@@ -1,0 +1,111 @@
+function setupWizard()
+{
+   if(!isObject($TorqueManager::wizardPageList))
+      $TorqueManager::wizardPageList = new ArrayObject();
+   else
+      $TorqueManager::wizardPageList.empty();
+      
+   ManagerWizardWindow.stepNumber = 0;
+   
+   ManagerWizardPageContainer.callOnChildrenNoRecurse("setHidden", true);
+   
+   ManagerWizardWindow-->backButton.setActive(true);
+   ManagerWizardWindow-->nextButton.setActive(true);
+}
+
+function ManagerWizardWindow::previousStep(%this)
+{
+   if(%this.stepNumber == 0)
+      return;
+      
+   %this.stepNumber--;
+   
+   %this.pageChanged = true;
+   
+   %this.showPage(%this.stepNumber);
+}
+
+function ManagerWizardWindow::nextStep(%this)
+{
+   if(%this.stepNumber == $TorqueManager::wizardPageList.count()-1)
+   {
+      ManagerWizardWindow.setHidden(true);
+      return;  
+   }
+   
+   %this.stepNumber++;
+   
+   %this.pageChanged = true;
+   
+   %this.showPage(%this.stepNumber);
+}
+
+function ManagerWizardWindow::setStep(%this, %stepNum)
+{
+   if(%stepNum >= $TorqueManager::wizardPageList.count())
+   {
+      ManagerWizardWindow.setHidden(true);
+      return;  
+   }
+   
+   if(%stepNum < 0)
+      return;  
+   
+   %this.stepNumber = %stepNum;
+   
+   %this.pageChanged = true;
+   
+   %this.showPage(%this.stepNumber);
+}
+
+function ManagerWizardWindow::refreshPage(%this)
+{
+   for(%i=0; %i < $TorqueManager::wizardPageList.count(); %i++)
+   {
+      %page = $TorqueManager::wizardPageList.getKey(%i); 
+      %page.setHidden(true);
+   }  
+   
+   %page = $TorqueManager::wizardPageList.getKey(%this.stepNumber);
+   %page.setHidden(false);
+   
+   if(%this.stepNumber == 0)
+      ManagerWizardWindow-->backButton.setHidden(true);
+   
+   if(%this.stepNumber == $TorqueManager::wizardPageList.count()-1)
+      ManagerWizardWindow-->nextButton.setText("Finish");
+   else
+      ManagerWizardWindow-->nextButton.setText("Next");
+}
+
+function ManagerWizardWindow::showPage(%this, %pageIndex)
+{
+   if(%pageIndex < 0 || %pageIndex > $TorqueManager::wizardPageList.count())
+      return;
+      
+   %this.stepNumber = %pageIndex;
+   
+   %this.refreshPage();
+   
+   if(%this.pageChanged)
+   {
+      //run page logic
+      %page = $TorqueManager::wizardPageList.getKey(%this.stepNumber);
+      
+      if(%page.isMethod("openPage"))
+         %page.openPage();
+   }
+   
+   %this.pageChanged = false;
+}
+
+function ManagerWizardWindow::getCurrentPage(%this)
+{
+   return $TorqueManager::wizardPageList.getKey(%this.stepNumber);
+}
+
+function ManagerWizardWindow::addWizardPage(%this, %page)
+{
+   ManagerWizardPageContainer.add(%page);
+   $TorqueManager::wizardPageList.add(%page);
+}

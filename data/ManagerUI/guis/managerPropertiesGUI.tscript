@@ -1,0 +1,23 @@
+function ManagerPropertiesGUI::onWake(%this)
+{
+    
+}
+
+function ManagerPropertiesGUI::onSleep(%this)
+{
+    hideLoadingSplashGui();
+}
+
+function ManagerPropertiesGUI::saveProperties(%this)
+{
+   if(%this.mode $= "Engine Build")
+   {
+      setEngineBuildNameByIndex(%this.targetId, $tmpEngineBuildName);
+      setEngineBuildGitPathByIndex(%this.targetId, $tmpEngineBuildGitPath);
+      setEngineBuildBranchNameByIndex(%this.targetId, $tmpEngineBuildBranchName);
+      //setEngineBuildLocalPath(%this.targetId, $tmpEngineBuildLocalPath);
+   }
+   
+   Canvas.popDialog(%this);
+   MainMenuGui.refresh();
+}

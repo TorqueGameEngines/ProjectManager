@@ -1,0 +1,14 @@
+<ModuleDefinition
+	ModuleId="ManagerUI"
+	VersionId="1"
+	Description="Module that implements the menus for the project manager."
+	ScriptFile="ManagerUI"
+	CreateFunction="onCreate"
+	DestroyFunction="onDestroy"
+	Group="Game">
+	 <DeclaredAssets
+        canSave="true"
+        canSaveDynamicFields="true"
+        Extension="asset.taml"
+        Recurse="true" />
+</ModuleDefinition>

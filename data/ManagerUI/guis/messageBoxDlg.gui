@@ -1,0 +1,160 @@
+//--- OBJECT WRITE BEGIN ---
+$guiContent = new GuiControl(MessageBoxDlg) {
+   extent = "1024 768";
+   minExtent = "8 8";
+   horizSizing = "width";
+   vertSizing = "height";
+   profile = "GuiOverlayProfile";
+   tooltipProfile = "GuiToolTipProfile";
+   isContainer = "1";
+   canSaveDynamicFields = "1";
+      helpTag = "0";
+
+   new GuiControl(MessageBoxCtrl) {
+      position = "192 213";
+      extent = "641 276";
+      horizSizing = "center";
+      vertSizing = "center";
+      profile = "GuiDefaultProfile";
+      tooltipProfile = "GuiToolTipProfile";
+      isContainer = "1";
+
+      new GuiBitmapBarCtrl() {
+         BitmapAsset = "ManagerUI:panel_image";
+         extent = "641 30";
+         horizSizing = "width";
+         profile = "GuiDefaultProfile";
+         tooltipProfile = "GuiToolTipProfile";
+      };
+      new GuiTextCtrl(MessageBoxTitleText) {
+         text = "OPTIONS";
+         position = "32 3";
+         extent = "577 28";
+         profile = "MenuHeaderText";
+         tooltipProfile = "GuiToolTipProfile";
+      };
+      new GuiBitmapBarCtrl() {
+         BitmapAsset = "ManagerUI:panel_low_image";
+         position = "0 30";
+         extent = "641 245";
+         horizSizing = "width";
+         profile = "GuiDefaultProfile";
+         tooltipProfile = "GuiToolTipProfile";
+      };
+      new GuiMLTextCtrl(MessageBoxText) {
+         position = "80 130";
+         extent = "481 16";
+         minExtent = "8 8";
+         horizSizing = "center";
+         vertSizing = "center";
+         profile = "MenuBodyText";
+         tooltipProfile = "GuiToolTipProfile";
+      };
+      new GuiControl(MessageBoxOKButtonHolder) {
+         position = "-1 220";
+         extent = "642 30";
+         horizSizing = "center";
+         vertSizing = "top";
+         profile = "GuiDefaultProfile";
+         tooltipProfile = "GuiToolTipProfile";
+         isContainer = "1";
+         class = "MenuInputButtonContainer";
+
+         new GuiIconButtonCtrl() {
+            sizeIconToButton = "1";
+            makeIconSquare = "1";
+            textLocation = "Right";
+            text = "Go";
+            position = "251 0";
+            profile = "GuiMenuButtonProfile";
+            command = "MainMenuButtonList.activateRow();";
+            tooltipProfile = "GuiToolTipProfile";
+            internalName = "OKButton";
+            class = "MenuInputButton";
+         };
+      };
+      new GuiControl(MessageBoxOCButtonHolder) {
+         position = "-1 220";
+         extent = "642 30";
+         horizSizing = "center";
+         vertSizing = "top";
+         profile = "GuiDefaultProfile";
+         tooltipProfile = "GuiToolTipProfile";
+         isContainer = "1";
+         class = "MenuInputButtonContainer";
+
+         new GuiIconButtonCtrl() {
+            sizeIconToButton = "1";
+            makeIconSquare = "1";
+            textLocation = "Right";
+            text = "Go";
+            position = "171 0";
+            profile = "GuiMenuButtonProfile";
+            command = "MainMenuButtonList.activateRow();";
+            tooltipProfile = "GuiToolTipProfile";
+            internalName = "OKButton";
+            class = "MenuInputButton";
+         };
+         new GuiIconButtonCtrl() {
+            sizeIconToButton = "1";
+            makeIconSquare = "1";
+            textLocation = "Right";
+            text = "Go";
+            position = "323 0";
+            profile = "GuiMenuButtonProfile";
+            command = "MainMenuButtonList.activateRow();";
+            tooltipProfile = "GuiToolTipProfile";
+            internalName = "CancelButton";
+            class = "MenuInputButton";
+         };
+      };
+      new GuiControl(MessageBoxYNCButtonHolder) {
+         position = "-1 220";
+         extent = "642 30";
+         horizSizing = "center";
+         vertSizing = "top";
+         profile = "GuiDefaultProfile";
+         tooltipProfile = "GuiToolTipProfile";
+         isContainer = "1";
+         class = "MenuInputButtonContainer";
+
+         new GuiIconButtonCtrl() {
+            sizeIconToButton = "1";
+            makeIconSquare = "1";
+            textLocation = "Right";
+            text = "Go";
+            position = "99 0";
+            profile = "GuiMenuButtonProfile";
+            command = "MainMenuButtonList.activateRow();";
+            tooltipProfile = "GuiToolTipProfile";
+            internalName = "yesButton";
+            class = "MenuInputButton";
+         };
+         new GuiIconButtonCtrl() {
+            sizeIconToButton = "1";
+            makeIconSquare = "1";
+            textLocation = "Right";
+            text = "Go";
+            position = "251 0";
+            profile = "GuiMenuButtonProfile";
+            command = "MainMenuButtonList.activateRow();";
+            tooltipProfile = "GuiToolTipProfile";
+            internalName = "noButton";
+            class = "MenuInputButton";
+         };
+         new GuiIconButtonCtrl() {
+            sizeIconToButton = "1";
+            makeIconSquare = "1";
+            textLocation = "Right";
+            text = "Go";
+            position = "403 0";
+            profile = "GuiMenuButtonProfile";
+            command = "MainMenuButtonList.activateRow();";
+            tooltipProfile = "GuiToolTipProfile";
+            internalName = "CancelButton";
+            class = "MenuInputButton";
+         };
+      };
+   };
+};
+//--- OBJECT WRITE END ---

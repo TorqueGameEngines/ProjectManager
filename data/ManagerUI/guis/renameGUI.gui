@@ -1,0 +1,83 @@
+//--- OBJECT WRITE BEGIN ---
+$guiContent = new GuiControl(renameGUI) {
+   extent = "1024 768";
+   profile = "GuiDefaultProfile";
+   tooltipProfile = "GuiToolTipProfile";
+   isContainer = "1";
+   canSaveDynamicFields = "1";
+
+   new GuiControl(RenameBoxCtrl) {
+      position = "192 285";
+      extent = "641 144";
+      horizSizing = "center";
+      vertSizing = "center";
+      profile = "GuiDefaultProfile";
+      tooltipProfile = "GuiToolTipProfile";
+      isContainer = "1";
+
+      new GuiBitmapBarCtrl() {
+         BitmapAsset = "ManagerUI:panel_image";
+         extent = "641 40";
+         horizSizing = "width";
+         profile = "GuiDefaultProfile";
+         tooltipProfile = "GuiToolTipProfile";
+      };
+      new GuiTextCtrl(RenameBoxTitleText) {
+         text = "Change Name";
+         position = "32 7";
+         extent = "577 28";
+         profile = "MenuHeaderText";
+         tooltipProfile = "GuiToolTipProfile";
+      };
+      new GuiBitmapBarCtrl() {
+         BitmapAsset = "ManagerUI:panel_low_image";
+         position = "0 40";
+         extent = "641 341";
+         horizSizing = "width";
+         profile = "GuiDefaultProfile";
+         tooltipProfile = "GuiToolTipProfile";
+      };
+      new GuiControl(RenameBoxOCButtonHolder) {
+         position = "-1 88";
+         extent = "642 40";
+         horizSizing = "center";
+         vertSizing = "top";
+         profile = "GuiDefaultProfile";
+         tooltipProfile = "GuiToolTipProfile";
+         isContainer = "1";
+         class = "MenuInputButtonContainer";
+
+         new GuiIconButtonCtrl() {
+            sizeIconToButton = "1";
+            makeIconSquare = "1";
+            textLocation = "Right";
+            text = "OK";
+            position = "171 8";
+            extent = "140 25";
+            profile = "GuiMenuButtonProfile";
+            tooltipProfile = "GuiToolTipProfile";
+            internalName = "OKButton";
+            command = "renameGUI.doRename();";
+         };
+         new GuiIconButtonCtrl() {
+            sizeIconToButton = "1";
+            makeIconSquare = "1";
+            textLocation = "Right";
+            text = "Cancel";
+            position = "323 8";
+            extent = "140 25";
+            profile = "GuiMenuButtonProfile";
+            tooltipProfile = "GuiToolTipProfile";
+            internalName = "CancelButton";
+            command = "Canvas.popDialog(renameGUI);";
+         };
+      };
+      new GuiTextEditCtrl(RenameBoxNewNameTxt) {
+         position = "33 57";
+         extent = "570 25";
+         profile = "GuiMenuTextEditProfile";
+         tooltipProfile = "GuiToolTipProfile";
+      };
+   };
+};
+//--- OBJECT WRITE END ---

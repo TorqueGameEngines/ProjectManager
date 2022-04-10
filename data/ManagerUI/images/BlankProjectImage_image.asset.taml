@@ -1,0 +1,8 @@
+<ImageAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="BlankProjectImage_image"
+    imageFile="@assetFile=BlankProjectImage.png"
+    UseMips="true"
+    isHDRImage="false"
+    imageType="Albedo" />

@@ -1,0 +1,5 @@
+<GUIAsset
+    AssetName="ManagerPropertiesGUI"
+    scriptFile="@assetFile=ManagerPropertiesGUI.tscript"
+    GUIFile="@assetFile=ManagerPropertiesGUI.gui"
+    VersionId="1"/>

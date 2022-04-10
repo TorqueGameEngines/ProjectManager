@@ -1,0 +1,3 @@
+<ImageAsset
+    AssetName="question_image"
+    imageFile="@assetFile=question.png"/>

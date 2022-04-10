@@ -1,0 +1,32 @@
+//--- OBJECT WRITE BEGIN ---
+$guiContent = new GuiControl(LoadingSplashGUI) {
+   extent = "1024 768";
+   profile = "GuiOverlayProfile";
+   tooltipProfile = "ToolsGuiToolTipProfile";
+   isContainer = "1";
+   canSaveDynamicFields = "1";
+
+   new GuiControl() {
+      position = "389 355";
+      extent = "245 57";
+      horizSizing = "center";
+      vertSizing = "center";
+      profile = "ToolsGuiSolidDefaultProfile";
+      tooltipProfile = "ToolsGuiToolTipProfile";
+      isContainer = "1";
+      internalName = "Dialog";
+
+      new GuiTextCtrl() {
+         text = "Working. Please Wait.";
+         position = "5 19";
+         extent = "236 18";
+         horizSizing = "width";
+         vertSizing = "center";
+         profile = "ToolsGuiTextBoldCenterProfile";
+         tooltipProfile = "ToolsGuiToolTipProfile";
+         isContainer = "0";
+         internalName = "loadingText";
+      };
+   };
+};
+//--- OBJECT WRITE END ---

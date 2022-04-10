@@ -1,0 +1,5 @@
+<GUIAsset
+    AssetName="renameGUI"
+    scriptFile="@assetFile=renameGUI.tscript"
+    GUIFile="@assetFile=renameGUI.gui"
+    VersionId="1"/>

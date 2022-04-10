@@ -1,0 +1,775 @@
+//--- OBJECT WRITE BEGIN ---
+$guiContent = new GuiControl(wizardMenus) {
+   extent = "1024 768";
+   profile = "GuiDefaultProfile";
+   tooltipProfile = "GuiToolTipProfile";
+   isContainer = "1";
+   canSaveDynamicFields = "1";
+
+   new GuiContainer() {
+      extent = "541 441";
+      horizSizing = "center";
+      vertSizing = "center";
+      profile = "GuiMenuButtonProfile";
+      tooltipProfile = "GuiToolTipProfile";
+
+      new GuiContainer() {
+         extent = "541 441";
+         profile = "GuiDefaultProfile";
+         tooltipProfile = "GuiToolTipProfile";
+         internalName = "CreateNewProject";
+
+         new GuiContainer(CreateNewProjectPage0) {
+            position = "1 1";
+            extent = "541 441";
+            horizSizing = "width";
+            profile = "GuiDefaultProfile";
+            visible = "0";
+            tooltipProfile = "GuiToolTipProfile";
+            internalName = "page0";
+            hidden = "1";
+
+            new GuiMLTextCtrl() {
+               text = "Project Name:";
+               position = "0 117";
+               extent = "542 18";
+               profile = "MenuHeaderText";
+               tooltipProfile = "GuiToolTipProfile";
+            };
+            new GuiTextEditCtrl() {
+               position = "12 142";
+               extent = "511 25";
+               profile = "GuiMenuTextEditProfile";
+               tooltipProfile = "GuiToolTipProfile";
+               internalName = "projectName";
+            };
+            new GuiMLTextCtrl() {
+               text = "Project Folder:";
+               position = "-1 197";
+               extent = "466 18";
+               profile = "MenuHeaderText";
+               tooltipProfile = "GuiToolTipProfile";
+            };
+            new GuiMLTextCtrl() {
+               position = "-1 219";
+               extent = "466 16";
+               profile = "MenuBodyText";
+               tooltipProfile = "GuiToolTipProfile";
+               internalName = "projectPathTxt";
+            };
+            new GuiButtonCtrl() {
+               text = "Change";
+               position = "463 208";
+               extent = "61 30";
+               profile = "GuiMenuButtonProfile";
+               tooltipProfile = "GuiToolTipProfile";
+               class = "changeProjectPathBtn";
+            };
+         };
+         new GuiContainer(CreateNewProjectPage1) {
+            position = "1 1";
+            extent = "541 441";
+            horizSizing = "width";
+            profile = "GuiDefaultProfile";
+            visible = "0";
+            tooltipProfile = "GuiToolTipProfile";
+            internalName = "page1";
+            hidden = "1";
+
+            new GuiMLTextCtrl() {
+               text = "Project Options:";
+               position = "-1 21";
+               extent = "532 18";
+               profile = "MenuHeaderText";
+               tooltipProfile = "GuiToolTipProfile";
+            };
+            new GuiScrollCtrl() {
+               hScrollBar = "alwaysOff";
+               vScrollBar = "dynamic";
+               position = "10 51";
+               extent = "518 371";
+               profile = "GuiMenuScrollProfile";
+               tooltipProfile = "GuiToolTipProfile";
+
+               new GuiStackControl() {
+                  padding = "5";
+                  position = "1 1";
+                  extent = "490 364";
+                  profile = "GuiDefaultProfile";
+                  tooltipProfile = "GuiToolTipProfile";
+                  internalName = "cmakeOptionsList";
+               };
+            };
+         };
+         new GuiContainer(CreateNewProjectPage2) {
+            position = "1 1";
+            extent = "541 441";
+            horizSizing = "width";
+            profile = "GuiDefaultProfile";
+            visible = "0";
+            tooltipProfile = "GuiToolTipProfile";
+            internalName = "page2";
+            hidden = "1";
+
+            new GuiMLTextCtrl() {
+               text = "Install Modules";
+               position = "1 21";
+               extent = "524 18";
+               horizSizing = "width";
+               profile = "MenuHeaderText";
+               tooltipProfile = "GuiToolTipProfile";
+            };
+            new GuiMLTextCtrl() {
+               text = "These Modules are set to be installed in your new project. Please review:";
+               position = "1 42";
+               extent = "524 16";
+               horizSizing = "width";
+               profile = "MenuBodyText";
+               tooltipProfile = "GuiToolTipProfile";
+            };
+            new GuiScrollCtrl() {
+               hScrollBar = "dynamic";
+               position = "11 64";
+               extent = "518 357";
+               horizSizing = "center";
+               profile = "GuiMenuScrollProfile";
+               tooltipProfile = "GuiToolTipProfile";
+
+               new GuiStackControl() {
+                  padding = "5";
+                  position = "1 1";
+                  extent = "502 340";
+                  horizSizing = "width";
+                  profile = "GuiDefaultProfile";
+                  tooltipProfile = "GuiToolTipProfile";
+                  internalName = "installingModuleList";
+               };
+            };
+         };
+         new GuiContainer(CreateNewProjectPage3) {
+            position = "1 1";
+            extent = "541 441";
+            horizSizing = "width";
+            profile = "GuiDefaultProfile";
+            visible = "0";
+            tooltipProfile = "GuiToolTipProfile";
+            internalName = "page3";
+            hidden = "1";
+
+            new GuiMLTextCtrl() {
+               text = "Generating...";
+               position = "159 186";
+               extent = "119 18";
+               profile = "MenuHeaderText";
+               tooltipProfile = "GuiToolTipProfile";
+            };
+            new GuiMLTextCtrl() {
+               text = "Complete!";
+               position = "275 187";
+               extent = "77 18";
+               profile = "MenuHeaderTextCenter";
+               tooltipProfile = "GuiToolTipProfile";
+               internalName = "projectGenCompleteTxt";
+            };
+         };
+         new GuiContainer(CreateNewProjectSelectBuildPage) {
+            position = "1 1";
+            extent = "541 441";
+            horizSizing = "width";
+            profile = "GuiDefaultProfile";
+            visible = "0";
+            tooltipProfile = "GuiToolTipProfile";
+            internalName = "page4";
+            hidden = "1";
+
+            new GuiMLTextCtrl() {
+               text = "Select Engine Build to Use:";
+               position = "0 157";
+               extent = "542 18";
+               profile = "MenuHeaderText";
+               tooltipProfile = "GuiToolTipProfile";
+            };
+            new GuiPopUpMenuCtrl() {
+               position = "11 166";
+               extent = "515 45";
+               profile = "GuiPopUpMenuProfile";
+               tooltipProfile = "GuiToolTipProfile";
+               internalName = "engineBuildList";
+            };
+         };
+         new GuiContainer(CreateNewProjectSelectCompilerPage) {
+            position = "1 1";
+            extent = "541 441";
+            horizSizing = "width";
+            profile = "GuiDefaultProfile";
+            visible = "0";
+            tooltipProfile = "GuiToolTipProfile";
+            internalName = "page5";
+            hidden = "1";
+
+            new GuiMLTextCtrl() {
+               text = "Select Compiler to Use:";
+               position = "0 157";
+               extent = "542 18";
+               profile = "MenuHeaderText";
+               tooltipProfile = "GuiToolTipProfile";
+            };
+            new GuiPopUpMenuCtrl() {
+               position = "11 166";
+               extent = "515 45";
+               profile = "GuiPopUpMenuProfile";
+               tooltipProfile = "GuiToolTipProfile";
+               internalName = "compilerList";
+            };
+         };
+      };
+      new GuiContainer() {
+         extent = "541 441";
+         profile = "GuiDefaultProfile";
+         visible = "0";
+         tooltipProfile = "GuiToolTipProfile";
+         internalName = "addNewEngineBuild";
+         hidden = "1";
+
+         new GuiContainer(AddNewEngineBuildPage0) {
+            position = "1 1";
+            extent = "541 441";
+            horizSizing = "width";
+            profile = "GuiDefaultProfile";
+            visible = "0";
+            tooltipProfile = "GuiToolTipProfile";
+            internalName = "page0";
+            hidden = "1";
+
+            new GuiMLTextCtrl() {
+               text = "Engine Build Location:";
+               position = "-1 69";
+               extent = "328 18";
+               profile = "MenuHeaderText";
+               tooltipProfile = "GuiToolTipProfile";
+            };
+            new GuiRadioCtrl(engineBuildGitBtn) {
+               text = "Git Repository";
+               position = "10 90";
+               extent = "417 30";
+               profile = "GuiMenuRadioProfile";
+               tooltipProfile = "GuiToolTipProfile";
+            };
+            new GuiTextCtrl() {
+               text = "Git URL Path:";
+               position = "25 124";
+               extent = "87 18";
+               profile = "MenuBodyText";
+               active = "0";
+               tooltipProfile = "GuiToolTipProfile";
+               internalName = "gitPathTxt";
+            };
+            new GuiTextEditCtrl() {
+               position = "26 146";
+               extent = "485 25";
+               profile = "GuiMenuTextEditProfile";
+               active = "0";
+               tooltipProfile = "GuiToolTipProfile";
+               internalName = "gitPathURL";
+            };
+            new GuiTextCtrl() {
+               text = "Branch Name:";
+               position = "25 177";
+               extent = "146 18";
+               profile = "MenuBodyText";
+               active = "0";
+               tooltipProfile = "GuiToolTipProfile";
+               internalName = "gitBranchNameTxt";
+            };
+            new GuiTextEditCtrl() {
+               placeholderText = "(If blank, will use default branch)";
+               position = "26 199";
+               extent = "485 25";
+               profile = "GuiMenuTextEditProfile";
+               active = "0";
+               tooltipProfile = "GuiToolTipProfile";
+               internalName = "gitBranchName";
+            };
+            new GuiRadioCtrl(engineBuildLocalBtn) {
+               text = "Local Path:";
+               position = "10 237";
+               extent = "417 30";
+               profile = "GuiMenuRadioProfile";
+               tooltipProfile = "GuiToolTipProfile";
+            };
+            new GuiTextCtrl() {
+               text = "Folder Path:";
+               position = "25 271";
+               extent = "417 18";
+               profile = "MenuBodyText";
+               active = "0";
+               tooltipProfile = "GuiToolTipProfile";
+               internalName = "localPathTxt";
+            };
+            new GuiButtonCtrl(newEngineBuildLocalPathBtn) {
+               text = "Change";
+               position = "427 278";
+               extent = "85 25";
+               profile = "GuiMenuButtonProfile";
+               active = "0";
+               tooltipProfile = "GuiToolTipProfile";
+               internalName = "localPathBtn";
+            };
+            new GuiMLTextCtrl() {
+               position = "25 293";
+               extent = "417 14";
+               profile = "GuiMLTextProfile";
+               tooltipProfile = "GuiToolTipProfile";
+               internalName = "localPath";
+            };
+         };
+         new GuiContainer(AddNewEngineBuildPage1) {
+            position = "1 1";
+            extent = "541 441";
+            horizSizing = "width";
+            profile = "GuiDefaultProfile";
+            visible = "0";
+            tooltipProfile = "GuiToolTipProfile";
+            internalName = "page1";
+            hidden = "1";
+
+            new GuiMLTextCtrl() {
+               text = "Engine Build Name:";
+               position = "0 141";
+               extent = "328 18";
+               profile = "MenuHeaderText";
+               tooltipProfile = "GuiToolTipProfile";
+            };
+            new GuiCheckBoxCtrl() {
+               text = "Is A Binary Engine Build";
+               position = "12 199";
+               extent = "514 30";
+               profile = "GuiMenuCheckBoxProfile";
+               tooltipProfile = "GuiToolTipProfile";
+               internalName = "isBinaryCheckbox";
+            };
+            new GuiTextEditCtrl() {
+               position = "12 166";
+               extent = "514 25";
+               profile = "GuiMenuTextEditProfile";
+               tooltipProfile = "GuiToolTipProfile";
+               internalName = "engineBuildNameTxt";
+            };
+         };
+         new GuiContainer(AddNewEngineBuildPage2) {
+            position = "1 1";
+            extent = "541 441";
+            horizSizing = "width";
+            profile = "GuiDefaultProfile";
+            visible = "0";
+            tooltipProfile = "GuiToolTipProfile";
+            internalName = "page2";
+            hidden = "1";
+
+            new GuiMLTextCtrl() {
+               text = "Registering Engine Build....";
+               position = "117 192";
+               extent = "252 18";
+               profile = "MenuHeaderText";
+               tooltipProfile = "GuiToolTipProfile";
+            };
+            new GuiMLTextCtrl() {
+               text = "Complete!";
+               position = "317 192";
+               extent = "182 18";
+               profile = "MenuHeaderText";
+               tooltipProfile = "GuiToolTipProfile";
+               internalName = "engineBuildMakeComplete";
+            };
+         };
+      };
+      new GuiContainer() {
+         extent = "541 441";
+         profile = "GuiDefaultProfile";
+         visible = "0";
+         tooltipProfile = "GuiToolTipProfile";
+         internalName = "changeEingineBuildGitInfo";
+         hidden = "1";
+
+         new GuiContainer(changeEngineBuildGitInfoPage0) {
+            position = "1 1";
+            extent = "541 441";
+            horizSizing = "width";
+            profile = "GuiDefaultProfile";
+            visible = "0";
+            tooltipProfile = "GuiToolTipProfile";
+            internalName = "page0";
+            hidden = "1";
+
+            new GuiMLTextCtrl() {
+               text = "New Git Info:";
+               position = "1 129";
+               extent = "328 18";
+               profile = "MenuHeaderText";
+               tooltipProfile = "GuiToolTipProfile";
+            };
+            new GuiTextCtrl() {
+               text = "Git URL Path:";
+               position = "11 156";
+               extent = "101 18";
+               profile = "MenuBodyText";
+               tooltipProfile = "GuiToolTipProfile";
+               internalName = "gitPathTxt";
+            };
+            new GuiTextEditCtrl() {
+               position = "12 178";
+               extent = "514 25";
+               profile = "GuiMenuTextEditProfile";
+               tooltipProfile = "GuiToolTipProfile";
+               internalName = "gitPathURL";
+            };
+            new GuiTextCtrl() {
+               text = "Branch Name:";
+               position = "12 211";
+               extent = "96 18";
+               profile = "MenuBodyText";
+               tooltipProfile = "GuiToolTipProfile";
+               internalName = "gitBranchNameTxt";
+            };
+            new GuiTextEditCtrl() {
+               placeholderText = "(If blank, will use default branch)";
+               position = "13 233";
+               extent = "514 25";
+               profile = "GuiMenuTextEditProfile";
+               tooltipProfile = "GuiToolTipProfile";
+               internalName = "gitBranchName";
+            };
+         };
+         new GuiContainer(changeEngineBuildGitInfoPage1) {
+            position = "1 1";
+            extent = "541 441";
+            horizSizing = "width";
+            profile = "GuiDefaultProfile";
+            visible = "0";
+            tooltipProfile = "GuiToolTipProfile";
+            internalName = "page1";
+            hidden = "1";
+
+            new GuiMLTextCtrl() {
+               text = "Updating Build\'s Git Info...";
+               position = "111 189";
+               extent = "206 18";
+               profile = "MenuHeaderText";
+               tooltipProfile = "GuiToolTipProfile";
+            };
+            new GuiMLTextCtrl() {
+               text = "Complete!";
+               position = "303 189";
+               extent = "93 18";
+               profile = "MenuHeaderText";
+               tooltipProfile = "GuiToolTipProfile";
+               internalName = "updateCompleteTxt";
+            };
+         };
+      };
+      new GuiContainer() {
+         extent = "541 441";
+         profile = "GuiDefaultProfile";
+         visible = "0";
+         tooltipProfile = "GuiToolTipProfile";
+         internalName = "addNewModule";
+         hidden = "1";
+
+         new GuiContainer(AddNewModulePage0) {
+            position = "1 1";
+            extent = "541 441";
+            horizSizing = "width";
+            profile = "GuiDefaultProfile";
+            visible = "0";
+            tooltipProfile = "GuiToolTipProfile";
+            internalName = "page0";
+            hidden = "1";
+
+            new GuiMLTextCtrl() {
+               text = "Engine Build Location:";
+               position = "-1 69";
+               extent = "328 18";
+               profile = "MenuHeaderText";
+               tooltipProfile = "GuiToolTipProfile";
+            };
+            new GuiRadioCtrl(ModuleGitBtn) {
+               text = "Git Repository";
+               position = "10 90";
+               extent = "417 30";
+               profile = "GuiMenuRadioProfile";
+               tooltipProfile = "GuiToolTipProfile";
+            };
+            new GuiTextCtrl() {
+               text = "Git URL Path:";
+               position = "25 124";
+               extent = "87 18";
+               profile = "MenuBodyText";
+               active = "0";
+               tooltipProfile = "GuiToolTipProfile";
+               internalName = "gitPathTxt";
+            };
+            new GuiTextEditCtrl() {
+               position = "26 146";
+               extent = "485 25";
+               profile = "GuiMenuTextEditProfile";
+               active = "0";
+               tooltipProfile = "GuiToolTipProfile";
+               internalName = "gitPathURL";
+            };
+            new GuiTextCtrl() {
+               text = "Branch Name:";
+               position = "25 177";
+               extent = "146 18";
+               profile = "MenuBodyText";
+               active = "0";
+               tooltipProfile = "GuiToolTipProfile";
+               internalName = "gitBranchNameTxt";
+            };
+            new GuiTextEditCtrl() {
+               placeholderText = "(If blank, will use default branch)";
+               position = "26 199";
+               extent = "485 25";
+               profile = "GuiMenuTextEditProfile";
+               active = "0";
+               tooltipProfile = "GuiToolTipProfile";
+               internalName = "gitBranchName";
+            };
+            new GuiRadioCtrl(ModuleLocalBtn) {
+               text = "Local Path:";
+               position = "10 237";
+               extent = "417 30";
+               profile = "GuiMenuRadioProfile";
+               tooltipProfile = "GuiToolTipProfile";
+            };
+            new GuiTextCtrl() {
+               text = "Folder Path:";
+               position = "25 271";
+               extent = "417 18";
+               profile = "MenuBodyText";
+               active = "0";
+               tooltipProfile = "GuiToolTipProfile";
+               internalName = "localPathTxt";
+            };
+            new GuiButtonCtrl(newModuleLocalPathBtn) {
+               text = "Change";
+               position = "440 278";
+               extent = "72 25";
+               profile = "GuiMenuButtonProfile";
+               active = "0";
+               tooltipProfile = "GuiToolTipProfile";
+               internalName = "localPathBtn";
+            };
+            new GuiMLTextCtrl() {
+               position = "25 293";
+               extent = "417 14";
+               profile = "GuiMLTextProfile";
+               tooltipProfile = "GuiToolTipProfile";
+               internalName = "localPath";
+            };
+         };
+         new GuiContainer(AddNewModulePage1) {
+            position = "1 1";
+            extent = "541 441";
+            horizSizing = "width";
+            profile = "GuiDefaultProfile";
+            visible = "0";
+            tooltipProfile = "GuiToolTipProfile";
+            internalName = "page1";
+            hidden = "1";
+
+            new GuiMLTextCtrl() {
+               text = "Module Name:";
+               position = "0 141";
+               extent = "328 18";
+               profile = "MenuHeaderText";
+               tooltipProfile = "GuiToolTipProfile";
+            };
+            new GuiCheckBoxCtrl() {
+               text = "Install Module in new Projects";
+               position = "12 199";
+               extent = "514 30";
+               profile = "GuiMenuCheckBoxProfile";
+               tooltipProfile = "GuiToolTipProfile";
+               internalName = "installCheckbox";
+            };
+            new GuiTextEditCtrl() {
+               position = "12 166";
+               extent = "514 25";
+               profile = "GuiMenuTextEditProfile";
+               tooltipProfile = "GuiToolTipProfile";
+               internalName = "ModuleNameTxt";
+            };
+         };
+         new GuiContainer(AddNewModulePage2) {
+            position = "1 1";
+            extent = "541 441";
+            horizSizing = "width";
+            profile = "GuiDefaultProfile";
+            tooltipProfile = "GuiToolTipProfile";
+            internalName = "page2";
+
+            new GuiMLTextCtrl() {
+               text = "Registering Module....";
+               position = "117 192";
+               extent = "252 18";
+               profile = "MenuHeaderText";
+               tooltipProfile = "GuiToolTipProfile";
+            };
+            new GuiMLTextCtrl() {
+               text = "Complete!";
+               position = "317 192";
+               extent = "182 18";
+               profile = "MenuHeaderText";
+               tooltipProfile = "GuiToolTipProfile";
+               internalName = "ModuleMakeComplete";
+            };
+         };
+      };
+      new GuiContainer() {
+         extent = "541 441";
+         profile = "GuiDefaultProfile";
+         visible = "0";
+         tooltipProfile = "GuiToolTipProfile";
+         internalName = "installModule";
+         hidden = "1";
+
+         new GuiContainer(InstallModulePage0) {
+            position = "1 1";
+            extent = "541 441";
+            horizSizing = "width";
+            profile = "GuiDefaultProfile";
+            visible = "0";
+            tooltipProfile = "GuiToolTipProfile";
+            internalName = "page0";
+            hidden = "1";
+
+            new GuiMLTextCtrl() {
+               text = "Select Project to Install Module Into:";
+               position = "0 157";
+               extent = "542 18";
+               profile = "MenuHeaderText";
+               tooltipProfile = "GuiToolTipProfile";
+            };
+            new GuiPopUpMenuCtrl() {
+               position = "11 166";
+               extent = "515 45";
+               profile = "GuiPopUpMenuProfile";
+               tooltipProfile = "GuiToolTipProfile";
+               internalName = "projectList";
+            };
+         };
+         new GuiContainer(InstallModulePage1) {
+            position = "1 1";
+            extent = "541 441";
+            horizSizing = "width";
+            profile = "GuiDefaultProfile";
+            tooltipProfile = "GuiToolTipProfile";
+            internalName = "page1";
+
+            new GuiMLTextCtrl() {
+               text = "Installing...";
+               position = "187 186";
+               extent = "119 18";
+               profile = "MenuHeaderText";
+               tooltipProfile = "GuiToolTipProfile";
+            };
+            new GuiMLTextCtrl() {
+               text = "Complete!";
+               position = "275 187";
+               extent = "77 18";
+               profile = "MenuHeaderTextCenter";
+               tooltipProfile = "GuiToolTipProfile";
+               internalName = "installModuleCompleteTxt";
+            };
+         };
+      };
+      new GuiContainer() {
+         extent = "541 441";
+         profile = "GuiDefaultProfile";
+         visible = "0";
+         tooltipProfile = "GuiToolTipProfile";
+         internalName = "setupGitCmake";
+         hidden = "1";
+
+         new GuiContainer(setupGitCmakePage0) {
+            position = "1 1";
+            extent = "541 441";
+            horizSizing = "width";
+            profile = "GuiDefaultProfile";
+            visible = "0";
+            tooltipProfile = "GuiToolTipProfile";
+            internalName = "page0";
+            hidden = "1";
+
+            new GuiMLTextCtrl() {
+               text = "We weren\'t able to detect git being installed, or it the current user doesn\'t have permission to run it via command line.";
+               position = "0 125";
+               extent = "531 32";
+               profile = "MenuBodyText";
+               tooltipProfile = "GuiToolTipProfile";
+            };
+            new GuiMLTextCtrl() {
+               text = "If you haven\'t installed it, please click the button below to be directed to the website where you can download it.";
+               position = "0 165";
+               extent = "532 32";
+               profile = "MenuBodyText";
+               tooltipProfile = "GuiToolTipProfile";
+            };
+            new GuiButtonCtrl() {
+               text = "Go to the git website";
+               position = "174 216";
+               extent = "195 30";
+               profile = "GuiMenuButtonProfile";
+               command = "gotoWebPage(\"https://git-scm.com/downloads\");";
+               tooltipProfile = "GuiToolTipProfile";
+            };
+            new GuiMLTextCtrl() {
+               text = "If you have already installed it, then please check the permissions so the current user can run the command via command line.";
+               position = "0 267";
+               extent = "530 32";
+               profile = "MenuBodyText";
+               tooltipProfile = "GuiToolTipProfile";
+            };
+         };
+         new GuiContainer(setupGitCmakePage1) {
+            position = "1 1";
+            extent = "541 441";
+            horizSizing = "width";
+            profile = "GuiDefaultProfile";
+            tooltipProfile = "GuiToolTipProfile";
+            internalName = "page1";
+
+            new GuiMLTextCtrl() {
+               text = "We weren\'t able to detect cmake being installed, or it the current user doesn\'t have permission to run it via command line.";
+               position = "0 125";
+               extent = "531 32";
+               profile = "MenuBodyText";
+               tooltipProfile = "GuiToolTipProfile";
+            };
+            new GuiMLTextCtrl() {
+               text = "If you haven\'t installed it, please click the button below to be directed to the website where you can download it.";
+               position = "0 165";
+               extent = "532 32";
+               profile = "MenuBodyText";
+               tooltipProfile = "GuiToolTipProfile";
+            };
+            new GuiButtonCtrl() {
+               text = "Go to the cmake website";
+               position = "174 216";
+               extent = "195 30";
+               profile = "GuiMenuButtonProfile";
+               command = "gotoWebPage(\"https://cmake.org/download/\");";
+               tooltipProfile = "GuiToolTipProfile";
+            };
+            new GuiMLTextCtrl() {
+               text = "If you have already installed it, then please check the permissions so the current user can run the command via command line.";
+               position = "0 267";
+               extent = "530 32";
+               profile = "MenuBodyText";
+               tooltipProfile = "GuiToolTipProfile";
+            };
+         };
+      };
+   };
+};
+//--- OBJECT WRITE END ---

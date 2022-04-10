@@ -1,0 +1,5 @@
+<GUIAsset
+    AssetName="wizardMenus"
+    scriptFile="@assetFile=wizardMenus.tscript"
+    GUIFile="@assetFile=wizardMenus.gui"
+    VersionId="1"/>

@@ -1,0 +1,3 @@
+<ImageAsset
+    AssetName="download_image"
+    imageFile="@assetFile=download.png"/>

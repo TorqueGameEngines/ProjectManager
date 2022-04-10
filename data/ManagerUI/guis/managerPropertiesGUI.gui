@@ -1,0 +1,62 @@
+//--- OBJECT WRITE BEGIN ---
+$guiContent = new GuiControl(ManagerPropertiesGUI) {
+   extent = "1024 768";
+   horizSizing = "width";
+   vertSizing = "height";
+   profile = "GuiOverlayProfile";
+   tooltipProfile = "GuiToolTipProfile";
+   isContainer = "1";
+   canSaveDynamicFields = "1";
+
+   new GuiWindowCtrl() {
+      text = "Properties";
+      resizeWidth = "0";
+      resizeHeight = "0";
+      canMove = "0";
+      canMinimize = "0";
+      canMaximize = "0";
+      closeCommand = "Canvas.popDialog(ManagerPropertiesGUI);";
+      edgeSnap = "0";
+      position = "272 168";
+      extent = "481 433";
+      horizSizing = "center";
+      vertSizing = "center";
+      profile = "ToolsGuiWindowProfile";
+      tooltipProfile = "GuiToolTipProfile";
+
+      new GuiScrollCtrl() {
+         hScrollBar = "dynamic";
+         vScrollBar = "dynamic";
+         position = "0 17";
+         extent = "482 386";
+         profile = "GuiMenuScrollProfile";
+         tooltipProfile = "GuiToolTipProfile";
+
+         new GuiStackControl(ManagerPropertiesList) {
+            position = "1 1";
+            extent = "471 64";
+            horizSizing = "width";
+            profile = "GuiDefaultProfile";
+            tooltipProfile = "GuiToolTipProfile";
+            padding = "5";
+         };
+      };
+      /*new GuiButtonCtrl() {
+         text = "Save";
+         position = "329 407";
+         extent = "71 23";
+         profile = "ToolsGuiButtonProfile";
+         command = "ManagerPropertiesGUI.saveProperties();";
+         tooltipProfile = "GuiToolTipProfile";
+      };*/
+      new GuiButtonCtrl() {
+         text = "Close";
+         position = "406 407";
+         extent = "71 23";
+         profile = "ToolsGuiButtonProfile";
+         command = "Canvas.popDialog(ManagerPropertiesGUI);";
+         tooltipProfile = "GuiToolTipProfile";
+      };
+   };
+};
+//--- OBJECT WRITE END ---

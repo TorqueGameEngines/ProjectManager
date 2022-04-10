@@ -1,0 +1,37 @@
+function renameGUI::onWake(%this)
+{
+    
+}
+
+function renameGUI::onSleep(%this)
+{
+    
+}
+
+function showRenameWindow(%title, %callback, %allowBlankName)
+{
+   if(%title $= "")
+      %title = "Rename";
+      
+   if(%allowBlankName $= "")
+      %allowBlankName = false;
+      
+   RenameBoxTitleText.text = %title;
+   
+   renameGUI.callback = %callback;
+   renameGUI.allowBlank = %allowBlankName;
+   
+   Canvas.pushDialog(renameGUI);
+}
+
+function renameGUI::doRename(%this)
+{
+   if(RenameBoxNewNameTxt.getText() $= "" && !%this.allowBlank)
+      return;
+      
+   %command = "" @ renameGUI.callback @ "(\"" @ RenameBoxNewNameTxt.getText() @ "\");";
+      
+   eval(%command);
+   
+   Canvas.popDialog(renameGUI);
+}

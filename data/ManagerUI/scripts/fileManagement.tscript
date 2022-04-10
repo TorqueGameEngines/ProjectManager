@@ -1,0 +1,54 @@
+function MainMenuGui::deleteFolder(%this, %folderPath)
+{
+   %fullPath = makeFullPath(%folderPath);
+   
+   return deleteDirectory(%fullPath);
+}
+
+function copyProjectFolder(%fromFolder, %toFolder)
+{
+   if(!isDirectory(%toFolder))
+      createPath(%toFolder);
+      
+   %file = findFirstFileMultiExpr( %fromFolder @ "/*.*", false);
+
+   while( %file !$= "" )
+   {    
+      %isGitPath = (strIsMatchExpr("*.git", %file) || strIsMatchExpr("*.git/", %file));
+      //%isGitPath = strIsMatchExpr("*.git/*", %file);
+      if(!%isGitPath)
+      {
+         %copiedFile = strreplace(%file, %fromFolder, %toFolder);
+         
+         %copiedPath = filePath(%copiedFile);
+         
+         if(!isDirectory(%copiedPath))
+            createPath(%copiedPath);
+      
+         %success = pathCopy(%file, %copiedFile, false);
+         if(!%success)
+            error("copyProjectFolder() - failed to copy file: " @ %file);
+         
+      }
+      else
+      {
+         %sadf = true;  
+      }
+      
+      %file = findNextFileMultiExpr( %fromFolder @ "/*.*" );
+   }
+   
+   //do sub directories
+   %paths = getDirectoryList(%fromFolder);
+   for(%i=0; %i < getFieldCount(%paths); %i++)
+   {
+      %childPath = getField(%paths, %i);
+      
+      if(%childPath $= ".git")
+         continue;
+         
+      copyProjectFolder(%fromFolder @ %childPath @ "/", %toFolder @ %childPath @ "/");
+   }
+      
+   return true;
+}

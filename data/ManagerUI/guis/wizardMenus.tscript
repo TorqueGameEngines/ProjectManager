@@ -1,0 +1,14 @@
+function wizardMenus::onWake(%this)
+{
+    
+}
+
+function wizardMenus::onSleep(%this)
+{
+    
+}
+
+function ManagerWizardPage0::openPage(%this)
+{
+   ManagerWizardWindow-->backButton.setHidden(true);
+}

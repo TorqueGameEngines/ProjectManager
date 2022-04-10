@@ -1,0 +1,5 @@
+<GUIAsset
+    AssetName="LoadingSplashGUI"
+    scriptFile="@assetFile=LoadingSplashGUI.tscript"
+    GUIFile="@assetFile=LoadingSplashGUI.gui"
+    VersionId="1"/>

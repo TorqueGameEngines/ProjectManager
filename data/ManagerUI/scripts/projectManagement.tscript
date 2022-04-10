@@ -1,0 +1,714 @@
+function openProjectActionMenu(%buildIdx, %buttonCtrl)
+{
+   openActionMenu(%buttonCtrl);
+   
+   ActionMenuDropdown.targetId = %buildIdx;
+   
+   %localPath = getProjectLocalPathByIndex(%buildIdx);
+   
+   if(%localPath !$= "")
+   {
+      //addActionMenuEntry("ManagerUI:download_image", "Pull Updates", "pullUpdateEngineBuild(" @ %buildIdx @ ");", 
+      //   "Pulls any updates for this build from its git repository.");
+         
+      addActionMenuEntry("ManagerUI:textField_image", "Edit Properties", 
+            "populateProjectProperties(" @ %buildIdx @ ");", 
+            "Edits the project's settings"); 
+         
+      addActionMenuEntry("ManagerUI:trashcan_image", "Delete Project", "deleteProject(" @ %buildIdx @ ");", 
+         "Deletes this project from the local machine.");
+   
+      addActionMenuEntry("ManagerUI:trashcan_image", "Remove Project", "removeProjectFromListing(" @ %buildIdx @ ");", 
+         "Removes project from list. Project files will stay on machine.");
+   }
+}
+
+function runProject(%projectId)
+{
+   %buildId = getProjectBuildIdByIndex(%projectId);
+   %projectTags = getEngineBuildTags(%buildId);
+   %projectName = getProjectNameByIndex(%projectId);
+   
+   %projectPath = getProjectLocalPathByIndex(%projectId);
+   
+   if(isSearchTextInTags(%projectTags, "Source"))
+   {
+      %projectPath = %projectPath @ "/My Projects/" @ %projectName @ "/game/";
+   }
+   
+   if($platform $= "windows")
+   {
+      %appPath = %projectPath @ %projectName @ ".exe";
+      if(!isFile(%appPath))
+         %appPath = %projectPath @ %projectName @ "_DEBUG.exe";
+         
+      %openCommand = "\"" @ %appPath @ "\"";
+   }
+   else
+   {
+      %appPath = %projectPath @ %projectName;
+         
+      %openCommand = "open \"" @ %appPath @ "\"";
+   }
+  
+   systemCommand(%openCommand, "");
+}
+
+//
+function deleteProject(%projectId)
+{
+   $TorqueManager::selectedProject = %projectId;
+   %projectName = getProjectNameByIndex($TorqueManager::selectedProject);
+   %localPath = getProjectLocalPathByIndex($TorqueManager::selectedProject);
+   
+   MessageBoxOKCancel("Delete Project?", 
+      "Are you sure you wish to delete the '" @ %projectName @"' Project?\nFile path: " @ %localPath,
+      "doDeleteProject();", "");
+}
+
+function doDeleteProject()
+{
+   displayLoadingSplashGui();
+   
+   //do da delete.
+   %localPath = getProjectLocalPathByIndex($TorqueManager::selectedProject);
+   
+   if(isDirectory(%localPath))
+   {
+      if(!MainMenuGui.deleteFolder(%localPath))
+      {
+         MessageBoxOK("Failure", "Failed to successfully delete selected Project.");
+         hideLoadingSplashGui();
+         return;
+      }
+   }
+   
+   setProjectLocalPath($TorqueManager::selectedProject, "");
+   
+   doRemoveProjectFromListing();
+   
+   MainMenuGui.refresh();
+   
+   hideLoadingSplashGui();
+}
+
+function doProjectRename(%newName)
+{
+   setProjectName(ActionMenuDropdown.targetId, %newName);
+   
+   saveData();
+   
+   MainMenuGui.refresh();
+}
+
+function removeProjectFromListing(%buildIdx)
+{
+   $TorqueManager::selectedProject = %buildIdx;
+   
+   %projectName = getProjectNameByIndex($TorqueManager::selectedProject);
+   MessageBoxOKCancel("Remove Project?", 
+      "Are you sure you wish to remove the '" @ %projectName @"' Project from the Manager?\nIf there is a local copy on this machine it will not be deleted.",
+      "doRemoveProjectFromListing();", "");
+}
+
+function doRemoveProjectFromListing()
+{
+   displayLoadingSplashGui();
+   
+   PMSettings.remove("Projects/" @ $TorqueManager::selectedProject @ "/buildId");
+   PMSettings.remove("Projects/" @ $TorqueManager::selectedProject @ "/projectName");
+   PMSettings.remove("Projects/" @ $TorqueManager::selectedProject @ "/localPath");
+   
+   saveData();
+   
+   MainMenuGui.refresh();
+   
+   hideLoadingSplashGui();
+}
+
+function findProjectPath(%buildIdx)
+{
+   %dlg = new OpenFolderDialog()
+   {
+      Title = "Select Project Folder";
+      Filters = "";
+      ChangePath = false;
+      MustExist = true;
+      MultipleFiles = false;
+   };
+
+   %dlg.DefaultPath = "./";
+   if(%dlg.Execute())
+   {
+      %path = makeFullPath(%dlg.FileName);
+      
+      setProjectLocalPathByIndex(%buildIdx, %path);
+
+      saveData();
+      MainMenuGui.refresh();
+   }
+
+   %dlg.delete();
+}
+//==============================================================================
+// Properties
+//==============================================================================
+function populateProjectProperties(%buildIdx)
+{
+   Canvas.pushDialog(ManagerPropertiesGUI);
+   ManagerPropertiesList.clear();
+
+   ManagerPropertiesGUI.targetId = %buildIdx;
+   ManagerPropertiesGUI.mode = "Project";
+   
+   %buildName = getProjectNameByIndex(%buildIdx);
+   
+   %field = makeSettingsCard("Project Name", "$tmpProjectName", "button", %buildName, %buildName, "Change Project Name", 
+      "changeProjectName("@%buildIdx@");");
+   ManagerPropertiesList.add(%field);
+   
+   /*%previewImage = getProjectPreviewImageByIndex(%buildIdx);
+   %field = makeSettingsCard("Change Preview Image", "$tmpProjectImagePath", "button", %previewImage, %previewImage, "Change Project Preview Image", 
+      "changePreviewImage("@%buildIdx@");");
+   ManagerPropertiesList.add(%field);*/
+}
+
+function changeProjectName(%buildIdx)
+{
+   $renamingProjectIdx = %buildIdx;
+   showRenameWindow("Change Project Name", "doProjectNameChange");
+}
+
+function doProjectNameChange(%newName)
+{
+   setProjectNameByIndex($renamingProjectIdx, %newName);
+   
+   saveData();
+   populateProjectProperties($renamingProjectIdx);
+   MainMenuGui.refresh();
+}
+
+function changePreviewImage(%buildIdx)
+{
+   %filters = "Image Files (*.png, *.jpg, *.dds)|*.png;*.jpg;*.dds|All Files (*.*)|*.*|";
+   %dlg = new OpenFileDialog()
+   {
+      Title = "Select Preview Image";
+      Filters = %filters;
+      DefaultFile = "./";
+      ChangePath = false;
+      MustExist = true;
+      MultipleFiles = false;
+   };
+
+   %dlg.DefaultPath = "./";
+   if(%dlg.Execute())
+   {
+      %path = makeFullPath(%dlg.FileName);
+
+      $TorqueManager::moduleDLPath = %path;
+      
+      if(startsWith(%path, getMainDotCsDir()))
+      {
+         %path = strreplace(%path, getMainDotCsDir(), "{ManagerDir}");  
+      }
+      
+      EditorSettings.setValue("Settings/Modules/downloadPath", %path);
+      
+      saveData();
+      MainMenuGui.refresh();
+   }
+
+   %dlg.delete();
+}
+//==============================================================================
+// Wizard Stuff
+//==============================================================================
+function startCreateNewProjectWizard(%buildIdx)
+{
+   setupWizard();
+   
+   ManagerWizardWindow.text = "Create New Project";
+   
+   $newProjectEngineBuildId = %buildIdx;
+   
+   if($newProjectEngineBuildId $= "")
+      ManagerWizardWindow.addWizardPage(CreateNewProjectSelectBuildPage);
+      
+   if(!isEngineBuildBinary(%buildIdx) || %buildIdx $= "")
+   {
+      ManagerWizardWindow.addWizardPage(CreateNewProjectSelectCompilerPage);
+   }
+      
+   ManagerWizardWindow.addWizardPage(CreateNewProjectPage0);
+   ManagerWizardWindow.addWizardPage(CreateNewProjectPage1);
+   ManagerWizardWindow.addWizardPage(CreateNewProjectPage2);   
+   ManagerWizardWindow.addWizardPage(CreateNewProjectPage3);
+   
+   ManagerWizardWindow.setStep(0); 
+   
+   ManagerWizardWindow.hidden = false;  
+   ManagerWizardWindow.selectWindow();
+}
+
+//==============================================================================
+// Project Generation
+//==============================================================================
+function changeProjectPathBtn::onClick(%this)
+{
+   %dlg = new OpenFolderDialog()
+   {
+      Title = "Select Project Folder";
+      Filters = "";
+      DefaultFile = "./";
+      ChangePath = false;
+      MustExist = true;
+      MultipleFiles = false;
+   };
+
+   %dlg.DefaultPath = "./";
+   if(%dlg.Execute())
+   {
+      %path = makeFullPath(%dlg.FileName);
+      
+      $newProjectDestPath = %path;
+      CreateNewProjectPage0-->projectPathTxt.setText($newProjectDestPath);
+   }
+
+   %dlg.delete();
+}
+
+function CreateNewProjectSelectBuildPage::openPage(%this)
+{
+   %this-->engineBuildList.clear();
+   
+   %buildCount = getEngineBuildCount();
+   for(%i=0; %i < %buildCount; %i++)
+   {
+      %buildName = getEngineBuildNameByIndex(%i);
+
+      %this-->engineBuildList.add(%buildName, %i); 
+   }
+}
+
+function CreateNewProjectSelectCompilerPage::openPage(%this)
+{
+   if($newProjectEngineBuildId $= "")
+   {
+      if(CreateNewProjectSelectBuildPage-->engineBuildList.getText() $= "")
+      {
+          ManagerWizardWindow.previousStep();
+          return;
+      }
+          
+      $newProjectEngineBuildId = CreateNewProjectSelectBuildPage-->engineBuildList.getSelected();
+   }
+   
+   if(isEngineBuildBinary($newProjectEngineBuildId))
+   {
+      ManagerWizardWindow.nextStep();
+      return;
+   }
+   
+   %this-->compilerList.clear();
+   
+   %compilerId = -1;
+   if($platform $= "windows")
+   {
+      %this-->compilerList.add("Visual Studio 17 2022", %compilerId++); 
+      %this-->compilerList.add("Visual Studio 16 2019", %compilerId++); 
+   }
+   
+   %this-->compilerList.add("Unix Makefiles", %compilerId++);
+   
+   %this-->compilerList.setSelected(0);
+}
+
+function CreateNewProjectPage0::openPage(%this)
+{
+   if($newProjectEngineBuildId $= "")
+   {
+      if(CreateNewProjectSelectBuildPage-->engineBuildList.getText() $= "")
+      {
+          ManagerWizardWindow.previousStep();
+          return;
+      }
+          
+      $newProjectEngineBuildId = CreateNewProjectSelectBuildPage-->engineBuildList.getSelected();
+   }
+   
+   if(!isEngineBuildBinary($newProjectEngineBuildId))
+   {
+      if($newProjectCompiler $= "")
+      {
+         if(CreateNewProjectSelectCompilerPage-->compilerList.getText() $= "")
+         {
+             ManagerWizardWindow.previousStep();
+             return;
+         }
+         else
+         {
+            $newProjectCompiler = CreateNewProjectSelectCompilerPage-->compilerList.getText();
+         }
+      }
+   }
+   
+   ManagerWizardWindow.text = "Create New Project";
+   CreateNewProjectPage0-->projectName.setText("");
+   CreateNewProjectPage0-->projectPathTxt.setText("");
+}
+
+function makeCmakeOptionCard(%label, %settingsVar, %tooltip, %command)
+{
+   %settingsCardHeight = 30;
+   
+   %buttonWidth = 50;
+   %buttonPad = 6;
+      
+   %ctrl = new GuiControl() {
+      position = "0 0";
+      extent = MainViewStack.extent.x SPC %settingsCardHeight;
+      horizSizing = "width";
+      vertSizing = "bottom";
+      profile = GuiPanelProfile;
+      minExtent = "100" SPC %settingsCardHeight;
+      settingsVar = %settingsVar;
+      
+      new GuiTextCtrl() { 
+         text = "   " @ %label;
+         position = "0 0";
+         extent = MainViewStack.extent.x - %buttonWidth SPC %settingsCardHeight;
+         horizSizing = "width";
+         vertSizing = "bottom";
+         profile = MenuHeaderText;
+         tooltip = %tooltip;
+         internalName = "label";
+         margin = "0 10 0 0";
+      };
+      
+      new GuiCheckBoxCtrl() {
+         position = MainViewStack.extent.x - (%buttonWidth/2) SPC (%settingsCardHeight / 2) - 10;
+         extent = "20 20";
+         horizSizing = "left";
+         vertSizing = "center";
+         buttonMargin = "40 2";
+         profile = GuiMenuCheckboxProfile;
+         text = "";
+         internalName = "optionsButton";
+         command = %command;
+         variable = %settingsVar;
+      };
+   };
+   
+   %ctrl-->optionsButton.setStateOn(getVariable(%settingsVar));
+   
+   if(%tooltip !$= "")
+   {
+      %ctrl-->label.extent = MainViewStack.extent.x - %buttonWidth SPC (%settingsCardHeight / 2);
+      
+      %tooltip = new GuiMLTextCtrl() { 
+         class = "SettingsTooltip";
+         text = %tooltip;
+         position = "20" SPC (%settingsCardHeight / 2);
+         extent = MainViewStack.extent.x - %buttonWidth - 20 SPC (%settingsCardHeight / 2);
+         horizSizing = "width";
+         vertSizing = "bottom";
+         profile = MenuBodyText;
+         internalName = "tooltip";
+         margin = "0 10 0 0";
+      };
+      
+      %ctrl.add(%tooltip);
+   }
+   
+   return %ctrl;
+}
+
+function CreateNewProjectPage1::openPage(%this)
+{
+   if(CreateNewProjectPage0-->projectName.getText() $= "" || $newProjectDestPath $= "")
+   {
+      ManagerWizardWindow.previousStep();
+      return;
+   }
+      
+   $TorqueManager::newProjectName = CreateNewProjectPage0-->projectName.getText();
+   
+   //If we're a binary build, we don't do these
+   if(isEngineBuildBinary($newProjectEngineBuildId))
+   {
+      ManagerWizardWindow.nextStep();
+      return;
+   }
+   
+   $newProjectEnableD3D = true;
+   $newProjectEnableOGL = true;
+   $newProjectEnablePhysX = false;
+   $newProjectEnableBullet = false;
+   $newProjectEnableSQLite = false;
+   
+   %this-->cmakeOptionsList.clear();
+   
+   if($platform !$= "windows")
+   {
+      $newProjectEnableD3D = false;
+   }
+   else
+   {
+      %option = makeCmakeOptionCard("Enable D3D11", "$newProjectEnableD3D", "Enables support for the D3D 11 Render API");
+      %this-->cmakeOptionsList.add(%option);
+   }
+   
+   //Non-windows platforms HAVE to use OGL
+   if($platform $= "windows")
+   {
+      %option = makeCmakeOptionCard("Enable OpenGL", "$newProjectEnableOGL", "Enables support for the OpenGL Render API");
+      %this-->cmakeOptionsList.add(%option);
+   }
+   
+   %option = makeCmakeOptionCard("Enable PhysX", "$newProjectEnablePhysX", "Enables support for the PhysX Physics Library");
+   %this-->cmakeOptionsList.add(%option);
+   
+   %option = makeCmakeOptionCard("Enable Bullet", "$newProjectEnableBullet", "Enables support for the Bullet Physics Library");
+   %this-->cmakeOptionsList.add(%option);
+   
+   %option = makeCmakeOptionCard("Enable SQLite", "$newProjectEnableSQLite", "Enables support for the SQLite databases");
+   %this-->cmakeOptionsList.add(%option);
+}
+
+function CreateNewProjectPage2::openPage(%this)
+{
+   %this-->installingModuleList.clear();
+   
+   %toInstallCount = 0;
+   %moduleCount = getModuleCount();
+   for(%i=0; %i < %moduleCount; %i++)
+   {
+      %moduleName = getModuleNameByIndex(%i);
+      %localPath = getModuleLocalPathByIndex(%i);
+      %installInNewProj = getModuleInstallInNewProj(%i);
+      
+      setVariable("$TorqueManager::installModule[" @ %i @ "]",%installInNewProj);
+      
+      if(%installInNewProj && %localPath !$= "" && IsDirectory(%localPath))
+      {
+         %option = makeCmakeOptionCard(%moduleName, "$TorqueManager::installModule[" @%i @ "]", "");
+         %this-->installingModuleList.add(%option);
+         %toInstallCount++;
+      }  
+   }
+   
+   if(%toInstallCount == 0)
+   {
+      ManagerWizardWindow.nextStep(); 
+      return; 
+   }
+   
+}
+
+function CreateNewProjectPage3::openPage(%this)
+{
+   %this-->projectGenCompleteTxt.setHidden(true);
+   ManagerWizardWindow-->nextButton.setActive(false);  
+   
+   Canvas.repaint();
+   
+   %projName = $TorqueManager::newProjectName;
+   
+   %engineBuildPath = getEngineBuildLocalPathByIndex($newProjectEngineBuildId);
+   %newProjectPath = $newProjectDestPath;
+   
+   %fullProjectPath = %newProjectPath @ "/";
+   
+   //sanitize the paths to be sure
+   %engineBuildPath = strReplace(%engineBuildPath, "//", "/");
+   %fullProjectPath = strReplace(%fullProjectPath, "//", "/");
+   
+   if(!IsDirectory(%fullProjectPath))
+   {
+      createPath(%fullProjectPath);
+   }
+   
+   if(!isEngineBuildBinary($newProjectEngineBuildId))
+   {
+      %buildPath = %fullProjectPath @ "Build/"; 
+      if(!IsDirectory(%buildPath))
+      {
+         createPath(%buildPath);
+      } 
+   }
+   
+   if(!copyProjectFolder(%engineBuildPath, %fullProjectPath))
+   {
+      MessageBoxOK("Failed.", "Failed to copy the Engine Build to the new project path. Please try again.");  
+      ManagerWizardWindow.setHidden(true);
+      return;
+   }
+   
+   %projectCount = getProjectCount();
+      
+   PMSettings.setValue("Projects/" @ %projectCount @ "/projectName", $TorqueManager::newProjectName);
+   PMSettings.setValue("Projects/" @ %projectCount @ "/localPath", %fullProjectPath);
+   PMSettings.setValue("Projects/" @ %projectCount @ "/buildPath", %buildPath);
+   PMSettings.setValue("Projects/" @ %projectCount @ "/previewImage", "");
+   PMSettings.setValue("Projects/" @ %projectCount @ "/buildId", $newProjectEngineBuildId);
+    
+   if(!isEngineBuildBinary($newProjectEngineBuildId))
+   {
+      //Install modules
+      %moduleCount = getModuleCount();
+      for(%m=0; %m < %moduleCount; %m++)
+      {
+         %doInstall = getVariable("$TorqueManager::installModule[" @ %m @ "]");
+         if(%doInstall)
+         {
+            %moduleName = getModuleNameByIndex(%m);
+            %localPath = getModuleLocalPathByIndex(%m);
+            %moduleInstallPath = %fullProjectPath @ "/My Projects/" @ %projName @ "/game/data/" @ %moduleName @ "/";
+            if(!IsDirectory(%moduleInstallPath))
+            {
+               createPath(%moduleInstallPath);  
+            }
+            
+            if(!copyProjectFolder(%localPath, %moduleInstallPath))
+            {
+               error("Failed to install module " @ %moduleName @ " from path: " @ %localPath @ " to new project: " @ %projName);
+            }
+         }
+      }
+      
+      //run cmake
+      if(isDirectory("core/libs/cmake/bin"))
+      {
+         %commandString = "cd \"" @ makeFullPath(getMainDotCsDir()) @ "/core/libs/cmake/bin/\"";
+         %commandString = %commandString @ " && cmake.exe ";
+      }
+      else
+      {
+         %commandString = "cmake ";
+      }
+      %commandString = %commandString @ "-S \"" @ %fullProjectPath @ "\" ";
+      %commandString = %commandString @ "-B \"" @ %buildPath @ "\" ";
+      %commandString = %commandString @ "-G \"" @ $newProjectCompiler @ "\" ";
+      %commandString = %commandString @ "-DTORQUE_APP_NAME:STRING=" @ %projName @ " -DCMAKE_GENERATOR_PLATFORM=x64";
+      /*if($newProjectEnableD3D)
+      {
+         %commandString = %commandString @ "-DTORQUE_D3D11=ON";  
+      }
+      if($newProjectEnableOGL)
+      {
+         %commandString = %commandString @ "-DTORQUE_OPENGL=ON";  
+      }
+      if($newProjectEnablePhysX)
+      {
+         %commandString = %commandString @ "-DTORQUE_PHYSICS_PHYSX3=ON";  
+      }
+      if($newProjectEnableBullet)
+      {
+         %commandString = %commandString @ "-DTORQUE_PHYSICS_BULLET=ON";  
+      }
+      if($newProjectEnableSQLite)
+      {
+         %commandString = %commandString @ "-DTORQUE_SQLITE=ON";  
+      }*/
+      systemCommand(%commandString, "makeProjectComplete");  
+   }
+   else
+   {
+      //Do the rename on the exe, torsion, etc files to comply them to the new project name  
+      %appPath = findFirstFile( %fullProjectPath @ "/*.exe", false);
+      if(%appPath !$= "")
+      {
+         %binaryName = fileBase(%appPath);
+         
+         %newAppPath = strReplace(%appPath, %binaryName, %projName);
+         pathCopy(%appPath, %newAppPath);
+         fileDelete(%appPath);
+      }
+      
+      %appPath = findFirstFile( %fullProjectPath @ "/*.torsion", false);
+      if(%appPath !$= "")
+      {
+         %binaryName = fileBase(%appPath);
+         
+         %newAppPath = strReplace(%appPath, %binaryName, %projName);
+         pathCopy(%appPath, %newAppPath);
+         fileDelete(%appPath);
+      }
+      
+      //Install modules
+      %moduleCount = getModuleCount();
+      for(%m=0; %m < %moduleCount; %m++)
+      {
+         %doInstall = getVariable("$TorqueManager::installModule[" @ %m @ "]");
+         if(%doInstall)
+         {
+            %moduleName = getModuleNameByIndex(%m);
+            %localPath = getModuleLocalPathByIndex(%m);
+            %moduleInstallPath = %fullProjectPath @ "/data/" @ %moduleName @ "/";
+            if(!IsDirectory(%moduleInstallPath))
+            {
+               createPath(%moduleInstallPath);  
+            }
+            
+            if(!copyProjectFolder(%localPath, %moduleInstallPath))
+            {
+               error("Failed to install module " @ %moduleName @ " from path: " @ %localPath @ " to new project: " @ %projName);
+            }
+         }
+      }
+      
+      makeProjectComplete();
+   }
+}
+
+function makeProjectComplete(%resultCode)
+{
+   saveData();
+   
+   CreateNewProjectPage3-->projectGenCompleteTxt.setHidden(false);
+   ManagerWizardWindow-->nextButton.setActive(true);
+   
+   openSolutionFile(%resultCode);
+   
+   //Hop over to the projects page so we can check out our new project
+   populateProjectsList();
+}
+
+function openSolutionFile(%resultCode)
+{
+   if(!isEngineBuildBinary($newProjectEngineBuildId))
+   {
+      %projectId = getProjectIndexByName($TorqueManager::newProjectName);
+      %buildPath = getProjectBuildPathByIndex(%projectId);
+      
+      if($platform $= "windows")
+      {
+         %solutionPath = %buildPath @ $TorqueManager::newProjectName @ ".sln";
+         if(isFile(%solutionPath))
+         {
+            %openCommand = "cd \"" @ %buildPath @ "\" && start " @ $TorqueManager::newProjectName @ ".sln";
+            systemCommand(%openCommand, "");
+         }
+      }
+   }
+   else
+   {
+      %projectId = getProjectIndexByName($TorqueManager::newProjectName);
+      %localPath = getProjectLocalPathByIndex(%projectId);
+      
+      if(%localPath !$= "" && isDirectory(%localPath))
+      {
+         if($platform $= "windows")
+         {
+            %cmd = "cd \"" @ makeFullPath(%localPath) @ "\" && start .";
+            systemCommand(%cmd);
+         }
+         else
+         {
+            %cmd = "open \"" @ makeFullPath(%localPath) @ "\"";
+            systemCommand(%cmd);
+         }
+      }
+   }   
+}

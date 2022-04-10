@@ -1,0 +1,147 @@
+function openActionMenu(%button)
+{
+   %globalPos = %button.getGlobalPosition();
+   %position = %globalPos.x - 5 SPC %globalPos.y + %button.extent.y - 1;
+   
+   if(!isObject(ActionMenuDropdown))
+   {
+      new GuiContainer(ActionMenuDropdown){
+         Profile = "GuiActionMenuProfile";
+         Position = %position;
+         Extent = "175" SPC 6;
+         isContainer = "1";
+         visible = "0"; 
+            
+         new GuiStackControl(ActionMenuArray) {
+           canSaveDynamicFields = "0";
+            Enabled = "1";
+            isContainer = "1";
+            Profile = "GuiSolidDefaultProfile";
+            HorizSizing = "width";
+            VertSizing = "height";
+            Position = "5 5";
+            Extent = "170" SPC getWord(ActionMenuDropdown.extent, 1)-5;
+            MinExtent = "8 2";
+            canSave = "1";
+            Visible = "1";
+            tooltipprofile = "ToolsGuiToolTipProfile";
+            hovertime = "1000";
+            padding = "3";
+         };
+         
+         new GuiDecoyCtrl(ActionMenuDropdownDecoy) {
+            profile = "GuiActionMenuProfile";
+            horizSizing = "right";
+            vertSizing = "bottom";
+            position = "0 0";
+            extent = ActionMenuArray.extent.x + 5 SPC ActionMenuArray.extent.y + 5;
+            minExtent = "8 8";
+            visible = "1";
+            helpTag = "0";
+            useMouseEvents = "1";
+            isDecoy = "1";
+         };
+      };  
+      
+      MainMenuGui.add(ActionMenuDropdown);
+   }
+   else
+   {
+      ActionMenuArray.clear();
+      ActionMenuDropdown.Extent = "175" SPC 6;
+      ActionMenuArray.Extent = "170" SPC getWord(ActionMenuDropdown.extent, 1)-5;
+      ActionMenuDropdownDecoy.Extent = ActionMenuArray.extent.x + 5 SPC ActionMenuArray.extent.y + 5;
+   }
+   
+   if(%position.x > MainMenuGui.extent.x / 2)
+   {
+      //if this is done on the right half, nudge the popup window left
+      %position.x -= ActionMenuDropdown.Extent.x - %button.extent.x;
+   }
+   
+   ActionMenuDropdown.position = %position;
+   ActionMenuDropdownToggle();
+}
+
+function addActionMenuEntry(%imageAsset, %labelText, %command, %tooltip)
+{
+   %btn = new GuiIconButtonCtrl() {
+      class = "ActionMenuButton";
+      canSaveDynamicFields = "0";
+      Enabled = "1";
+      isContainer = "0";
+      Profile = "ToolsGuiIconButtonProfile";
+      HorizSizing = "right";
+      VertSizing = "bottom";
+      Position = "5 5";
+      Extent = "170 25";
+      MinExtent = "8 8";
+      canSave = "1";
+      Visible = "1";
+      Command = %command;
+      tooltipprofile = "ToolsGuiToolTipProfile";
+      ToolTip = %tooltip;
+      hovertime = "1000";
+      bitmapAsset = %imageAsset;
+      groupNum = "0";
+      text = %labelText;
+      buttonMargin = "0 4";
+      textMargin = "38";
+      groupNum = "0";
+      buttonType = "RadioButton";
+      useMouseEvents = "0";
+      iconLocation = "Left";
+      textLocation = "Left";
+      sizeIconToButton = "1";
+      makeIconSquare = "1";
+   };  
+   
+   ActionMenuArray.add(%btn);
+   
+   updateActionMapExtents();
+}
+
+function updateActionMapExtents()
+{
+   ActionMenuDropdown.Extent.y += 27;
+   ActionMenuArray.Extent.y = ActionMenuDropdown.extent.y - 5;
+   ActionMenuDropdownDecoy.Extent.y = ActionMenuArray.extent.y + 5;
+}
+
+function ActionMenuDropdownToggle()
+{
+   if ( ActionMenuDropdown.visible  )
+   {
+      //EWorldEditorToggleCamera.setStateOn(0);
+      ActionMenuDropdownDecoy.setVisible(false);
+      ActionMenuDropdownDecoy.setActive(false);
+      ActionMenuDropdown.setVisible(false);
+   }
+   else
+   {
+      ActionMenuDropdown.setVisible(true);
+      ActionMenuDropdownDecoy.setVisible(true);
+      ActionMenuDropdownDecoy.setActive(true);
+      //EWorldEditorToggleCamera.setStateOn(1);
+   }
+}
+
+function CloseActionMenu()
+{
+   if(isObject(ActionMenuDropdownDecoy))
+   {
+      ActionMenuDropdownDecoy.setVisible(false);
+      ActionMenuDropdownDecoy.setActive(false);
+      ActionMenuDropdown.setVisible(false);
+   }
+}
+
+function ActionMenuDropdownDecoy::onMouseLeave()
+{
+   ActionMenuDropdownToggle();
+}
+
+function ActionMenuButton::onClick(%this)
+{
+   ActionMenuDropdownToggle();
+}

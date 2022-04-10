@@ -1,0 +1,3 @@
+<ImageAsset
+    AssetName="cloud_image"
+    imageFile="@assetFile=cloud.png"/>

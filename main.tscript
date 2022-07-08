@@ -1,5 +1,5 @@
-$Core::windowIcon = "data/icon.png";
-$Core::splashWindowImage = "data/splash.png";
+$Core::windowIcon = "core/icon.png";
+$Core::splashWindowImage = "core/splash.png";
 
 // Console does something.
 setLogMode(6);
@@ -8,8 +8,7 @@ setLogMode(6);
 trace(false);
 
 // Set the name of our application
-$appName = "TorqueManagerUpdoot";
-
+$appName = "TorqueManager";
 $pref::Video::deviceMode = 0;
 
 //-----------------------------------------------------------------------------
@@ -29,16 +28,17 @@ else
 {
     $Video::forceDisplayAdapter = -1;
 }
-    
-//-----------------------------------------------------------------------------
-// Load any gameplay modules
-ModuleDatabase.scanModules( "data", false );
-ModuleDatabase.LoadGroup( "Game" );
 
-//Finally, initialize the client/server structure
-ModuleDatabase.LoadExplicit( "Core_ClientServer" );
+//load prefs
+exec( "core/defaults." @ $TorqueScriptFileExtension );
+$prefPath = getPrefpath();
+if ( isFile($prefPath @ "/clientPrefs." @ $TorqueScriptFileExtension ) )
+   exec( $prefPath @ "/clientPrefs." @ $TorqueScriptFileExtension );
+   
+callOnModules("initClient");
 
 Canvas.setContent(MainMenuGui);
+//testFormBuild();
 
 if ( ($Server::Dedicated == false) && ($platform $= "windows") )
     closeSplashWindow();

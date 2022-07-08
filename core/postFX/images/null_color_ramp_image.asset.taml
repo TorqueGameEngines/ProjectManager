@@ -1,8 +1,0 @@
-<ImageAsset
-    canSave="true"
-    canSaveDynamicFields="true"
-    AssetName="null_color_ramp_image"
-    imageFile="@assetFile=null_color_ramp.png"
-    UseMips="true"
-    isHDRImage="false"
-    imageType="Albedo" />

@@ -1,0 +1,104 @@
+function populateEngineBuildsList()
+{
+   MainMenuHeaderText.text = "Engine Builds";
+   
+   MainViewStack.hidden = false;
+   MainViewStack.clear();
+   
+   %dlRoll = new GuiRolloutCtrl() { 
+      caption = "Downloaded";
+      extent = MainViewStack.extent.x SPC 40;
+      profile = GuiMenuRolloutProfile;
+      margin = "5 5 5 5";
+      
+      new GuiStackControl() {
+         internalName = "stack";
+         padding = "5";
+      };
+   };
+   
+   MainViewStack.add(%dlRoll);
+   
+   %availRoll = new GuiRolloutCtrl() { 
+      caption = "Available For Download";
+      extent = MainViewStack.extent.x SPC 40;
+      profile = GuiMenuRolloutProfile;
+      margin = "5 5 5 5";
+      
+      new GuiStackControl() {
+         internalName = "stack";
+         padding = "5";
+      };
+   };
+   
+   MainViewStack.add(%availRoll);
+   
+   %buildCount = getEngineBuildCount();
+   for(%i=1; %i <= %buildCount; %i++)
+   {
+      %bld = getEngineBuild(%i);
+      
+      //%bld.dump();
+      
+      if(%bld.buildName !$= "")
+      {
+         %tags = getEngineBuildTags(%i);
+         
+         if(MainMenuGui.searchText !$= "")
+         {
+            if(!strIsMatchExpr("*" @ MainMenuGui.searchText @ "*", %bld.buildName) &&
+               !isSearchTextInTags(%tags, MainMenuGui.searchText))
+               continue;
+         }
+         
+         %ctrl = createCard(%bld.buildName, %bld.localPath, %tags, "", true, "navToEngineBuildProps("@%bld@");");
+         
+         if(%bld.localPath !$= "" && IsDirectory(%bld.localPath))
+         {
+            //%ctrl-->actionButton.command = "startCreateNewProjectWizard(" @ %i @ ");";
+            %dlRoll-->stack.add(%ctrl);
+         }
+         else if(%bld.localPath !$= "" && !IsDirectory(%bld.localPath))
+         {
+            //%ctrl-->actionButton.command = "findEngineBuild(" @ %i @ ");";
+            //%ctrl-->ActionButton.setBitmap("ManagerUI:zoom_image");
+            
+            %dlRoll-->stack.add(%ctrl);
+         }
+         else if(%bld.gitPath !$= "")
+         {
+            //%ctrl-->actionButton.setBitmap("ManagerUI:download_image");
+            %availRoll-->stack.add(%ctrl);
+            
+            //%ctrl-->actionButton.command = "downloadEngineBuild(" @ %i @ ");";
+         }
+      }
+   }
+   
+   //Now add our action panel buttons
+   ActionButtonPanelList.clear();
+   
+   %actionBtn = new GuiIconButtonCtrl()
+   {
+      position = "0 0";
+      extent = "100 45";
+      profile = GuiMenuButtonProfile;
+      buttonMargin = "0 -10";
+      bitmapAsset = "ManagerUI:plus_image";
+      iconLocation = "Center";
+      sizeIconToButton = true;
+      makeIconSquare = true;
+      textLocation = "Bottom";
+      text = "Add New";
+      command = "openNewEngineBuildWizard();";
+   };
+   
+   ActionButtonPanelList.add(%actionBtn);
+}
+
+function navToEngineBuildProps(%bld)
+{
+   MainMenuGui.currentPage = "EngineBuildPropertiesPage";
+   $CurrentEngineBuild = %bld;
+   populateEngineBuildProperties();  
+}

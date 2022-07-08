@@ -1,6 +1,0 @@
-<PostEffectAsset
-    canSave="true"
-    canSaveDynamicFields="true"
-    AssetName="flashPostFX"
-    scriptFile="@assetFile=flashPostFX.cs"
-    VersionId="1" />

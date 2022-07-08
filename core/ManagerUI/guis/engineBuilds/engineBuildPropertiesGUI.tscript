@@ -1,0 +1,61 @@
+function populateEngineBuildProperties()
+{
+   MainMenuHeaderText.text = "Engine Builds > Properties";
+   
+   MainViewStack.hidden = false;
+   MainViewStack.clear();
+   
+   %enabled = !$CurrentEngineBuild.isDefault;
+   MainViewStack.add(createCard("Engine Build Name", $CurrentEngineBuild.buildName, "", "The name of this engine build", false, 
+         "", %enabled ? "Button" : "", "", "Change", "changeEngineBuildName($CurrentEngineBuild);"));
+         
+   MainViewStack.add(createCard("Git Repository URL", $CurrentEngineBuild.gitPath, "", "The URL for the git repo this build is from", false, 
+         "", %enabled ? "Button" : "", "", "Change", "changeEngineBuildGitPath($CurrentEngineBuild);"));
+         
+   MainViewStack.add(createCard("Git Repository Branch", $CurrentEngineBuild.branchName, "", "The name of the branch in the git repo this build is from", false, 
+         "", %enabled ? "Button" : "", "", "Change", "changeEngineBuildBranchName($CurrentEngineBuild);"));
+         
+   MainViewStack.add(createCard("Local File Path", $CurrentEngineBuild.localPath, "", "The local file path for this engine build on the current machine", false, 
+         "", "Button", "", "Change", "changeEngineBuildLocalPath($CurrentEngineBuild);"));
+         
+   MainViewStack.add(createCard("Is Binary Build", "", "", "Does this engine build have precompiled binaries", false, 
+         "", "Checkbox", "", $CurrentEngineBuild.isBinary, "changeEngineBuildIsBinary($CurrentEngineBuild);"));
+         
+   MainViewStack.add(createCard("Windows Executable Name", $CurrentEngineBuild.winAppName, "", "The name of the windows executable file", false, 
+         "", %enabled ? "Button" : "", "", "Change", "changeEngineBuildWindowsExec($CurrentEngineBuild);"));
+   MainViewStack.add(createCard("Linux Executable Name", $CurrentEngineBuild.linAppName, "", "The name of the linux executable file", false, 
+         "", %enabled ? "Button" : "", "", "Change", "changeEngineBuildLinuxExec($CurrentEngineBuild);"));
+   MainViewStack.add(createCard("MacOS Executable Name", $CurrentEngineBuild.macAppName, "", "The name of the macOS executable file", false, 
+         "", %enabled ? "Button" : "", "", "Change", "changeEngineBuildMacOSExec($CurrentEngineBuild);"));
+         
+   //
+   //Now add our action panel buttons
+   ActionButtonPanelList.clear();
+   
+   if($CurrentEngineBuild.localPath !$= "")
+   {
+      AddActionButton("ManagerUI:plus_image", "New Project", "", "");
+      AddActionButton("ManagerUI:download_image", "Pull Updates", "", "");
+      AddActionButton("ManagerUI:trashcan_image", "Delete Local Copy", "", "");
+   }
+   else
+      AddActionButton("ManagerUI:download_image", "Download", "downloadEngineBuild($CurrentEngineBuild);", "");
+   
+   if(!$CurrentEngineBuild.isDefault)
+      AddActionButton("ManagerUI:trashcan_image", "Remove From List", "", "");
+   
+   if(!$CurrentEngineBuild.gitPath !$= "")
+   {
+      AddActionButton("ManagerUI:share1_image", "Visit Repo Page", "openEngineBuildGitPage($CurrentEngineBuild);", 
+               "Visit the repository page of this engine build.");
+               
+      AddActionButton("ManagerUI:share1_image", "Visit Issues Page", "openEngineBuildIssuesPage($CurrentEngineBuild);", 
+            "Visit the issues page of this engine build.");
+   }
+}
+
+function changeEngineBuildIsBinary(%bld)
+{
+     %bld.isBinary = !%bld.isBinary;
+     MainMenuGui.refresh();
+}

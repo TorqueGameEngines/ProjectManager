@@ -23,7 +23,7 @@
 // Set font cache path if it doesn't already exist.
 if($Gui::fontCacheDirectory $= "")
 {
-   $Gui::fontCacheDirectory = expandFilename("data/cache/fonts");
+   $Gui::fontCacheDirectory = expandFilename("core/cache/fonts");
 }
 
 $TextMediumEmphasisColor = "200 200 200";
@@ -81,6 +81,12 @@ new GuiControlProfile (GuiDefaultProfile)
    cursorColor = "0 0 0 255";
 };
 
+if(!isObject(GuiNonModalDefaultProfile))
+new GuiControlProfile (GuiNonModalDefaultProfile : GuiDefaultProfile)
+{
+   modal = false;
+};
+
 if(!isObject(GuiToolTipProfile))
 new GuiControlProfile (GuiToolTipProfile)
 {
@@ -118,7 +124,6 @@ new GuiControlProfile (GuiWindowProfile)
    category = "Core";
 };
 
-
 if(!isObject(GuiTextEditProfile))
 new GuiControlProfile(GuiTextEditProfile)
 {
@@ -138,26 +143,6 @@ new GuiControlProfile(GuiTextEditProfile)
    justify = "left";
    tab = true;
    canKeyFocus = true;   
-   category = "Core";
-};
-
-if(!isObject(GuiMenuScrollProfile))
-new GuiControlProfile(GuiMenuScrollProfile)
-{
-   opaque = true;
-   fontColor = $TextMediumEmphasisColor;
-   fontColorHL = $TextMediumEmphasisColor;
-   fontColorNA = $TextDisabledColor;
-   fontColorSEL = $TextMediumEmphasisColor;
-   fillColor = "40 40 40";
-   fillColorHL = "56 56 56";
-   fillColorNA = "40 40 40";
-   borderColor = "87 87 87";
-   borderColorNA = "0 0 0";
-   borderColorHL = "255 255 255";
-   border = true;
-   bitmapAsset = "Core_GUI:scrollBar_image";
-   hasBitmapArray = true;
    category = "Core";
 };
 

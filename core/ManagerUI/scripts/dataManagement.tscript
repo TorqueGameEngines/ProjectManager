@@ -1,0 +1,518 @@
+function saveData()
+{
+   PMSettings.write();  
+}
+
+//==============================================================================
+// Enigne Build Data Management
+//==============================================================================
+function incrementEngineBuildCount()
+{
+   %currentBuildCount = PMSettings.value("EngineBuilds/NumBuilds", "0");
+   %currentBuildCount++;
+   
+   PMSettings.setValue("EngineBuilds/NumBuilds", %currentBuildCount);
+   
+   return %currentBuildCount;
+}
+
+function getEngineBuildCount()
+{
+   %buildCount = PMSettings.value("EngineBuilds/NumBuilds", "0");
+   return %buildCount;
+}
+
+function findEngineBuildByName(%name)
+{
+   %buildCount = getEngineBuildCount();
+   if(%buildCount == 0)
+      return -1;
+   
+   for(%i=1; %i <= %buildCount; %i++)
+   {
+      if(PMSettings.value("EngineBuilds/" @ %i @ "/buildName", "") $= %name)
+         return %i;
+   }
+   
+   return -1;
+}
+
+function getEngineBuild(%index)
+{
+   %buildCount = getEngineBuildCount();
+   if(%index < 0 || %index > %buildCount)
+      return 0;
+      
+   %bld = new ScriptObject();
+   %bld.buildId = %index;
+   %bld.buildName = PMSettings.value("EngineBuilds/" @ %index @ "/buildName", "");
+   %bld.gitPath = PMSettings.value("EngineBuilds/" @ %index @ "/gitPath", "");
+   %bld.branchName = PMSettings.value("EngineBuilds/" @ %index @ "/branchName", "");
+   %bld.localPath = PMSettings.value("EngineBuilds/" @ %index @ "/localPath", "");
+   %bld.isDefault = PMSettings.value("EngineBuilds/" @ %index @ "/isDefault", "");
+   %bld.isBinary = PMSettings.value("EngineBuilds/" @ %index @ "/isBinary", "");
+   %bld.tags = PMSettings.value("EngineBuilds/" @ %index @ "/tags", "");
+   %bld.winAppName = PMSettings.value("EngineBuilds/" @ %index @ "/winAppName", "");
+   
+   return %bld;
+}
+
+function saveEngineBuild(%build)
+{
+   %index = %build.buildId;
+   
+   %buildCount = getEngineBuildCount();
+   if(%index < 0 || %index > %buildCount)
+      return 0;
+   
+   PMSettings.setValue("EngineBuilds/" @ %index @ "/buildName", %build.buildName);
+   PMSettings.setValue("EngineBuilds/" @ %index @ "/gitPath", %build.gitPath);
+   PMSettings.setValue("EngineBuilds/" @ %index @ "/branchName", %build.branchName);
+   PMSettings.setValue("EngineBuilds/" @ %index @ "/localPath", %build.localPath);
+   PMSettings.setValue("EngineBuilds/" @ %index @ "/isDefault", %build.isDefault);
+   PMSettings.setValue("EngineBuilds/" @ %index @ "/isBinary", %build.isBinary);
+   PMSettings.setValue("EngineBuilds/" @ %index @ "/tags", %build.tags);
+   PMSettings.setValue("EngineBuilds/" @ %index @ "/winAppName", %build.winAppName);
+}
+
+function setupDefaultEngineBuilds()
+{
+   if(findEngineBuildByName("Torque 3D 4.0 Preview Source") == -1)
+   {
+      %buildId = incrementEngineBuildCount();
+      
+      %bld = new ScriptObject();
+      %bld.buildId = %buildId;
+      %bld.buildName = "Torque 3D 4.0 Preview Source";
+      %bld.gitPath = "https://github.com/TorqueGameEngines/Torque3D";
+      %bld.branchName = "Preview4_0";
+      %bld.localPath = "";
+      %bld.isDefault = 1;
+      %bld.isBinary = 0;
+
+      saveEngineBuild(%bld);
+   }
+
+   if(findEngineBuildByName("Torque 3D 4.0 Preview Binaries") == -1)
+   {
+      %buildId = incrementEngineBuildCount();
+      
+      %bld = new ScriptObject();
+      %bld.buildId = %buildId;
+      %bld.buildName = "Torque 3D 4.0 Preview Binaries";
+      %bld.gitPath = "https://github.com/TorqueGameEngines/Torque3D-Binaries";
+      %bld.branchName = "Torque3D_win_20220409";
+      %bld.localPath = "";
+      %bld.isDefault = 1;
+      %bld.isBinary = 1;
+      %bld.winAppName = "Torque3D.exe";
+
+      saveEngineBuild(%bld);
+   }
+   
+   saveData();
+}
+
+function getEngineBuildTags(%index)
+{
+   %bld = getEngineBuild(%index);
+   
+   %tags = %bld.tags;
+   
+   %tokenCount = getTokenCount(%tags, ",;");
+   
+   if(%bld.isBinary)
+   {
+      if(%tokenCount == 0)
+         %tags = "Binary";
+      else
+         %tags = %tags @ ",Binary";
+      
+      %tokenCount++;
+   }
+   else
+   {
+      if(%tokenCount == 0)
+         %tags = "Source";
+      else
+         %tags = %tags @ ",Source";
+         
+      %tokenCount++;
+   }
+   
+   if(%bld.isDefault)
+   {
+      if(%tokenCount == 0)
+         %tags = "Default";
+      else
+         %tags = %tags @ ",Default";
+         
+      %tokenCount++;
+   }
+   
+   return %tags;
+}
+
+//==============================================================================
+// Module Data Management
+//==============================================================================
+function getModuleCount()
+{
+   %count = 0;
+   %idx = 0;
+   while(%idx != -1)
+   {
+      if(PMSettings.value("Modules/" @ %idx @ "/moduleName", "") !$= "")
+      {
+         %idx++;
+         %count++;
+      }
+      else
+      {
+         %idx = -1;
+      }
+   }
+   
+   return %count;
+}
+
+function getModuleNameByIndex(%index)
+{
+   %count = getModuleCount();
+   if(%index < 0 || %index >= %count)
+      return "";
+      
+   return PMSettings.value("Modules/" @ %index @ "/moduleName", "");
+}
+
+function setModuleNameByIndex(%index, %name)
+{
+   %count = getModuleCount();
+   if(%index < 0 || %index >= %count)
+      return;
+      
+   PMSettings.setValue("Modules/" @ %index @ "/moduleName", %name);
+}
+
+function getModuleGitPathByIndex(%index)
+{
+   %count = getModuleCount();
+   if(%index < 0 || %index >= %count)
+      return "";
+      
+   return PMSettings.value("Modules/" @ %index @ "/gitPath", "");
+}
+
+function setModuleGitPathByIndex(%index, %gitPath)
+{
+   %count = getModuleCount();
+   if(%index < 0 || %index >= %count)
+      return;
+      
+   PMSettings.setValue("Modules/" @ %index @ "/gitPath", %gitPath);
+}
+
+function getModuleBranchNameByIndex(%index)
+{
+   %count = getModuleCount();
+   if(%index < 0 || %index >= %count)
+      return "";
+      
+   return PMSettings.value("Modules/" @ %index @ "/branchName", "");
+}
+
+function setModuleBranchNameByIndex(%index, %branchName)
+{
+   %count = getModuleCount();
+   if(%index < 0 || %index >= %count)
+      return;
+      
+   PMSettings.setValue("Modules/" @ %index @ "/branchName", %branchName);
+}
+
+function getModuleLocalPathByIndex(%index)
+{
+   %count = getModuleCount();
+   if(%index < 0 || %index >= %count)
+      return "";
+      
+   return PMSettings.value("Modules/" @ %index @ "/localPath", "");
+}
+
+function setModuleLocalPathByIndex(%index, %localPath)
+{
+   %count = getModuleCount();
+   if(%index < 0 || %index >= %count)
+      return;
+      
+   PMSettings.setValue("Modules/" @ %index @ "/localPath", %localPath);
+}
+
+function setModuleLocalPath(%index, %path)
+{
+   %count = getModuleCount();
+   if(%index < 0 || %index >= %count)
+      return "";
+      
+   PMSettings.setValue("Modules/" @ %index @ "/localPath", %path);
+}
+
+function setModuleName(%index, %newName)
+{
+   %count = getModuleCount();
+   if(%index < 0 || %index >= %count)
+      return "";
+      
+   PMSettings.setValue("Modules/" @ %index @ "/moduleName", %newName);
+}
+
+function isModuleDefault(%index)
+{
+   %count = getModuleCount();
+   if(%index < 0 || %index >= %count)
+      return "";
+      
+   return PMSettings.value("Modules/" @ %index @ "/isDefault", "");
+}
+
+function getModuleIndexByName(%buildName)
+{
+   %count = getModuleCount();
+   for(%i=0; %i < %count; %i++)
+   {
+      if(PMSettings.value("Modules/" @ %i @ "/moduleName", "") $= %buildName)
+         return %i;
+   }
+   
+   return -1;
+}
+
+function setupDefaultModules()
+{
+   if(getModuleIndexByName("Action-Adventure Kit") == -1)
+   {
+      %bldCount = getModuleCount();
+      
+      PMSettings.setValue("Modules/" @ %bldCount @ "/gitPath", "https://github.com/Torque3DResources/AAK");
+      PMSettings.setValue("Modules/" @ %bldCount @ "/moduleName", "Action-Adventure Kit");
+      PMSettings.setValue("Modules/" @ %bldCount @ "/branchName", "");
+      PMSettings.setValue("Modules/" @ %bldCount @ "/localPath", "");
+      PMSettings.setValue("Modules/" @ %bldCount @ "/isDefault", "1");
+   }
+   
+   if(getModuleIndexByName("FPS Gameplay") == -1)
+   {
+      %bldCount = getModuleCount();
+      
+      PMSettings.setValue("Modules/" @ %bldCount @ "/gitPath", "https://github.com/Torque3DResources/FPSGameplay");
+      PMSettings.setValue("Modules/" @ %bldCount @ "/moduleName", "FPS Gameplay");
+      PMSettings.setValue("Modules/" @ %bldCount @ "/branchName", "");
+      PMSettings.setValue("Modules/" @ %bldCount @ "/localPath", "");
+      PMSettings.setValue("Modules/" @ %bldCount @ "/isDefault", "1");
+   }
+   
+   saveData();
+}
+
+function getModuleDownloadPath()
+{
+   %downloadPath = PMSettings.value("Settings/Modules/downloadPath", "{ManagerDir}/Modules/");
+   
+   %downloadPath = strreplace(%downloadPath, "{ManagerDir}", getMainDotCsDir());
+   return %downloadPath;
+}
+
+function getModuleInstallInNewProj(%index)
+{
+   %count = getModuleCount();
+   if(%index < 0 || %index >= %count)
+      return "";
+      
+   return PMSettings.value("Modules/" @ %index @ "/installInNewProj", "0");
+}
+
+function setModuleInstallInNewProj(%index, %set)
+{
+   %count = getModuleCount();
+   if(%index < 0 || %index >= %count)
+      return;
+      
+   PMSettings.setValue("Modules/" @ %index @ "/installInNewProj", %set);
+}
+
+function getModuleTags(%index)
+{
+   %tags = PMSettings.value("Modules/" @ %index @ "/tags", "");
+   %installStatus = getModuleInstallInNewProj(%index);
+   %isDefault = isModuleDefault(%index);
+   
+   %tokenCount = getTokenCount(%tags, ",;");
+   
+   if(%installStatus)
+   {
+      if(%tokenCount == 0)
+         %tags = "Install in New Projects";
+      else
+         %tags = %tags @ ",Install in New Projects";
+      
+      %tokenCount++;
+   }
+   
+   if(%isDefault)
+   {
+      if(%tokenCount == 0)
+         %tags = "Default";
+      else
+         %tags = %tags @ ",Default";
+         
+      %tokenCount++;
+   }
+   
+   return %tags;
+}
+//==============================================================================
+// Project Data Management
+//==============================================================================
+function getProjectCount()
+{
+   %count = 0;
+   %idx = 0;
+   while(%idx != -1)
+   {
+      if(PMSettings.value("Projects/" @ %idx @ "/projectName", "") !$= "")
+      {
+         %idx++;
+         %count++;
+      }
+      else
+      {
+         %idx = -1;
+      }
+   }
+   
+   return %count;
+}
+
+function getProjectNameByIndex(%index)
+{
+   %count = getProjectCount();
+   if(%index < 0 || %index >= %count)
+      return "";
+      
+   return PMSettings.value("Projects/" @ %index @ "/projectName", "");
+}
+
+function setProjectNameByIndex(%index, %name)
+{
+   %count = getProjectCount();
+   if(%index < 0 || %index >= %count)
+      return;
+      
+   PMSettings.setValue("Projects/" @ %index @ "/projectName", %name);
+}
+
+function getProjectBuildPathByIndex(%index)
+{
+   %count = getProjectCount();
+   if(%index < 0 || %index >= %count)
+      return "";
+      
+   return PMSettings.value("Projects/" @ %index @ "/buildPath", "");
+}
+
+function setProjectBuildPathByIndex(%index, %localPath)
+{
+   %count = getProjectCount();
+   if(%index < 0 || %index >= %count)
+      return;
+      
+   PMSettings.setValue("Projects/" @ %index @ "/buildPath", %localPath);
+}
+
+function getProjectLocalPathByIndex(%index)
+{
+   %count = getProjectCount();
+   if(%index < 0 || %index >= %count)
+      return "";
+      
+   return PMSettings.value("Projects/" @ %index @ "/localPath", "");
+}
+
+function setProjectLocalPathByIndex(%index, %localPath)
+{
+   %count = getProjectCount();
+   if(%index < 0 || %index >= %count)
+      return;
+      
+   PMSettings.setValue("Projects/" @ %index @ "/localPath", %localPath);
+}
+
+function setProjectLocalPath(%index, %path)
+{
+   %count = getProjectCount();
+   if(%index < 0 || %index >= %count)
+      return "";
+      
+   PMSettings.setValue("Projects/" @ %index @ "/localPath", %path);
+}
+
+function setProjectName(%index, %newName)
+{
+   %count = getProjectCount();
+   if(%index < 0 || %index >= %count)
+      return "";
+      
+   PMSettings.setValue("Projects/" @ %index @ "/projectName", %newName);
+}
+
+function getProjectIndexByName(%buildName)
+{
+   %count = getProjectCount();
+   for(%i=0; %i < %count; %i++)
+   {
+      if(PMSettings.value("Projects/" @ %i @ "/projectName", "") $= %buildName)
+         return %i;
+   }
+   
+   return -1;
+}
+
+function getProjectPreviewImageByIndex(%index)
+{
+   %count = getProjectCount();
+   if(%index < 0 || %index >= %count)
+      return "";
+      
+   return PMSettings.value("Projects/" @ %index @ "/previewImage", "");
+}
+
+function setProjectPreviewImageByIndex(%index, %localPath)
+{
+   %count = getProjectCount();
+   if(%index < 0 || %index >= %count)
+      return;
+      
+   //generate a cached version here, then bind and associate it
+      
+   PMSettings.setValue("Projects/" @ %index @ "/previewImage", %localPath);
+}
+
+function getProjectBuildIdByIndex(%index)
+{
+   %count = getProjectCount();
+   if(%index < 0 || %index >= %count)
+      return "";
+      
+   return PMSettings.value("Projects/" @ %index @ "/buildId", "");
+}
+
+function setProjectBuildIdByIndex(%index, %id)
+{
+   %count = getProjectCount();
+   if(%index < 0 || %index >= %count)
+      return;
+      
+   //generate a cached version here, then bind and associate it
+      
+   PMSettings.setValue("Projects/" @ %index @ "/buildId", %id);
+}

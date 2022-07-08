@@ -23,9 +23,9 @@ function CoreModule::onCreate(%this)
    ModuleDatabase.LoadExplicit( "Core_Utility" );
    ModuleDatabase.LoadExplicit( "Core_GUI" );
    ModuleDatabase.LoadExplicit( "Core_Lighting" );
-   ModuleDatabase.LoadExplicit( "Core_SFX" );
-   ModuleDatabase.LoadExplicit( "Core_PostFX" );
-   ModuleDatabase.LoadExplicit( "Core_GameObjects" );
+   //ModuleDatabase.LoadExplicit( "Core_SFX" );
+   //ModuleDatabase.LoadExplicit( "Core_PostFX" );
+   //ModuleDatabase.LoadExplicit( "Core_GameObjects" );
    
    exec("data/defaults." @ $TorqueScriptFileExtension);
    %prefPath = getPrefpath();
@@ -49,9 +49,9 @@ function CoreModule::onCreate(%this)
    ModuleDatabase.LoadExplicit( "Core_Console" );
    
    // Init the physics plugin.
-   physicsInit();
+   //physicsInit();
 
-   sfxStartup();
+   //sfxStartup();
 
    // Set up networking.
    setNetPort(0);
@@ -66,8 +66,7 @@ function CoreModule::onCreate(%this)
          exec("tools/main." @ $TorqueScriptFileExtension);
    }
    
-   //This is used to build the remap keybind sets for the different actionMaps.
-   $RemapCount = 0;
+   ModuleDatabase.LoadExplicit( "ManagerUI" );
 }
 
 function CoreModule::onDestroy(%this)

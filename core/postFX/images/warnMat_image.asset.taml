@@ -1,8 +1,0 @@
-<ImageAsset
-    canSave="true"
-    canSaveDynamicFields="true"
-    AssetName="warnMat_image"
-    imageFile="@assetFile=warnMat.dds"
-    UseMips="true"
-    isHDRImage="false"
-    imageType="Albedo" />

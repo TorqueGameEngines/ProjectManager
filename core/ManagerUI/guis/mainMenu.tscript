@@ -1,0 +1,1236 @@
+function MainMenuGui::onAdd(%this)
+{
+   $activeControllerName = "K&M"; //default input type
+   
+   %this.isRefreshing = false;
+}
+
+function MainMenuGui::onWake(%this)
+{
+   $TorqueManager::needToInstallGit = false;
+   $TorqueManager::needToInstallCmake = false;
+   
+   //Set up our settings object
+   %prefPath = getPrefpath();
+   
+   new Settings(PMSettings) { 
+      file = %prefPath @ "/data.xml"; 
+   };
+   
+   PMSettings.read();
+   
+   setupDefaultEngineBuilds();
+   
+   setupDefaultModules();
+   
+   setupWizard();
+   
+   //check we have git and cmake commandline access
+   //if we have the portable libraries in the core directory, we can skip the real
+   //checks
+   //if not, we need to check that the commands are installed and usable
+   //ensure these work on linux and mac as well
+   if(!isDirectory("core/libs/cmake/bin/"))
+   {
+      systemCommand("where cmake >nul 2>nul", "cmakeCheck");
+   }
+   
+   if(!isDirectory("core/libs/git/bin/"))
+   {
+      systemCommand("where git >nul 2>nul", "gitCheck");
+   }
+   
+   //If needed, we'll run the setup for these
+   setupCommandLinePrograms();
+   
+   $showMenubar = true;
+   
+   //MainPanel.setRootPage(RootPage);
+   
+   //display the page
+   %this.goToPage("EngineBuildPage");
+}
+
+function MainMenuGui::onSleep(%this)
+{
+   MainMenuButtonHolder.hidden = true;
+}
+
+function MainMenuGui::refresh(%this)
+{
+   if(%this.isRefreshing)
+      return;
+      
+   %this.isRefreshing = true;
+      
+   %this.schedule(32, doRefresh);
+}
+
+function MainMenuGui::doRefresh(%this)
+{
+   %this.isRefreshing = false;
+   
+   if(%this.currentPage $= "EngineBuildPage")
+      populateEngineBuildsList();
+   else if(%this.currentPage $= "EngineBuildPropertiesPage")
+      populateEngineBuildProperties();
+   else if(MainMenuHeaderText.text $= "Prototype Kits")
+      populateRPKsList();
+   else if(MainMenuHeaderText.text $= "Modules")
+      populateModulesList();
+   else if(MainMenuHeaderText.text $= "Projects")
+      populateProjectsList();
+   else if(MainMenuHeaderText.text $= "Settings")
+      populateSettingsList();
+      
+   CloseActionMenu();  
+}
+
+function MainMenuGui::goToPage(%this, %pageName)
+{
+   %this.currentPage = "EngineBuildPage";
+   %this.refresh();
+}
+
+//
+function makeModuleCard(%moduleId)
+{
+   %moduleCount = getEngineBuildCount();
+   
+   if(%moduleCount <= %moduleId)
+   {
+      error("Invalid Module index: " @ %moduleId);
+      return;
+   }
+   
+   %gitPath = PMSettings.value("Modules/" @ %moduleId @ "/gitPath", "");
+   %buildName = PMSettings.value("Modules/" @ %moduleId @ "/moduleName", "");
+   %branchName = PMSettings.value("Modules/" @ %moduleId @ "/branchName", "");
+   %localPath = PMSettings.value("Modules/" @ %moduleId @ "/localPath", "");
+   %isDefault = PMSettings.value("Modules/" @ %moduleId @ "/isDefault", "0");
+   %installStatus = PMSettings.value("Modules/" @ %moduleId @ "/installInNewProj", "0");
+   
+   %tooltip = "Engine Build Name: " @ %buildName @ "\n" @
+                            "Git Path: " @ %gitPath @ "\n" @
+                            "Git Branch: " @ %branchName @ "\n" @
+                            "Local Path: " @ %localPath @ "\n" @
+                            "Install in new Projects: " @ %installStatus @ "\n" @
+                            "Is A Default Build: " @ %isDefault;
+      
+   %cardRowHeight = 20;
+   %ModuleCardHeight = %cardRowHeight * 2;
+   %ModuleCardButtonSize = 40;
+   
+   //We'll use this to adjust the height, so calc this ahead of time
+   //run through metadata tags
+   %tags = getModuleTags(%moduleId);
+   %tokenCount = getTokenCount(%tags, ",;");
+   
+   %ModuleTextHeight = %ModuleCardHeight;
+   
+   if(%tokenCount != 0)
+   {
+      %ModuleCardHeight += %cardRowHeight + 5; //add another 'row' to the card
+   }
+   
+   %ctrl = new GuiControl() {
+      position = "0 0";
+      extent = MainViewStack.extent.x SPC %ModuleCardHeight;
+      horizSizing = "width";
+      vertSizing = "bottom";
+      profile = GuiMenuButtonProfile;
+      minExtent = "100" SPC %ModuleCardHeight;
+      
+      new GuiTextCtrl() { 
+         text = "  " @ %buildName;
+         position = "0 0";
+         extent = MainViewStack.extent.x -(%ModuleCardButtonSize * 2) SPC %ModuleTextHeight;
+         horizSizing = "width";
+         vertSizing = "bottom";
+         profile = MenuSubHeaderText;
+         tooltip = %tooltip;
+         internalName = "label";
+         margin = "0 10 0 0";
+         tooltip = %tooltip;
+      };
+      
+      new GuiBitmapButtonCtrl() {
+         bitmapAsset = "ManagerUI:plus_image";
+         position = MainViewStack.extent.x - (%ModuleCardButtonSize * 2) SPC %cardRowHeight / 2;
+         extent = %ModuleCardButtonSize SPC %ModuleCardButtonSize;
+         horizSizing = "left";
+         vertSizing = "center";
+         profile = GuiMenuButtonProfile;
+         tooltip = "Create a new Project using this build";
+         internalName = "actionButton";
+      };
+      
+      new GuiBitmapButtonCtrl() {
+         bitmapAsset = "ManagerUI:moreOptions_image";
+         position = MainViewStack.extent.x - %ModuleCardButtonSize SPC %cardRowHeight / 2;
+         extent = %ModuleCardButtonSize SPC %ModuleCardButtonSize;
+         horizSizing = "left";
+         vertSizing = "center";
+         profile = GuiMenuButtonProfile;
+         internalName = "optionsButton";
+      };
+   };
+   
+   if(%localPath !$= "")
+   {
+      //add the additional text line for our local path display  
+      
+      %ctrl-->label.extent.y = %cardRowHeight;
+      
+      %tooltip = new GuiMLTextCtrl() { 
+         text = %localPath;
+         position = "0" SPC %cardRowHeight;
+         extent = MainViewStack.extent.x - (%ModuleCardButtonSize * 2) SPC %cardRowHeight;
+         horizSizing = "width";
+         vertSizing = "bottom";
+         profile = MenuBodyText;
+         internalName = "tooltip";
+         tooltip = %tooltip;
+         margin = "0 10 0 0";
+      };
+      
+      %ctrl.add(%tooltip);
+   }
+   
+   if(%tokenCount != 0)
+   {
+      %tagList = new GuiStackControl(){
+         stackingType = "Horizontal";
+         position = 10 SPC 40;
+         extent = MainViewStack.extent.x - (%ModuleCardButtonSize * 2) SPC %cardRowHeight;
+         padding = "5";  
+      };
+      
+      %ctrl.add(%tagList);
+
+      for(%t=0; %t < %tokenCount; %t++)
+      {
+         %tag = getToken(%tags, ",;", %t);
+         %tagWidth = GuiTagButtonProfile.getStringWidth(%tag) + 5;
+         %tagBtn = new GuiButtonCtrl() {
+            profile = GuiTagButtonProfile;
+            text = %tag;
+            position = "0 0";
+            extent = %tagWidth SPC %cardRowHeight;
+            active = false;
+         };
+         
+         %tagList.add(%tagBtn);
+      }
+   }
+         
+   return %ctrl;
+}
+
+function populateModulesList()
+{
+   MainViewStack.hidden = false;
+   MainViewStack.clear();
+   
+   MainMenuGui.setActionBarVisible(true);
+   
+   MainMenuGui.mode = "Modules";
+   
+   ActionButtonPanelList.clear();
+   
+   MainMenuHeaderText.setText("Modules");
+   
+   %dlRoll = new GuiRolloutCtrl() { 
+      caption = "Downloaded";
+      extent = MainViewStack.extent.x SPC 40;
+      profile = GuiMenuRolloutProfile;
+      margin = "5 5 5 5";
+      
+      new GuiStackControl() {
+         internalName = "stack";
+         padding = "5";
+      };
+   };
+   
+   MainViewStack.add(%dlRoll);
+   
+   %availRoll = new GuiRolloutCtrl() { 
+      caption = "Available For Download";
+      extent = MainViewStack.extent.x SPC 40;
+      profile = GuiMenuRolloutProfile;
+      margin = "5 5 5 5";
+      
+      new GuiStackControl() {
+         internalName = "stack";
+         padding = "5";
+      };
+   };
+   
+   MainViewStack.add(%availRoll);
+   
+   %defaultModuleCount = getModuleCount();
+   for(%i=0; %i < %defaultModuleCount; %i++)
+   {
+      %moduleName = PMSettings.value("Modules/" @ %i @ "/moduleName", "");
+      %localPath = PMSettings.value("Modules/" @ %i @ "/localPath", "");
+      %gitPath = PMSettings.value("Modules/" @ %i @ "/gitPath", "");
+      if(%moduleName !$= "")
+      {
+         if(MainMenuGui.searchText !$= "")
+         {
+            %tags = getModuleTags(%i);
+            if(!strIsMatchExpr("*" @ MainMenuGui.searchText @ "*", %moduleName) &&
+               !isSearchTextInTags(%tags, MainMenuGui.searchText))
+               continue;
+         }
+            
+         %ctrl = makeModuleCard(%i);
+         
+         if(%localPath !$= "" && IsDirectory(%localPath))
+         {
+            %ctrl-->actionButton.command = "openInstallModuleWizard(" @ %i @ ");";
+            
+            %dlRoll-->stack.add(%ctrl);
+         }
+         else if(%localPath !$= "" && !IsDirectory(%localPath))
+         {
+            %ctrl-->actionButton.command = "findModulePath(" @ %i @ ");";
+            
+            %ctrl-->ActionButton.setBitmap("ManagerUI:zoom_image");
+            
+            %dlRoll-->stack.add(%ctrl);
+         }
+         else if(%gitPath !$= "")
+         {
+            %ctrl-->actionButton.setBitmap("ManagerUI:download_image");
+            %availRoll-->stack.add(%ctrl);
+            
+            %ctrl-->actionButton.command = "downloadModule(" @ %i @ ");";
+         }
+         
+         %isDefault = isModuleDefault(%i);
+         %ctrl-->optionsButton.Command = "openModuleActionMenu(" @ %i @ ", " @ %ctrl-->optionsButton @ ");";
+      }
+   }
+   
+   //Now add our action panel buttons
+   ActionButtonPanelList.clear();
+   
+   %actionBtn = new GuiIconButtonCtrl()
+   {
+      position = "0 0";
+      extent = "100 45";
+      profile = GuiMenuButtonProfile;
+      buttonMargin = "0 -10";
+      bitmapAsset = "ManagerUI:plus_image";
+      iconLocation = "Center";
+      sizeIconToButton = true;
+      makeIconSquare = true;
+      textLocation = "Bottom";
+      text = "Add New";
+      command = "openNewModuleWizard();";
+   };
+   
+   ActionButtonPanelList.add(%actionBtn);
+}
+
+//
+function makeRPKCard(%buildName)
+{
+   %editOptions = makeEngineBuildCard("");
+   
+   %editOptions-->newProjectButton.hidden = true;
+   
+   %roll = new GuiRolloutCtrl() { 
+      caption = %buildName;
+      extent = MainViewStack.extent.x SPC 40;
+      profile = GuiMenuRolloutProfile;
+      margin = "5 5 5 5";
+      
+      new GuiStackControl() {
+         internalName = "stack";
+         padding = "5";
+      };
+   };
+   
+   %roll-->stack.add(%editOptions);
+   
+   return %roll;
+}
+
+function makeRPKModuleListCard(%buildName)
+{
+   %engineBuildCardHeight = 40;
+   
+   %ctrl = new GuiControl() {
+      position = "0 0";
+      extent = MainViewStack.extent.x SPC %engineBuildCardHeight;
+      horizSizing = "width";
+      vertSizing = "bottom";
+      profile = GuiMenuButtonProfile;
+      minExtent = "100" SPC %engineBuildCardHeight;
+      
+      new GuiBitmapButtonCtrl() {
+         bitmapAsset = "ManagerUI:checkmark_image";
+         position = "0 0";
+         extent = %engineBuildCardHeight SPC %engineBuildCardHeight;
+         horizSizing = "right";
+         vertSizing = "bottom";
+         profile = GuiMenuButtonProfile;
+         tooltip = "Create a new Project using this build";
+         internalName = "newProjectButton";
+      };
+      
+      new GuiTextCtrl() { 
+         text = "   " @ %buildName;
+         position = %engineBuildCardHeight SPC 0;
+         extent = MainViewStack.extent.x -(%engineBuildCardHeight * 2) SPC %engineBuildCardHeight;
+         horizSizing = "width";
+         vertSizing = "bottom";
+         profile = MenuHeaderText;
+         tooltip = "This project is super neato\nVery neato indeed\nThe mostest neatoest";
+         internalName = "engineBuildText";
+         margin = "0 10 0 0";
+      };
+      
+      new GuiBitmapButtonCtrl() {
+         bitmapAsset = "ManagerUI:moreOptions_image";
+         position = MainViewStack.extent.x - %engineBuildCardHeight SPC 0;
+         extent = %engineBuildCardHeight SPC %engineBuildCardHeight;
+         horizSizing = "left";
+         vertSizing = "bottom";
+         profile = GuiMenuButtonProfile;
+         internalName = "optionsButton";
+      };
+   };
+   
+   return %ctrl;
+}
+
+function populateRPKsList()
+{
+   MainViewStack.hidden = false;
+   MainViewStack.clear();
+   
+   ActionButtonPanelList.clear();
+   
+   MainMenuHeaderText.setText("Prototype Kits");
+   
+   %module = makeRPKModuleListCard("Module Name");
+   %moduleTwo = makeRPKModuleListCard("Other Module Name");
+   
+   %roll = makeRPKCard("FPS Gameplay Kit");
+   
+   %roll-->stack.add(%module);
+   %roll-->stack.add(%moduleTwo);
+   
+   MainViewStack.add(%roll);
+}
+
+//
+
+function makeProjectCard(%projectId)
+{
+   %projectCount = getProjectCount();
+   
+   if(%projectCount <= %projectId)
+   {
+      error("Invalid Project index: " @ %projectId);
+      return;
+   }
+   
+   %projectName = getProjectNameByIndex(%projectId);
+   %localPath = getProjectLocalPathByIndex(%projectId);
+   %previewImage = getProjectPreviewImageByIndex(%projectId);
+   
+   if(%previewImage $= "")
+   {
+      %previewImage = "ManagerUI:BlankProjectImage_image";
+   }
+   
+   %tooltip = "Project Name: " @ %projectName @ "\n" @
+                            "Local Path: " @ %localPath;
+                            
+   %cardHeight = 100;
+   %rowHeight = 20;
+   %buttonHeight = 40;
+   %projectImageWidth = 150;
+   %pad = 10;
+   
+   %ctrl = new GuiControl() {
+      position = "0 0";
+      extent = MainViewStack.extent.x SPC %cardHeight;
+      horizSizing = "width";
+      vertSizing = "bottom";
+      profile = GuiMenuButtonProfile;
+      minExtent = "100" SPC %cardHeight;
+      
+      new GuiBitmapCtrl() {
+         bitmapAsset = %previewImage;
+         position = 5 SPC 5;
+         extent = %projectImageWidth - %pad SPC %cardHeight - %pad;
+         horizSizing = "right";
+         vertSizing = "center";
+         profile = GuiMenuButtonProfile;
+         tooltip = "";
+         internalName = "newProjectButton";
+      };
+      
+      new GuiTextCtrl() { 
+         text = %projectName;
+         position = %projectImageWidth SPC %pad;
+         extent = MainViewStack.extent.x -(%buttonHeight * 2) - %projectImageWidth SPC %rowHeight;
+         horizSizing = "width";
+         vertSizing = "bottom";
+         profile = MenuSubHeaderText;
+         tooltip = "This project is super neato\nVery neato indeed\nThe mostest neatoest";
+         internalName = "projectNameText";
+         margin = "0 10 0 0";
+      };
+      
+      new GuiTextCtrl() { 
+         text = %localPath;
+         position = %projectImageWidth SPC %rowHeight + %pad;
+         extent = MainViewStack.extent.x -(%buttonHeight * 2) - %projectImageWidth SPC %rowHeight;
+         horizSizing = "width";
+         vertSizing = "bottom";
+         profile = MenuBodyText;
+         internalName = "localPathText";
+         margin = "0 10 0 0";
+      };
+      
+      new GuiBitmapButtonCtrl() {
+         bitmapAsset = "ManagerUI:right_image";
+         position = MainViewStack.extent.x - (%buttonHeight * 2) SPC ((%cardHeight - %buttonHeight) / 2);
+         extent = %buttonHeight SPC %buttonHeight;
+         horizSizing = "left";
+         vertSizing = "center";
+         profile = GuiMenuButtonProfile;
+         tooltip = "Launch the Project";
+         internalName = "actionButton";
+      };
+      
+      new GuiBitmapButtonCtrl() {
+         bitmapAsset = "ManagerUI:moreOptions_image";
+         position = MainViewStack.extent.x - %buttonHeight SPC ((%cardHeight - %buttonHeight) / 2);
+         extent = %buttonHeight SPC %buttonHeight;
+         horizSizing = "left";
+         vertSizing = "center";
+         profile = GuiMenuButtonProfile;
+         internalName = "optionsButton";
+      };
+   };
+   
+   %ctrl-->optionsButton.Command = "openProjectActionMenu("@%projectId@", " @ %ctrl-->optionsButton @ ");";
+   
+   //We'll use this to adjust the height, so calc this ahead of time
+   //run through metadata tags
+   %buildId = getProjectBuildIdByIndex(%projectId);
+   %tags = getEngineBuildTags(%buildId);
+   %tokenCount = getTokenCount(%tags, ",;");
+   if(%tokenCount != 0)
+   {
+      %tagList = new GuiStackControl(){
+         stackingType = "Horizontal";
+         position = %projectImageWidth SPC %rowHeight * 3;
+         extent = MainViewStack.extent.x -(%buttonHeight * 2) - %projectImageWidth SPC %rowHeight;
+         padding = "5";  
+      };
+      
+      %ctrl.add(%tagList);
+      
+      for(%t=0; %t < %tokenCount; %t++)
+      {
+         %tag = getToken(%tags, ",;", %t);
+         
+         if(%tag $= "Default")
+            continue;
+            
+         %tagWidth = GuiTagButtonProfile.getStringWidth(%tag) + 5;
+         %tagBtn = new GuiButtonCtrl() {
+            profile = GuiTagButtonProfile;
+            text = %tag;
+            position = "0 0";
+            extent = %tagWidth SPC %rowHeight;
+            active = false;
+         };
+         
+         %tagList.add(%tagBtn);
+      }
+   }
+   
+   return %ctrl;
+}
+
+function populateProjectsList()
+{
+   MainViewStack.hidden = false;
+   MainViewStack.clear();
+   
+   MainMenuGui.setActionBarVisible(true);
+   
+   MainMenuGui.mode = "Projects";
+   
+   ActionButtonPanelList.clear();
+   
+   MainMenuHeaderText.setText("Projects");
+   
+   %projectCount = getProjectCount();
+   for(%i=0; %i < %projectCount; %i++)
+   {
+      %projectName = getProjectNameByIndex(%i);
+      %localPath = getProjectLocalPathByIndex(%i);
+      
+      if(%projectName !$= "")
+      {
+         if(MainMenuGui.searchText !$= "")
+         {
+            if(!strIsMatchExpr("*" @ MainMenuGui.searchText @ "*", %projectName))
+               continue;
+         }
+         
+         %proj = makeProjectCard(%i);
+            
+         if(%localPath !$= ""&& IsDirectory(%localPath))
+         {
+            %proj-->ActionButton.command = "runProject(" @ %i @ ");";
+            MainViewStack.add(%proj);
+         }
+         else if(%localPath !$= "" && !IsDirectory(%localPath))
+         {
+            %proj-->actionButton.command = "findProjectPath(" @ %i @ ");";
+            %proj-->ActionButton.setBitmap("ManagerUI:zoom_image");
+            
+            MainViewStack.add(%proj);
+         }
+      }
+   }
+   
+   //Now add our action panel buttons
+   ActionButtonPanelList.clear();
+   
+   %actionBtn = new GuiIconButtonCtrl()
+   {
+      position = "0 0";
+      extent = "100 45";
+      profile = GuiMenuButtonProfile;
+      buttonMargin = "0 -10";
+      bitmapAsset = "ManagerUI:plus_image";
+      iconLocation = "Center";
+      sizeIconToButton = true;
+      makeIconSquare = true;
+      textLocation = "Bottom";
+      text = "Add New";
+      command = "startCreateNewProjectWizard();";
+   };
+   
+   ActionButtonPanelList.add(%actionBtn);
+}
+
+//==============================================================================
+
+function makeSettingsCard(%label, %settingsVar, %type, %defaultValue, %subLabel, %tooltip, %command)
+{
+   %settingsCardHeight = 40;
+   
+   %buttonWidth = 75;
+   %buttonPad = 6;
+      
+   %ctrl = 0;
+   
+   if(%type $= "button")
+   {
+      %ctrl = new GuiControl() {
+         position = "0 0";
+         extent = MainViewStack.extent.x SPC %settingsCardHeight;
+         horizSizing = "width";
+         vertSizing = "bottom";
+         profile = GuiPanelProfile;
+         minExtent = "100" SPC %settingsCardHeight;
+         settingsVar = %settingsVar;
+         
+         new GuiTextCtrl() { 
+            text = "   " @ %label;
+            position = "0 0";
+            extent = MainViewStack.extent.x - %buttonWidth SPC %settingsCardHeight;
+            horizSizing = "width";
+            vertSizing = "bottom";
+            profile = MenuHeaderText;
+            tooltip = %tooltip;
+            internalName = "label";
+            margin = "0 10 0 0";
+         };
+         
+         new GuiButtonCtrl() {
+            position = MainViewStack.extent.x - %buttonWidth SPC %buttonPad;
+            extent = %buttonWidth SPC %settingsCardHeight - (%buttonPad *2);
+            horizSizing = "left";
+            vertSizing = "center";
+            buttonMargin = "40 2";
+            profile = GuiMenuButtonProfile;
+            text = "Change";
+            tooltip = "Change";
+            internalName = "optionsButton";
+            command = %command;
+         };
+      };
+   }
+   else if(%type $= "bool")
+   {
+      %ctrl = new GuiControl() {
+         position = "0 0";
+         extent = MainViewStack.extent.x SPC %settingsCardHeight;
+         horizSizing = "width";
+         vertSizing = "bottom";
+         profile = GuiPanelProfile;
+         minExtent = "100" SPC %settingsCardHeight;
+         settingsVar = %settingsVar;
+         
+         new GuiTextCtrl() { 
+            text = "   " @ %label;
+            position = "0 0";
+            extent = MainViewStack.extent.x - %buttonWidth SPC %settingsCardHeight;
+            horizSizing = "width";
+            vertSizing = "bottom";
+            profile = MenuHeaderText;
+            tooltip = %tooltip;
+            internalName = "label";
+            margin = "0 10 0 0";
+         };
+         
+         new GuiCheckBoxCtrl() {
+            position = MainViewStack.extent.x - (%buttonWidth/2) SPC (%settingsCardHeight / 2) - 10;
+            extent = "20" SPC %settingsCardHeight;
+            horizSizing = "left";
+            vertSizing = "center";
+            buttonMargin = "40 2";
+            profile = GuiMenuCheckboxProfile;
+            text = "";
+            internalName = "optionsButton";
+            command = %command;
+            variable = %settingsVar;
+         };
+      };
+      
+      %ctrl-->optionsButton.setStateOn(%defaultValue);
+   }
+   else if(%type $= "string")
+   {
+      %ctrl = new GuiControl() {
+         position = "0 0";
+         extent = MainViewStack.extent.x SPC %settingsCardHeight;
+         horizSizing = "width";
+         vertSizing = "bottom";
+         profile = GuiPanelProfile;
+         minExtent = "100" SPC %settingsCardHeight;
+         settingsVar = %settingsVar;
+         tooltip = %tooltip;
+         
+         new GuiTextCtrl() { 
+            text = "   " @ %label;
+            position = "0 0";
+            extent = MainViewStack.extent.x - %buttonWidth SPC %settingsCardHeight;
+            horizSizing = "width";
+            vertSizing = "bottom";
+            profile = MenuHeaderText;
+            tooltip = %tooltip;
+            internalName = "label";
+            margin = "0 10 0 0";
+            tooltip = %tooltip;
+         };
+         
+         new GuiButtonCtrl() {
+            position = MainViewStack.extent.x - %buttonWidth SPC %buttonPad;
+            extent = %buttonWidth SPC %settingsCardHeight - (%buttonPad *2);
+            horizSizing = "left";
+            vertSizing = "center";
+            buttonMargin = "40 2";
+            profile = GuiMenuButtonProfile;
+            text = "Edit";
+            tooltip = "Edit";
+            internalName = "optionsButton";
+            command = %command;
+         };
+      };
+   }
+   
+   if(%subLabel !$= "")
+   {
+      %ctrl-->label.extent = MainViewStack.extent.x - %buttonWidth SPC (%settingsCardHeight / 2);
+      
+      %tooltipCtrl = new GuiMLTextCtrl() { 
+         class = "SettingsTooltip";
+         text = %subLabel;
+         position = "0" SPC (%settingsCardHeight / 2);
+         extent = MainViewStack.extent.x - %buttonWidth SPC (%settingsCardHeight / 2);
+         horizSizing = "width";
+         vertSizing = "bottom";
+         profile = MenuBodyText;
+         internalName = "tooltip";
+         margin = "0 10 0 0";
+         tooltip = %tooltip;
+      };
+      
+      %ctrl.add(%tooltipCtrl);
+   }
+   
+   //edit controls added here, taking up half the extent
+   
+   return %ctrl;
+}
+
+function SettingsTooltip::onResize(%this, %x, %y)
+{
+   %stringWidth = %this.profile.getStringWidth(%this.getText());
+   
+   if(%stringWidth > %x)
+   {
+      //too long, so lets ensure that our option is expanded to give it room  
+      %this.getParent().extent.y = 60;
+   } 
+}
+
+function populateSettingsList()
+{
+   MainViewStack.hidden = false;
+   MainViewStack.clear();
+   
+   MainMenuGui.setActionBarVisible(false);
+   
+   ActionButtonPanelList.clear();
+   
+   MainMenuHeaderText.setText("Settings");
+   
+   //
+   %downloadPath = PMSettings.value("Settings/EngineBuilds/downloadPath", "{ManagerDir}/EngineBuilds/");
+   %field = makeSettingsCard("Engine Build Download Path", "$TorqueManager::engineBuildDLPath", "button", %downloadPath, %downloadPath,
+      "The path for the engine builds that are downloaded to be placed in. Can use '{ManagerDir}' as a special keyword to ensure it is always the Manager's current filepath",
+      "changeEngineBuildDownloadPath();");
+   MainViewStack.add(%field);
+   
+   //
+   %downloadPath = PMSettings.value("Settings/Modules/downloadPath", "{ManagerDir}/Modules/");
+   %field = makeSettingsCard("Modules Download Path", "$TorqueManager::moduleDLPath", "button", %downloadPath, %downloadPath,
+      "The path for the modules that are downloaded to be placed in. Can use '{ManagerDir}' as a special keyword to ensure it is always the Manager's current filepath",
+      "changeModuleDownloadPath();");
+   MainViewStack.add(%field);
+   
+   //%field = makeSettingsCard("Always Install Modules on New Project", $TorqueManager::alwaysInstallModules, "bool", false, 
+   //   "Indicates if modules should be marked as being 'Install on new project' by default.");
+   //MainViewStack.add(%field);
+   
+   //%field = makeSettingsCard("Other Option", $TorqueManager::alwaysInstallModules, "bool", false, 
+   //   "");
+   //MainViewStack.add(%field);
+}
+
+function isSearchTextInTags(%tags, %text)
+{
+   %tokenCount = getTokenCount(%tags, ",;");
+   if(%tokenCount == 0)
+      return false;
+      
+   for(%t=0; %t < %tokenCount; %t++)
+   {
+      %tag = getToken(%tags, ",;", %t);
+      
+      if(strIsMatchExpr("*" @ %text @ "*", %tag))
+         return true;
+   }
+   
+   return false;
+}
+//==============================================================================
+//
+//==============================================================================
+function MainMenuGui::setActionBarVisible(%this, %set)
+{
+   %barHeight = 45;
+   
+   if(%set!$= "")
+      $showMenubar = %set;
+   else
+      $showMenubar = !$showMenubar;
+      
+   if($showMenubar)
+   {
+      ActionButtonPanelList.setHidden(false);
+      MainViewScroll.position.y = %barHeight + 2;
+      MainViewScroll.extent.y = MainPanel.extent.y - %barHeight + 2; 
+   }
+   else
+   {
+      ActionButtonPanelList.setHidden(true);
+      MainViewScroll.position.y = 0;
+      MainViewScroll.extent.y = MainPanel.extent.y; 
+   }
+}
+
+//==============================================================================
+//
+//==============================================================================
+function MainMenuGui::onReturnTo(%this)
+{
+   MainMenuButtonList.hidden = false;
+   MainMenuButtonList.setFirstResponder();
+   MainMenuButtonHolder.setActive();
+   MainMenuButtonList.setAsActiveMenuList();
+}
+
+//==============================================================================
+//
+//==============================================================================
+function MainMenuSearchBar::onReturn(%this)
+{
+   %this.clearFirstResponder();
+}
+
+function MainMenuSearchBar::updateSearchText(%this)
+{
+   MainMenuGui.searchText = %this.getText();
+   if(MainMenuGui.searchText !$= "")
+   {
+      MainMenuSearchClearBtn.setBitmap("ManagerUI:cross_image"); 
+   }
+   else
+   {
+      MainMenuSearchClearBtn.setBitmap("ManagerUI:zoom_image");
+   }
+   
+   MainMenuGui.refresh();
+}
+
+function MainMenuSearchBar::clearSearchText(%this)
+{
+   MainMenuGui.searchText = "";
+   %this.setText("");
+   MainMenuSearchClearBtn.setBitmap("ManagerUI:cross_image");
+   //MainMenuSearchClearBtn.setBitmap("ManagerUI:zoom_image"); 
+   
+   %this.clearFirstResponder();
+   
+   MainMenuGui.refresh();
+}
+
+function selectSearchbar()
+{
+   MainMenuSearchBar.setFirstResponder();
+}
+
+function navigateBack()
+{
+   if(MainMenuGui.mode $= "Engine Build Settings")
+      populateEngineBuildsList();
+}
+
+//==============================================================================
+function gitCheck(%resultCode)
+{
+   if(%resultCode == 1)
+   {
+      $TorqueManager::needToInstallGit = true;
+   }
+}
+
+function cmakeCheck(%resultCode)
+{
+   if(%resultCode == 1)
+   {
+      $TorqueManager::needToInstallCmake = true;
+   }
+}
+
+function setupCommandLinePrograms()
+{
+   if(!$TorqueManager::needToInstallGit && !$TorqueManager::needToInstallCmake)
+      return;
+      
+   setupWizard();
+   
+   ManagerWizardWindow.text = "Setup Command Line Programs";
+   
+   if($TorqueManager::needToInstallGit == true)
+      ManagerWizardWindow.addWizardPage(setupGitCmakePage0);
+      
+   if($TorqueManager::needToInstallCmake == true)
+      ManagerWizardWindow.addWizardPage(setupGitCmakePage1);
+   
+   ManagerWizardWindow.setStep(0); 
+   
+   ManagerWizardWindow.hidden = false;  
+   ManagerWizardWindow.selectWindow();
+}
+//==============================================================================
+//
+//==============================================================================
+function ManagerWizardWindow::onVisible(%this, %state)
+{
+   WizardBackground.setHidden(!%state);
+}
+
+//==============================================================================
+//
+//==============================================================================
+function createCard(%mainText, %subText, %tagsList, %tooltip, %hasNavigation, %navCommand, %actionType, %actionData, %actionDefaultValue, %actionCommand, %enabled)
+{
+   if(%enabled $= "")
+      %enabled = true;
+      
+   %cardRowHeight = 20;
+   %engineBuildCardHeight = %cardRowHeight * 2;
+   %engineBuildCardButtonSize = 40;
+   %engineBuildTextHeight = %engineBuildCardHeight;
+   %actionCtrlWidth = 150;
+   
+   %navButtonImage = "";
+   if(%hasNavigation)
+      %navButtonImage = "ManagerUI:nextOption_n_image";
+      
+   %tagCount = getTokenCount(%tagsList, ",;");
+   if(%tagCount != 0)
+   {
+      %engineBuildCardHeight += %cardRowHeight + 5; //add another 'row' to the card
+   }
+      
+   %ctrl = new GuiControl() {
+      position = "0 0";
+      extent = MainViewStack.extent.x SPC %engineBuildCardHeight;
+      horizSizing = "width";
+      vertSizing = "bottom";
+      profile = GuiMenuButtonProfile;
+      minExtent = "100" SPC %engineBuildCardHeight;
+      
+      new GuiIconButtonCtrl() {
+         bitmapAsset = %navButtonImage;
+         command = %navCommand;
+         horizSizing = "width";
+         vertSizing = "height";
+         iconLocation = "Right";
+         sizeIconToButton = true;
+         makeIconSquare = true;
+         buttonMargin = "0 20";
+         position = "0 0";
+         extent = MainViewStack.extent.x SPC %engineBuildCardHeight;
+         profile = GuiMenuButtonProfile;
+         tooltip = %tooltip;
+         internalName = "btn";
+         active = %enabled;
+      };
+      
+      new GuiTextCtrl() { 
+         text = "  " @ %mainText;
+         position = "0 0";
+         extent = MainViewStack.extent.x -(%engineBuildCardButtonSize * 2) SPC %engineBuildTextHeight;
+         horizSizing = "width";
+         vertSizing = "bottom";
+         profile = MenuSubHeaderText;
+         tooltip = %tooltip;
+         internalName = "label";
+         margin = "0 10 0 0";
+         active = %enabled;
+      };
+      
+      /*new GuiBitmapButtonCtrl() {
+         bitmapAsset = "ManagerUI:plus_image";
+         position = MainViewStack.extent.x - (%engineBuildCardButtonSize * 2) SPC %cardRowHeight / 2;
+         extent = %engineBuildCardButtonSize SPC %engineBuildCardButtonSize;
+         horizSizing = "left";
+         vertSizing = "center";
+         profile = GuiMenuButtonProfile;
+         tooltip = "Create a new Project using this build";
+         internalName = "actionButton";
+      };
+      
+      new GuiBitmapButtonCtrl() {
+         bitmapAsset = "ManagerUI:moreOptions_image";
+         position = MainViewStack.extent.x - %engineBuildCardButtonSize SPC %cardRowHeight / 2;
+         extent = %engineBuildCardButtonSize SPC %engineBuildCardButtonSize;
+         horizSizing = "left";
+         vertSizing = "center";
+         profile = GuiMenuButtonProfile;
+         internalName = "optionsButton";
+      };*/
+   };
+   
+   //ensure the height is right for the button
+   %ctrl-->btn.extent = %ctrl.extent;
+   
+   if(%subText !$= "")
+   {
+      //add the additional text line for our local path display  
+      
+      %ctrl-->label.extent.y = %cardRowHeight;
+      
+      %subTextLine = new GuiMLTextCtrl() { 
+         text = %subText;
+         position = "0" SPC %cardRowHeight;
+         extent = MainViewStack.extent.x - (%engineBuildCardButtonSize * 2) SPC %cardRowHeight;
+         horizSizing = "width";
+         vertSizing = "bottom";
+         profile = MenuBodyText;
+         internalName = "tooltip";
+         margin = "0 10 0 0";
+         active = %enabled;
+      };
+      
+      %ctrl.add(%subTextLine);
+   }
+   
+   %tagCount = getTokenCount(%tagsList, ",;");
+   if(%tagCount != 0)
+   {
+      %tagStack = new GuiStackControl(){
+         stackingType = "Horizontal";
+         position = 10 SPC 40;
+         extent = MainViewStack.extent.x -(%engineBuildCardButtonSize * 2) SPC %cardRowHeight;
+         padding = "5";  
+      };
+      
+      %ctrl.add(%tagStack);
+      
+      for(%t=0; %t < %tagCount; %t++)
+      {
+         %tag = getToken(%tagsList, " ,;\t", %t);
+         %tagWidth = GuiTagButtonProfile.getStringWidth(%tag) + 5;
+         %tagBtn = new GuiButtonCtrl() {
+            profile = GuiTagButtonProfile;
+            text = %tag;
+            position = "0 0";
+            extent = %tagWidth SPC %cardRowHeight;
+            active = false;
+         };
+         
+         %tagStack.add(%tagBtn);
+      }
+   }
+   
+   if(%actionType !$= "")
+   {
+      %actionExtent = %actionCtrlWidth SPC %engineBuildTextHeight;
+      %actionPosition = (%ctrl.extent.x - %actionExtent.x) SPC 20;
+      
+      if(%hasNavigation)
+      {
+         //nudge us back so we give the nav arrow room
+         %actionPosition.x -= 20; 
+         %actionExtent.x -= 20;
+      }
+      
+      if(%actionType $= "Button")
+      {
+         %actionPosition.x -= 5;
+         %actionExtent.y = %cardRowHeight;
+         %actionPosition.y = (%ctrl.extent.y/2) - (%actionExtent.y/2);
+         
+         %actionCtrl = new GuiButtonCtrl() {
+            text = %actionDefaultValue;
+            command = %actionCommand;
+            horizSizing = "left";
+            vertSizing = "center";
+            extent = %actionExtent;
+            position = %actionPosition;
+            profile = GuiMenuActionButtonProfile;
+            active = %enabled;
+         };
+         
+         %ctrl.add(%actionCtrl);
+      }
+      else if(%actionType $= "Dropdown")
+      {
+         %actionCtrl = new GuiPopUpMenuCtrlEx() {
+            text = %actionDefaultValue;
+            command = %actionCommand;
+            horizSizing = "left";
+            vertSizing = "center";
+            extent = %actionExtent.x SPC 20;
+            position = %actionPosition.x SPC 20;
+            profile = GuiMenuPopUpMenuProfile;
+            active = %enabled;
+         };
+         
+         %dropdownList = getTokenCount(%actionData, ",");
+         for(%j = 0; %j < %dropdownList; %j++)
+         {
+            %lineText = getToken(%actionData, ",", %j);
+            %actionCtrl.add(%lineText);
+         }
+         
+         %ctrl.add(%actionCtrl);
+         
+         //There's some odd secondary scaling happening after the action control is getting added
+         //so we'll just force the position and stuff here
+         %actionCtrl.extent.y = %cardRowHeight;
+         %actionCtrl.position.y = %cardRowHeight;
+      }
+      else if(%actionType $= "TextEdit")
+      {
+         %actionCtrl = new GuiTextEditCtrl() {
+            text = %actionDefaultValue;
+            command = %actionCommand;
+            horizSizing = "left";
+            vertSizing = "center";
+            extent = %actionExtent;
+            position = %actionPosition;
+            profile = GuiMenuTextEditProfile;
+            active = %enabled;
+         };
+         
+         %ctrl.add(%actionCtrl);
+         
+         //There's some odd secondary scaling happening after the action control is getting added
+         //so we'll just force the position and stuff here
+         %actionCtrl.extent.y = %cardRowHeight;
+         %actionCtrl.position.y = %cardRowHeight;
+      }
+      else if(%actionType $= "Checkbox")
+      {
+         %actionExtent = 50 SPC %engineBuildTextHeight;
+         %actionPosition = (%ctrl.extent.x - %actionExtent.x) - 5 SPC 0;
+         
+         if(%hasNavigation)
+            %actionPosition.x -= 20; 
+         
+         %optionText = %actionDefaultValue ? "On" : "Off";
+      
+         %actionCtrl = new GuiCheckboxCtrl() {
+            text = %optionText;
+            command = %actionCommand;
+            horizSizing = "left";
+            vertSizing = "center";
+            extent = %actionExtent;
+            position = %actionPosition;
+            profile = GuiMenuCheckboxProfile;
+            active = %enabled;
+         };
+         
+         %actionCtrl.setStateOn(%actionDefaultValue);
+         
+         %ctrl.add(%actionCtrl);
+      }
+   }
+   
+   return %ctrl;
+}
+
+//==============================================================================
+//
+//==============================================================================
+function AddActionButton(%image, %text, %command, %tooltip)
+{
+   %actionBtn = new GuiIconButtonCtrl()
+   {
+      position = "0 0";
+      extent = "100 45";
+      profile = GuiMenuActionBarButtonProfile;
+      buttonMargin = "0 -10";
+      bitmapAsset = %image;
+      iconLocation = "Center";
+      sizeIconToButton = true;
+      makeIconSquare = true;
+      textLocation = "Bottom";
+      text = %text;
+      command = %command;
+      tooltip = %tooltip;
+   };
+   ActionButtonPanelList.add(%actionBtn);
+}

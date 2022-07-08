@@ -1,6 +1,0 @@
-<PostEffectAsset
-    canSave="true"
-    canSaveDynamicFields="true"
-    AssetName="CausticsPostFX"
-    scriptFile="@assetFile=CausticsPostFX.cs"
-    VersionId="1" />

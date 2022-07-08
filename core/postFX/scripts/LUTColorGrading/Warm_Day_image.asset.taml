@@ -1,8 +1,0 @@
-<ImageAsset
-    canSave="true"
-    canSaveDynamicFields="true"
-    AssetName="Warm_Day_image"
-    imageFile="@assetFile=Warm_Day.png"
-    UseMips="true"
-    isHDRImage="false"
-    imageType="Albedo" />

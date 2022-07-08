@@ -1,0 +1,603 @@
+function downloadEngineBuild(%build)
+{
+   displayLoadingSplashGui();
+   
+   $downloadingBuildIdx = %build.buildId;
+   
+   %gitPath = %build.gitPath;
+   %branchName = %build.branchName;
+   %buildName = %build.buildName;
+   
+   %downloadPath = getEngineBuildDownloadPath();
+   
+   //sanitize
+   %buildName = strReplace(%buildName, "(", "");
+   %buildName = strReplace(%buildName, ")", "");
+   %buildName = trim(%buildName);
+   %buildName = strReplace(%buildName, ".", "");
+   %buildName = strReplace(%buildName, " ", "_");
+   
+   %targetPath = %downloadPath @ "/" @ %buildName @ "/";
+   
+   %targetPath = strReplace(%targetPath, "//", "/");
+   
+   if(!IsDirectory(%targetPath))
+   {
+      createPath(%targetPath);  
+   }
+   
+   $downloadingBuildTargetPath = %targetPath;
+   
+   if(isDirectory("core/libs/git/bin"))
+   {
+      %commandString = "cd \"" @ makeFullPath(getMainDotCsDir()) @ "/core/libs/git/bin/\"";
+      
+      %commandString = %commandString @ " && git.exe clone ";
+   }
+   else
+   {
+      %commandString = "git clone ";  
+   }
+   
+   if(%branchName !$= "")
+      %commandString = %commandString @ "--branch " @ %branchName @ " ";
+      
+   %commandString = %commandString @ %gitPath @ " \"" @ %targetPath @ "\"";
+   
+   systemCommand(%commandString, "downloadEngineBuildComplete");
+}
+
+function downloadEngineBuildComplete(%resultCode)
+{
+   error("Running downloadEngineBuild resulted in a return code of " @ %resultCode);
+   
+   if(%resultCode $= 0)
+   {
+      setEngineBuildLocalPathByIndex($downloadingBuildIdx, $downloadingBuildTargetPath);
+      
+      saveData();
+      
+      MainMenuGui.refresh();
+   }
+   
+   hideLoadingSplashGui();
+}
+
+function pullUpdateEngineBuild(%buildIdx)
+{
+   $downloadingBuildIdx = %buildIdx;
+   
+   %gitPath = getEngineBuildGitPathByIndex(%buildIdx);
+   %branchName = getEngineBuildBranchNameByIndex(%buildIdx);
+   %buildName = getEngineBuildNameByIndex(%buildIdx);
+   
+   %downloadPath = getEngineBuildDownloadPath();
+   
+   if(isDirectory("core/libs/git/bin"))
+   {
+      %commandString = "cd \"" @ makeFullPath(getMainDotCsDir()) @ "/core/libs/git/bin/\"";
+      
+      %commandString = %commandString @ " && git.exe pull ";
+   }
+   else
+   {
+      %commandString = "git pull ";  
+   }
+   
+   systemCommand(%commandString, "pullUpdateEngineBuildComplete");
+}
+
+function pullUpdateEngineBuildComplete(%resultCode)
+{
+   error("Running downloadEngineBuild resulted in a return code of " @ %resultCode);
+   
+   if(%resultCode $= 0)
+   {
+      MainMenuGui.refresh();
+   }
+}
+
+function openEngineBuildGitPage(%buildIdx)
+{
+   %gitPath = getEngineBuildGitPathByIndex(%buildIdx);
+   
+   gotoWebPage(%gitPath);
+}
+
+function openEngineBuildIssuesPage(%buildIdx)
+{
+   %gitPath = getEngineBuildGitPathByIndex(%buildIdx);
+   
+   gotoWebPage(%gitPath @ "/issues");
+}
+
+//
+function openEngineBuildActionMenu(%buildIdx, %buttonCtrl)
+{
+   openActionMenu(%buttonCtrl);
+   
+   ActionMenuDropdown.targetId = %buildIdx;
+   
+   %gitPath = getEngineBuildGitPathByIndex(%buildIdx);
+   %localPath = getEngineBuildLocalPathByIndex(%buildIdx);
+   if(%gitPath !$= "")
+   {
+      if(%localPath !$= "" && IsDirectory(%localPath))
+      {
+         addActionMenuEntry("ManagerUI:download_image", "Pull Updates", "pullUpdateEngineBuild(" @ %buildIdx @ ");", 
+            "Pulls any updates for this build from its git repository.");
+      }
+      else if(%localPath $= "")
+      {
+         addActionMenuEntry("ManagerUI:download_image", "Download Build", "downloadEngineBuild(" @ %buildIdx @ ");", 
+            "Downloads engine build to local machine.");
+      }
+      
+      addActionMenuEntry("ManagerUI:share1_image", "Visit Repository Page", "openEngineBuildGitPage(" @ %buildIdx @ ");", 
+            "Visit the repository page of this engine build.");
+            
+      addActionMenuEntry("ManagerUI:share1_image", "Visit Issues Page", "openEngineBuildIssuesPage(" @ %buildIdx @ ");", 
+            "Visit the issues page of this engine build.");
+   }
+     
+   %isDefault = isEngineBuildDefault(%buildIdx);
+   if(!%isDefault)
+   {
+      addActionMenuEntry("ManagerUI:textField_image", "Edit Properties", 
+         "populateEngineBuildProperties(" @ %buildIdx @ ");", 
+         "Edit's the build's properties.");  
+         
+      /*%gitPath = getEngineBuildGitPathByIndex(%buildIdx);
+      if(%gitPath !$= "")
+         addActionMenuEntry("ManagerUI:cloud_image", "Change Git Info", "openEngineBuildChangeGitInfoWizard();", 
+            "Edits the git path and branch of this build."); */
+   }
+      
+   if(%localPath !$= "")
+   {
+      addActionMenuEntry("ManagerUI:trashcan_image", "Delete Build", "deleteEngineBuild(" @ %buildIdx @ ");", 
+         "Deletes this engine build from the local machine.");
+   }
+   
+   if(!%isDefault)
+   {
+      addActionMenuEntry("ManagerUI:trashcan_image", "Remove Build", "removeEngineBuildFromListing(" @ %buildIdx @ ");", 
+         "Removes build from list. If downloaded, local copy will stay on machine.");
+   }
+}
+
+//
+function deleteEngineBuild(%buildIdx)
+{
+   $TorqueManager::selectedEngineBuild = %buildIdx;
+   %buildName = getEngineBuildNameByIndex($TorqueManager::selectedEngineBuild);
+   %localPath = getEngineBuildLocalPathByIndex($TorqueManager::selectedEngineBuild);
+   
+   MessageBoxOKCancel("Delete Engine Build?", 
+      "Are you sure you wish to delete the '" @ %buildName @"' Engine Build?\nFile path: " @ %localPath,
+      "doDeleteEngineBuild();", "");
+}
+
+function doDeleteEngineBuild()
+{
+   displayLoadingSplashGui();
+   
+   //do da delete.
+   %localPath = getEngineBuildLocalPathByIndex($TorqueManager::selectedEngineBuild);
+   
+   if(isDirectory(%localPath))
+   {
+      if(!MainMenuGui.deleteFolder(%localPath))
+      {
+         MessageBoxOK("Failure", "Failed to successfully delete local copy of selected Engine Build.");
+         hideLoadingSplashGui();
+         return;
+      }
+   }
+   
+   setEngineBuildLocalPathByIndex($TorqueManager::selectedEngineBuild, "");
+   
+   //check if it was a build that had a gitpath
+   //if not, then we'll just fully remove the registration as well, as it's completely gone
+   %gitPath = getEngineBuildGitPathByIndex($TorqueManager::selectedEngineBuild);
+   if(%gitPath $= "")
+   {
+      doRemoveEngineBuildFromListing();
+   }
+   
+   saveData();
+   
+   MainMenuGui.refresh();
+   
+   hideLoadingSplashGui();
+}
+
+function doEngineBuildRename(%newName)
+{
+   setEngineBuildName(ActionMenuDropdown.targetId, %newName);
+   
+   saveData();
+   
+   MainMenuGui.refresh();
+}
+
+function removeEngineBuildFromListing(%buildIdx)
+{
+   $TorqueManager::selectedEngineBuild = %buildIdx;
+   
+   %buildName = getEngineBuildNameByIndex($TorqueManager::selectedEngineBuild);
+   MessageBoxOKCancel("Remove Engine Build?", 
+      "Are you sure you wish to remove the '" @ %buildName @"' Engine Build from the Manager?\nIf there is a local copy on this machine it will not be deleted.",
+      "doRemoveEngineBuildFromListing();", "");
+}
+
+function doRemoveEngineBuildFromListing()
+{
+   displayLoadingSplashGui();
+   
+   PMSettings.remove("EngineBuilds/" @ $TorqueManager::selectedEngineBuild @ "/gitPath");
+   PMSettings.remove("EngineBuilds/" @ $TorqueManager::selectedEngineBuild @ "/buildName");
+   PMSettings.remove("EngineBuilds/" @ $TorqueManager::selectedEngineBuild @ "/branchName");
+   PMSettings.remove("EngineBuilds/" @ $TorqueManager::selectedEngineBuild @ "/localPath");
+   PMSettings.remove("EngineBuilds/" @ $TorqueManager::selectedEngineBuild @ "/isDefault");
+   PMSettings.remove("EngineBuilds/" @ $TorqueManager::selectedEngineBuild @ "/isBinary");
+   
+   saveData();
+   
+   MainMenuGui.refresh();
+   
+   hideLoadingSplashGui();
+}
+
+function changeEngineBuildDownloadPath()
+{
+   %dlg = new OpenFolderDialog()
+   {
+      Title = "Select Engine Build Folder";
+      Filters = "";
+      DefaultFile = "./";
+      ChangePath = false;
+      MustExist = true;
+      MultipleFiles = false;
+   };
+
+   %dlg.DefaultPath = "./";
+   if(%dlg.Execute())
+   {
+      %path = makeFullPath(%dlg.FileName);
+      
+      $TorqueManager::engineBuildDLPath = %path;
+      
+      if(startsWith(%path, getMainDotCsDir()))
+      {
+         %path = strreplace(%path, getMainDotCsDir(), "{ManagerDir}");  
+      }
+      
+      EditorSettings.setValue("EngineBuilds/downloadPath",%path);
+      
+      saveData();
+      MainMenuGui.refresh();
+   }
+
+   %dlg.delete();
+}
+
+function findEngineBuild(%buildIdx)
+{
+   %dlg = new OpenFolderDialog()
+   {
+      Title = "Select Engine Build Folder";
+      Filters = "";
+      ChangePath = false;
+      MustExist = true;
+      MultipleFiles = false;
+   };
+
+   %dlg.DefaultPath = "./";
+   if(%dlg.Execute())
+   {
+      %path = makeFullPath(%dlg.FileName);
+      
+      setEngineBuildLocalPathByIndex(%buildIdx, %path);
+
+      saveData();
+      MainMenuGui.refresh();
+   }
+
+   %dlg.delete();
+}
+//==============================================================================
+// Properties
+//==============================================================================
+function changeEngineBuildName(%buildIdx)
+{
+   $renamingEngineBuildIdx = %buildIdx;
+   showRenameWindow("Change Engine Build Name", "doEngineBuildNameChange");
+}
+
+function doEngineBuildNameChange(%newName)
+{
+   setEngineBuildNameByIndex($renamingEngineBuildIdx, %newName);
+   
+   saveData();
+   populateEngineBuildProperties($renamingEngineBuildIdx);
+   MainMenuGui.refresh();
+}
+
+function changeEngineBuildGitURLPath(%buildIdx)
+{
+   $renamingEngineBuildIdx = %buildIdx;
+   showRenameWindow("Change Engine Build Git URL", "doEngineBuildGitURLPathChange");
+}
+
+function doEngineBuildGitURLPathChange(%newURL)
+{
+   setEngineBuildGitPathByIndex($renamingEngineBuildIdx, %newURL);
+   
+   saveData();
+   populateEngineBuildProperties($renamingEngineBuildIdx);
+}
+
+function changeEngineBuildBranchName(%buildIdx)
+{
+   $renamingEngineBuildIdx = %buildIdx;
+   showRenameWindow("Change Engine Build Branch Name", "doEngineBuildBranchChange", true);
+}
+
+function doEngineBuildBranchChange(%newName)
+{
+   setEngineBuildBranchNameByIndex($renamingEngineBuildIdx, %newName);
+   
+   saveData();
+   populateEngineBuildProperties($renamingEngineBuildIdx);
+}
+
+function populateEngineBuildPropertiesOld(%buildIdx)
+{
+   Canvas.pushDialog(ManagerPropertiesGUI);
+   ManagerPropertiesList.clear();
+   
+   //MainMenuGui.mode = "Engine Build Settings";
+   
+   ManagerPropertiesGUI.targetId = %buildIdx;
+   ManagerPropertiesGUI.mode = "Engine Build";
+   
+   %buildName = getEngineBuildNameByIndex(%buildIdx);
+   //managerPropertiesInspector.addField("$tmpEngineBuildName", "Engine Build Name", "string", "Name of the Engine Build", 
+   //            %buildName, "", "");  
+   
+   //MainMenuHeaderText.setText("Engine Build > " @ %buildName);
+   
+   %field = makeSettingsCard("Engine Build Name", "$tmpEngineBuildName", "button", %buildName, %buildName, "Change Engine Build Name", 
+      "changeEngineBuildName("@%buildIdx@");");
+   ManagerPropertiesList.add(%field);
+   
+   %gitPath = getEngineBuildGitPathByIndex(%buildIdx);
+   if(%gitPath !$= "")
+   {
+      %field = makeSettingsCard("Git URL Path", "$tmpEngineBuildGitPath", "button", %gitPath, %gitPath, "Change Engine Build Git Path",
+         "changeEngineBuildGitURLPath("@%buildIdx@");");
+      ManagerPropertiesList.add(%field);
+   
+      //managerPropertiesInspector.addField("$tmpEngineBuildGitPath", "Git URL Path", "string", "URL path of the git repository this build is from", 
+      //         %gitPath, "", "");
+               
+      %branchName = getEngineBuildBranchNameByIndex(%buildIdx);
+      //managerPropertiesInspector.addField("$tmpEngineBuildBranchName", "Git Branch Name", "string", 
+      //         "Name of the git branch this build targets. If left blank, uses the default branch", %branchName, "", "");
+      
+      if(%branchName $= "")
+         %branchName = "(Default Branch)";
+               
+      %field = makeSettingsCard("Git Branch Name", "$tmpEngineBuildBranchName", "button", %branchName, %branchName, "Change Engine Build Git Branch Name", 
+         "changeEngineBuildBranchName("@%buildIdx@");");
+      ManagerPropertiesList.add(%field);
+   }
+   
+   /*%localPath = getEngineBuildLocalPathByIndex(%buildIdx);
+   if(%localPath !$= "")
+   {
+      managerPropertiesInspector.addField("$tmpEngineBuildLocalPath", "Local Folder Path", "string", "Directory Path to the locally downloaded copy of this build.", 
+               %localPath, "", "");
+   }*/
+}
+
+//==============================================================================
+// Wizard Stuff
+//==============================================================================
+//==============================================================================
+// New Engine Build
+//==============================================================================
+function openNewEngineBuildWizard()
+{
+   setupWizard();
+   
+   ManagerWizardWindow.text = "Register New Engine Build";
+   
+   ManagerWizardWindow.addWizardPage(AddNewEngineBuildPage0);
+   ManagerWizardWindow.addWizardPage(AddNewEngineBuildPage1);
+   ManagerWizardWindow.addWizardPage(AddNewEngineBuildPage2);
+   
+   ManagerWizardWindow.setStep(0); 
+   
+   ManagerWizardWindow.hidden = false;  
+   ManagerWizardWindow.selectWindow();
+}
+
+function AddNewEngineBuildPage0::openPage(%this)
+{
+   engineBuildGitBtn.setStateOn(false);
+   engineBuildLocalBtn.setStateOn(false);
+   
+   AddNewEngineBuildPage0-->gitPathURL.text = "";
+   AddNewEngineBuildPage0-->gitBranchName.text = "";
+   
+   AddNewEngineBuildPage0-->localPathBtn.text = "Find Folder";
+}
+
+function engineBuildGitBtn::onClick(%this)
+{
+   AddNewEngineBuildPage0-->gitPathTxt.setActive(true);
+   AddNewEngineBuildPage0-->gitPathURL.setActive(true);
+   AddNewEngineBuildPage0-->gitBranchNameTxt.setActive(true);
+   AddNewEngineBuildPage0-->gitBranchName.setActive(true);
+   
+   AddNewEngineBuildPage0-->localPathTxt.setActive(false);
+   AddNewEngineBuildPage0-->localPathBtn.setActive(false);
+}
+
+function engineBuildLocalBtn::onClick(%this)
+{
+   AddNewEngineBuildPage0-->gitPathTxt.setActive(false);
+   AddNewEngineBuildPage0-->gitPathURL.setActive(false);
+   AddNewEngineBuildPage0-->gitBranchNameTxt.setActive(false);
+   AddNewEngineBuildPage0-->gitBranchName.setActive(false);
+   
+   AddNewEngineBuildPage0-->localPathTxt.setActive(true);
+   AddNewEngineBuildPage0-->localPathBtn.setActive(true);
+}
+
+function newEngineBuildLocalPathBtn::onClick(%this)
+{
+   //open file path bit
+   %dlg = new OpenFolderDialog()
+   {
+      Title = "Select Engine Build Folder";
+      Filters = "";
+      DefaultFile = "./";
+      ChangePath = false;
+      MustExist = true;
+      MultipleFiles = false;
+   };
+
+   %dlg.DefaultPath = "./";
+   if(%dlg.Execute())
+   {
+      %path = makeFullPath(%dlg.FileName);
+      %this.setText(%path);
+      %this.tooltip = %path;
+      $TorqueManager::newEngineBuildLocalPath = %path;
+   }
+
+   %dlg.delete();
+}
+
+function AddNewEngineBuildPage1::openPage(%this)
+{
+   //If they didn't pass validation on the previous page, go back to it
+   if(!engineBuildGitBtn.isStateOn() && !engineBuildLocalBtn.isStateOn())
+      ManagerWizardWindow.setStep(0);
+      
+   AddNewEngineBuildPage1-->engineBuildNameTxt.text = "";
+   AddNewEngineBuildPage1-->isBinaryCheckbox.setStateOn(false);
+      
+   $TorqueManager::newEngineBuildIsGit = false;
+   $TorqueManager::newEngineBuildIsLocal = false;
+      
+   if(engineBuildGitBtn.isStateOn())
+   {
+      $TorqueManager::newEngineBuildIsGit = true;
+      $TorqueManager::newEngineBuildGitPath = AddNewEngineBuildPage0-->gitPathURL.getText();
+      $TorqueManager::newEngineBuildBranchName = AddNewEngineBuildPage0-->gitBranchName.getText();
+   }
+   else if(engineBuildLocalBtn.isStateOn())
+   {
+      $TorqueManager::newEngineBuildIsLocal = true;
+   }
+}
+
+function AddNewEngineBuildPage2::openPage(%this)
+{
+   //If they didn't pass validation on the previous page, go back to it
+   if(AddNewEngineBuildPage1-->engineBuildNameTxt.getText() $= "")
+      ManagerWizardWindow.setStep(1);
+      
+   %this-->engineBuildMakeComplete.setHidden(true);
+   ManagerWizardWindow-->nextButton.setActive(false);
+   
+   Canvas.repaint();
+   
+   //start the ruuuuun
+   if($TorqueManager::newEngineBuildIsGit)
+   {
+      %buildCount = getEngineBuildCount();
+      
+      PMSettings.setValue("EngineBuilds/" @ %buildCount @ "/gitPath", $TorqueManager::newEngineBuildGitPath);
+      PMSettings.setValue("EngineBuilds/" @ %buildCount @ "/buildName", AddNewEngineBuildPage1-->engineBuildNameTxt.getText());
+      PMSettings.setValue("EngineBuilds/" @ %buildCount @ "/branchName", $TorqueManager::newEngineBuildBranchName);
+      PMSettings.setValue("EngineBuilds/" @ %buildCount @ "/localPath", "");
+      PMSettings.setValue("EngineBuilds/" @ %buildCount @ "/isDefault", "0");
+      PMSettings.setValue("EngineBuilds/" @ %buildCount @ "/isBinary", AddNewEngineBuildPage1-->isBinaryCheckbox.isStateOn());
+   }
+   else if($TorqueManager::newEngineBuildIsLocal)
+   {
+      %buildCount = getEngineBuildCount();
+      
+      PMSettings.setValue("EngineBuilds/" @ %buildCount @ "/gitPath", "");
+      PMSettings.setValue("EngineBuilds/" @ %buildCount @ "/buildName", AddNewEngineBuildPage1-->engineBuildNameTxt.getText());
+      PMSettings.setValue("EngineBuilds/" @ %buildCount @ "/branchName", "");
+      PMSettings.setValue("EngineBuilds/" @ %buildCount @ "/localPath", $TorqueManager::newEngineBuildLocalPath);
+      PMSettings.setValue("EngineBuilds/" @ %buildCount @ "/isDefault", "0");
+      PMSettings.setValue("EngineBuilds/" @ %buildCount @ "/isBinary", AddNewEngineBuildPage1-->isBinaryCheckbox.isStateOn());
+   }
+   
+   saveData();
+   
+   MainMenuGui.refresh();
+   
+   %this-->engineBuildMakeComplete.setHidden(false);
+   ManagerWizardWindow-->nextButton.setActive(true);
+}
+
+//==============================================================================
+// New Engine Build
+//==============================================================================
+function openEngineBuildChangeGitInfoWizard()
+{
+   setupWizard();
+   
+   ManagerWizardWindow.text = "Change Engine Build Git Info";
+   ManagerWizardWindow.addWizardPage(changeEngineBuildGitInfoPage0);
+   ManagerWizardWindow.addWizardPage(changeEngineBuildGitInfoPage1);
+   
+   ManagerWizardWindow.setStep(0); 
+   
+   ManagerWizardWindow.hidden = false;  
+   ManagerWizardWindow.selectWindow();
+}
+
+function changeEngineBuildGitInfoPage0::openPage(%this)
+{
+   %oldGitPath = getEngineBuildGitPathByIndex(ActionMenuDropdown.targetId);
+   %this-->gitPathURL.text = %oldGitPath;
+   
+   %oldGitBranch = getEngineBuildBranchNameByIndex(ActionMenuDropdown.targetId);
+   %this-->gitBranchName.text = %oldGitBranch;
+}
+
+function changeEngineBuildGitInfoPage1::openPage(%this)
+{
+   //If they didn't pass validation on the previous page, go back to it
+   if(changeEngineBuildGitInfoPage0-->gitPathURL.getText() $= "")
+      ManagerWizardWindow.setStep(0);
+      
+   %this-->updateCompleteTxt.setHidden(true);
+   ManagerWizardWindow-->nextButton.setActive(false);
+   
+   Canvas.repaint();
+      
+   %buildCount = getEngineBuildCount();
+   
+   if(ActionMenuDropdown.targetId < 0 || %buildCount <= ActionMenuDropdown.targetId)
+   {
+      %this-->updateCompleteTxt.text = "Something went wrong. Invalid Engine Build Id. Please try again.";
+      %this-->updateCompleteTxt.setHidden(false);
+      return; //not a good index
+   }
+      
+   PMSettings.setValue("EngineBuilds/" @ ActionMenuDropdown.targetId @ "/gitPath", AddNewEngineBuildPage0-->gitPathURL.getText());
+   PMSettings.setValue("EngineBuilds/" @ ActionMenuDropdown.targetId @ "/branchName", AddNewEngineBuildPage0-->gitBranchName.getText());
+   
+   %this-->updateCompleteTxt.text = "Complete!";
+   %this-->updateCompleteTxt.setHidden(false);
+}

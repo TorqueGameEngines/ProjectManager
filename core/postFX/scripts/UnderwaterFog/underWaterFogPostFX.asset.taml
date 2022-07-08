@@ -1,6 +1,0 @@
-<PostEffectAsset
-    canSave="true"
-    canSaveDynamicFields="true"
-    AssetName="underWaterFogPostFX"
-    scriptFile="@assetFile=underWaterFogPostFX.cs"
-    VersionId="1" />

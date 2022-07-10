@@ -1,0 +1,79 @@
+function populateEngineBuildProperties()
+{
+   updateBreadcrumbList("EngineBuildPage;EngineBuildPropertiesPage");
+   
+   MainMenuSearchBar.hidden = true;
+   MainMenuSearchClearBtn.hidden = true;
+   
+   MainViewStack.hidden = false;
+   MainViewStack.clear();
+   
+   %enabled = !$CurrentEngineBuild.isDefault;
+   %specialTags = getEngineBuildTags($CurrentEngineBuild.buildId);
+   MainViewStack.add(createCard("Engine Build Name", $CurrentEngineBuild.buildName, %specialTags, "The name of this engine build", false, 
+         "", %enabled ? "Button" : "", "", "Change", "changeEngineBuildName($CurrentEngineBuild);"));
+         
+   if($CurrentEngineBuild.gitPath !$= "")
+   {
+      %gitPath = $CurrentEngineBuild.gitPath !$= "" ? $CurrentEngineBuild.gitPath : "(None)";
+      MainViewStack.add(createCard("Git Repository URL", %gitPath, "", "The URL for the git repo this build is from", false, 
+            "", %enabled ? "Button" : "", "", "Change", "changeEngineBuildGitPath($CurrentEngineBuild);"));
+            
+      MainViewStack.add(createCard("Git Repository Branch", $CurrentEngineBuild.branchName, "", "The name of the branch in the git repo this build is from", false, 
+            "", %enabled ? "Button" : "", "", "Change", "changeEngineBuildBranchName($CurrentEngineBuild);"));
+   }
+         
+   %localPath = $CurrentEngineBuild.localPath !$= "" ? $CurrentEngineBuild.localPath : "(Not Downloaded)";
+   %buttonText = $CurrentEngineBuild.localPath !$= "" ? "Change" : "Find";
+   MainViewStack.add(createCard("Local File Path", %localPath, "", "The local file path for this engine build on the current machine", false, 
+         "", "Button", "", %buttonText, "changeEngineBuildLocalPath($CurrentEngineBuild);"));
+         
+   //MainViewStack.add(createCard("Is Binary Build", "", "", "Does this engine build have precompiled binaries", false, 
+   //      "", "Checkbox", "False;True", $CurrentEngineBuild.isBinary, "changeEngineBuildIsBinary($CurrentEngineBuild);"));
+         
+   if($CurrentEngineBuild.isBinary)
+   {
+      %winAppName = $CurrentEngineBuild.winAppName !$= "" ? $CurrentEngineBuild.winAppName : "(None)";
+      MainViewStack.add(createCard("Windows Executable Name", $CurrentEngineBuild.winAppName, "", "The name of the windows executable file", false, 
+            "", %enabled ? "Button" : "", "", "Change", "changeEngineBuildWindowsExec($CurrentEngineBuild);"));
+            
+      %linAppName = $CurrentEngineBuild.linAppName !$= "" ? $CurrentEngineBuild.linAppName : "(None)";
+      MainViewStack.add(createCard("Linux Executable Name", %linAppName, "", "The name of the linux executable file", false, 
+            "", %enabled ? "Button" : "", "", "Change", "changeEngineBuildLinuxExec($CurrentEngineBuild);"));
+            
+      %macAppName = $CurrentEngineBuild.macAppName !$= "" ? $CurrentEngineBuild.macAppName : "(None)";
+      MainViewStack.add(createCard("MacOS Executable Name", %macAppName, "", "The name of the macOS executable file", false, 
+            "", %enabled ? "Button" : "", "", "Change", "changeEngineBuildMacOSExec($CurrentEngineBuild);"));
+   }
+         
+   //
+   //Now add our action panel buttons
+   ActionButtonPanelList.clear();
+   
+   if($CurrentEngineBuild.localPath !$= "")
+   {
+      AddActionButton("ManagerUI:plus_image", "New Project", "", "");
+      AddActionButton("ManagerUI:download_image", "Pull Updates", "pullUpdateEngineBuild($CurrentEngineBuild);", "");
+      AddActionButton("ManagerUI:trashcan_image", "Delete Local Copy", "", "");
+   }
+   else
+      AddActionButton("ManagerUI:download_image", "Download", "downloadEngineBuild($CurrentEngineBuild);", "");
+   
+   if(!$CurrentEngineBuild.isDefault)
+      AddActionButton("ManagerUI:trashcan_image", "Remove From List", "", "");
+   
+   if(!$CurrentEngineBuild.gitPath !$= "")
+   {
+      AddActionButton("ManagerUI:share1_image", "Visit Repo Page", "openEngineBuildGitPage($CurrentEngineBuild);", 
+               "Visit the repository page of this engine build.");
+               
+      AddActionButton("ManagerUI:share1_image", "Visit Issues Page", "openEngineBuildIssuesPage($CurrentEngineBuild);", 
+            "Visit the issues page of this engine build.");
+   }
+}
+
+function changeEngineBuildIsBinary(%bld)
+{
+     %bld.isBinary = !%bld.isBinary;
+     MainMenuGui.refresh();
+}

@@ -40,8 +40,9 @@ function ManagerUI::initClient(%this)
    %this.queueExec("./scripts/menuNavigation");
    
    //
-   %this.queueExec("./guis/engineBuilds/engineBuildGUI");
-   %this.queueExec("./guis/engineBuilds/engineBuildPropertiesGUI");
+   %this.queueExec("./guis/engineBuilds/engineBuildPage");
+   %this.queueExec("./guis/engineBuilds/engineBuildPropertiesPage");
+   %this.queueExec("./guis/projects/projectsPage");
    
    //   
    %this.queueExec("./scripts/actionMenu");

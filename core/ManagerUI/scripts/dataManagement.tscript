@@ -158,6 +158,36 @@ function getEngineBuildTags(%index)
       %tokenCount++;
    }
    
+   if(%bld.winAppName !$= "")
+   {
+      if(%tokenCount == 0)
+         %tags = "Windows";
+      else
+         %tags = %tags @ ",Windows";
+         
+      %tokenCount++;
+   }
+   
+   if(%bld.linAppName !$= "")
+   {
+      if(%tokenCount == 0)
+         %tags = "Linux";
+      else
+         %tags = %tags @ ",Linux";
+         
+      %tokenCount++;
+   }
+   
+   if(%bld.macAppName !$= "")
+   {
+      if(%tokenCount == 0)
+         %tags = "macAppName";
+      else
+         %tags = %tags @ ",macAppName";
+         
+      %tokenCount++;
+   }
+   
    return %tags;
 }
 
@@ -378,149 +408,70 @@ function getModuleTags(%index)
    
    return %tags;
 }
+
 //==============================================================================
 // Project Data Management
 //==============================================================================
+function incrementProjectCount()
+{
+   %currentProjectCount = PMSettings.value("Projects/NumProjects", "0");
+   %currentProjectCount++;
+   
+   PMSettings.setValue("Projects/NumProjects", %currentProjectCount);
+   
+   return %currentProjectCount;
+}
+
 function getProjectCount()
 {
-   %count = 0;
-   %idx = 0;
-   while(%idx != -1)
-   {
-      if(PMSettings.value("Projects/" @ %idx @ "/projectName", "") !$= "")
-      {
-         %idx++;
-         %count++;
-      }
-      else
-      {
-         %idx = -1;
-      }
-   }
-   
+   %count = PMSettings.value("Projects/NumProjects", "0");
    return %count;
 }
 
-function getProjectNameByIndex(%index)
+function findProjectByName(%name)
 {
    %count = getProjectCount();
-   if(%index < 0 || %index >= %count)
-      return "";
-      
-   return PMSettings.value("Projects/" @ %index @ "/projectName", "");
-}
-
-function setProjectNameByIndex(%index, %name)
-{
-   %count = getProjectCount();
-   if(%index < 0 || %index >= %count)
-      return;
-      
-   PMSettings.setValue("Projects/" @ %index @ "/projectName", %name);
-}
-
-function getProjectBuildPathByIndex(%index)
-{
-   %count = getProjectCount();
-   if(%index < 0 || %index >= %count)
-      return "";
-      
-   return PMSettings.value("Projects/" @ %index @ "/buildPath", "");
-}
-
-function setProjectBuildPathByIndex(%index, %localPath)
-{
-   %count = getProjectCount();
-   if(%index < 0 || %index >= %count)
-      return;
-      
-   PMSettings.setValue("Projects/" @ %index @ "/buildPath", %localPath);
-}
-
-function getProjectLocalPathByIndex(%index)
-{
-   %count = getProjectCount();
-   if(%index < 0 || %index >= %count)
-      return "";
-      
-   return PMSettings.value("Projects/" @ %index @ "/localPath", "");
-}
-
-function setProjectLocalPathByIndex(%index, %localPath)
-{
-   %count = getProjectCount();
-   if(%index < 0 || %index >= %count)
-      return;
-      
-   PMSettings.setValue("Projects/" @ %index @ "/localPath", %localPath);
-}
-
-function setProjectLocalPath(%index, %path)
-{
-   %count = getProjectCount();
-   if(%index < 0 || %index >= %count)
-      return "";
-      
-   PMSettings.setValue("Projects/" @ %index @ "/localPath", %path);
-}
-
-function setProjectName(%index, %newName)
-{
-   %count = getProjectCount();
-   if(%index < 0 || %index >= %count)
-      return "";
-      
-   PMSettings.setValue("Projects/" @ %index @ "/projectName", %newName);
-}
-
-function getProjectIndexByName(%buildName)
-{
-   %count = getProjectCount();
-   for(%i=0; %i < %count; %i++)
+   if(%count == 0)
+      return -1;
+   
+   for(%i=1; %i <= %count; %i++)
    {
-      if(PMSettings.value("Projects/" @ %i @ "/projectName", "") $= %buildName)
+      if(PMSettings.value("Projects/" @ %i @ "/projectName", "") $= %name)
          return %i;
    }
    
    return -1;
 }
 
-function getProjectPreviewImageByIndex(%index)
+function getProject(%index)
 {
    %count = getProjectCount();
-   if(%index < 0 || %index >= %count)
-      return "";
+   if(%index < 0 || %index > %count)
+      return 0;
       
-   return PMSettings.value("Projects/" @ %index @ "/previewImage", "");
+   %project = new ScriptObject();
+   %project.projectId = %index;
+   %project.projectName = PMSettings.value("Projects/" @ %index @ "/projectName", "");
+   %project.buildPath = PMSettings.value("Projects/" @ %index @ "/buildPath", "");
+   %project.localPath = PMSettings.value("Projects/" @ %index @ "/localPath", "");
+   %project.previewImage = PMSettings.value("Projects/" @ %index @ "/previewImage", "");
+   %project.engineBuildId = PMSettings.value("Projects/" @ %index @ "/engineBuildId", "");
+   
+   return %project;
 }
 
-function setProjectPreviewImageByIndex(%index, %localPath)
+function saveProject(%project)
 {
+   %index = %project.projectId;
+   
    %count = getProjectCount();
-   if(%index < 0 || %index >= %count)
-      return;
-      
-   //generate a cached version here, then bind and associate it
-      
-   PMSettings.setValue("Projects/" @ %index @ "/previewImage", %localPath);
-}
-
-function getProjectBuildIdByIndex(%index)
-{
-   %count = getProjectCount();
-   if(%index < 0 || %index >= %count)
-      return "";
-      
-   return PMSettings.value("Projects/" @ %index @ "/buildId", "");
-}
-
-function setProjectBuildIdByIndex(%index, %id)
-{
-   %count = getProjectCount();
-   if(%index < 0 || %index >= %count)
-      return;
-      
-   //generate a cached version here, then bind and associate it
-      
-   PMSettings.setValue("Projects/" @ %index @ "/buildId", %id);
+   if(%index < 0 || %index > %count)
+      return 0;
+   
+   PMSettings.setValue("Projects/" @ %index @ "/projectName", %project.projectName);
+   PMSettings.setValue("Projects/" @ %index @ "/projectId", %project.projectId);
+   PMSettings.setValue("Projects/" @ %index @ "/buildPath", %project.buildPath);
+   PMSettings.setValue("Projects/" @ %index @ "/localPath", %project.localPath);
+   PMSettings.setValue("Projects/" @ %index @ "/previewImage", %project.previewImage);
+   PMSettings.setValue("Projects/" @ %index @ "/engineBuildId", %project.engineBuildId);
 }

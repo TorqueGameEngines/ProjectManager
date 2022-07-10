@@ -644,6 +644,7 @@ function getQualityLevels(%qualityGroup)
 
 function AutodetectGraphics()
 {
+   return;
    $pref::Video::autoDetect = false;
    
    %shaderVer = getPixelShaderVersion();

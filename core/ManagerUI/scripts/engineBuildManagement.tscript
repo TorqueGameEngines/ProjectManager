@@ -64,13 +64,13 @@ function downloadEngineBuildComplete(%resultCode)
    hideLoadingSplashGui();
 }
 
-function pullUpdateEngineBuild(%buildIdx)
+function pullUpdateEngineBuild(%build)
 {
-   $downloadingBuildIdx = %buildIdx;
+   $CurrentEngineBuild = %build;
    
-   %gitPath = getEngineBuildGitPathByIndex(%buildIdx);
-   %branchName = getEngineBuildBranchNameByIndex(%buildIdx);
-   %buildName = getEngineBuildNameByIndex(%buildIdx);
+   %gitPath = %build.gitPath;
+   %branchName = %build.branchName;
+   %buildName = %build.buildName;
    
    %downloadPath = getEngineBuildDownloadPath();
    
@@ -98,18 +98,14 @@ function pullUpdateEngineBuildComplete(%resultCode)
    }
 }
 
-function openEngineBuildGitPage(%buildIdx)
+function openEngineBuildGitPage(%build)
 {
-   %gitPath = getEngineBuildGitPathByIndex(%buildIdx);
-   
-   gotoWebPage(%gitPath);
+   gotoWebPage(%build.gitPath);
 }
 
-function openEngineBuildIssuesPage(%buildIdx)
+function openEngineBuildIssuesPage(%build)
 {
-   %gitPath = getEngineBuildGitPathByIndex(%buildIdx);
-   
-   gotoWebPage(%gitPath @ "/issues");
+   gotoWebPage(%build.gitPath @ "/issues");
 }
 
 //

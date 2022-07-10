@@ -25,6 +25,8 @@ function MainMenuGui::onWake(%this)
    %this.registerPage("EngineBuildPage", "Engine Builds", "populateEngineBuildsList();");
    %this.registerPage("EngineBuildPropertiesPage", "Properties", "populateEngineBuildProperties();");
    
+   %this.registerPage("ProjectsPage", "Projects", "populateProjectsList();");
+   
    setupDefaultEngineBuilds();
    
    setupDefaultModules();
@@ -614,70 +616,7 @@ function makeProjectCard(%projectId)
    return %ctrl;
 }
 
-function populateProjectsList()
-{
-   MainViewStack.hidden = false;
-   MainViewStack.clear();
-   
-   MainMenuGui.setActionBarVisible(true);
-   
-   MainMenuGui.mode = "Projects";
-   
-   ActionButtonPanelList.clear();
-   
-   MainMenuHeaderText.setText("Projects");
-   
-   %projectCount = getProjectCount();
-   for(%i=0; %i < %projectCount; %i++)
-   {
-      %projectName = getProjectNameByIndex(%i);
-      %localPath = getProjectLocalPathByIndex(%i);
-      
-      if(%projectName !$= "")
-      {
-         if(MainMenuGui.searchText !$= "")
-         {
-            if(!strIsMatchExpr("*" @ MainMenuGui.searchText @ "*", %projectName))
-               continue;
-         }
-         
-         %proj = makeProjectCard(%i);
-            
-         if(%localPath !$= ""&& IsDirectory(%localPath))
-         {
-            %proj-->ActionButton.command = "runProject(" @ %i @ ");";
-            MainViewStack.add(%proj);
-         }
-         else if(%localPath !$= "" && !IsDirectory(%localPath))
-         {
-            %proj-->actionButton.command = "findProjectPath(" @ %i @ ");";
-            %proj-->ActionButton.setBitmap("ManagerUI:zoom_image");
-            
-            MainViewStack.add(%proj);
-         }
-      }
-   }
-   
-   //Now add our action panel buttons
-   ActionButtonPanelList.clear();
-   
-   %actionBtn = new GuiIconButtonCtrl()
-   {
-      position = "0 0";
-      extent = "100 45";
-      profile = GuiMenuButtonProfile;
-      buttonMargin = "0 -10";
-      bitmapAsset = "ManagerUI:plus_image";
-      iconLocation = "Center";
-      sizeIconToButton = true;
-      makeIconSquare = true;
-      textLocation = "Bottom";
-      text = "Add New";
-      command = "startCreateNewProjectWizard();";
-   };
-   
-   ActionButtonPanelList.add(%actionBtn);
-}
+
 
 //==============================================================================
 
@@ -1141,9 +1080,9 @@ function createCard(%mainText, %subText, %tagsList, %tooltip, %hasNavigation, %n
       %enabled = true;
       
    %cardRowHeight = 20;
-   %engineBuildCardHeight = %cardRowHeight * 2;
+   %cardHeight = %cardRowHeight * 2;
    %engineBuildCardButtonSize = 40;
-   %engineBuildTextHeight = %engineBuildCardHeight;
+   %engineBuildTextHeight = %cardHeight;
    %actionCtrlWidth = 150;
    
    %navButtonImage = "";
@@ -1153,16 +1092,16 @@ function createCard(%mainText, %subText, %tagsList, %tooltip, %hasNavigation, %n
    %tagCount = getTokenCount(%tagsList, ",;");
    if(%tagCount != 0)
    {
-      %engineBuildCardHeight += %cardRowHeight + 5; //add another 'row' to the card
+      %cardHeight += %cardRowHeight + 5; //add another 'row' to the card
    }
       
    %ctrl = new GuiControl() {
       position = "0 0";
-      extent = MainViewStack.extent.x SPC %engineBuildCardHeight;
+      extent = MainViewStack.extent.x SPC %cardHeight;
       horizSizing = "width";
       vertSizing = "bottom";
       profile = GuiMenuButtonProfile;
-      minExtent = "100" SPC %engineBuildCardHeight;
+      minExtent = "100" SPC %cardHeight;
       
       new GuiIconButtonCtrl() {
          bitmapAsset = %navButtonImage;
@@ -1174,7 +1113,7 @@ function createCard(%mainText, %subText, %tagsList, %tooltip, %hasNavigation, %n
          makeIconSquare = true;
          buttonMargin = "0 20";
          position = "0 0";
-         extent = MainViewStack.extent.x SPC %engineBuildCardHeight;
+         extent = MainViewStack.extent.x SPC %cardHeight;
          profile = GuiMenuButtonProfile;
          tooltip = %tooltip;
          internalName = "btn";
@@ -1379,6 +1318,26 @@ function createCard(%mainText, %subText, %tagsList, %tooltip, %hasNavigation, %n
          %actionCtrl.setStateOn(%actionDefaultValue);
          
          %ctrl.add(%actionCtrl);
+      }
+      else if(%actionType $= "PreviewImage")
+      {
+         %projectImageWidth = 150;      
+         
+         %actionCtrl = new GuiBitmapCtrl() {
+            bitmapAsset = %actionDefaultValue;
+            horizSizing = "left";
+            vertSizing = "center";
+            extent = %projectImageWidth SPC %CardHeight;
+            position = %projectImageWidth SPC 0;
+            profile = GuiMenuTextEditProfile;
+         };
+         
+         %ctrl.add(%actionCtrl);
+         
+         //There's some odd secondary scaling happening after the action control is getting added
+         //so we'll just force the position and stuff here
+         %actionCtrl.extent.y = %cardRowHeight;
+         %actionCtrl.position.y = %cardRowHeight;
       }
    }
    

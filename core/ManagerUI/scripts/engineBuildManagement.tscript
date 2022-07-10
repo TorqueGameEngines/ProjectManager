@@ -2,7 +2,7 @@ function downloadEngineBuild(%build)
 {
    displayLoadingSplashGui();
    
-   $downloadingBuildIdx = %build.buildId;
+   $CurrentEngineBuild = %build;
    
    %gitPath = %build.gitPath;
    %branchName = %build.branchName;
@@ -53,8 +53,9 @@ function downloadEngineBuildComplete(%resultCode)
    
    if(%resultCode $= 0)
    {
-      setEngineBuildLocalPathByIndex($downloadingBuildIdx, $downloadingBuildTargetPath);
+      $CurrentEngineBuild.localPath = $downloadingBuildTargetPath;
       
+      saveEngineBuild($CurrentEngineBuild);
       saveData();
       
       MainMenuGui.refresh();

@@ -17,7 +17,13 @@ function MainMenuGui::onWake(%this)
       file = %prefPath @ "/data.xml"; 
    };
    
+   if(!isObject(%this.navPages))
+      %this.navPages = new ArrayObject();
+   
    PMSettings.read();
+   
+   %this.registerPage("EngineBuildPage", "Engine Builds", "populateEngineBuildsList();");
+   %this.registerPage("EngineBuildPropertiesPage", "Properties", "populateEngineBuildProperties();");
    
    setupDefaultEngineBuilds();
    
@@ -70,7 +76,25 @@ function MainMenuGui::doRefresh(%this)
 {
    %this.isRefreshing = false;
    
-   if(%this.currentPage $= "EngineBuildPage")
+   for(%i=0; %i < %this.navPages.count(); %i++)
+   {
+      %pageData = %this.navPages.getKey(%i);
+      %pgNm = getToken(%pageData, ";", 0);
+      if(%pgNm $= %this.currentPage)
+      {
+         %pgText = getToken(%pageData, ";", 1);
+         %pgNav = %this.navPages.getValue(%i);
+         
+         CloseActionMenu();
+
+         eval(%pgNav);
+         break;
+      }
+   }
+   
+   return;
+   
+   /*if(%this.currentPage $= "EngineBuildPage")
       populateEngineBuildsList();
    else if(%this.currentPage $= "EngineBuildPropertiesPage")
       populateEngineBuildProperties();
@@ -83,15 +107,43 @@ function MainMenuGui::doRefresh(%this)
    else if(MainMenuHeaderText.text $= "Settings")
       populateSettingsList();
       
-   CloseActionMenu();  
+   CloseActionMenu();  */
 }
 
 function MainMenuGui::goToPage(%this, %pageName)
 {
-   %this.currentPage = "EngineBuildPage";
-   %this.refresh();
+   %pageIdx = %this.findNavPage(%pageName);
+   if(%pageIdx != -1)
+   {
+      %pageData = %this.navPages.getKey(%pageIdx);
+      %pgNm = getToken(%pageData, ";", 0);
+      %this.currentPage = %pgNm;
+      
+      %this.refresh();
+      pageSlideAnimation(); 
+   }
 }
 
+function MainMenuGui::registerPage(%this, %pageName, %pageTitle, %navCommand)
+{
+   if(%this.findNavPage(%pageName) == -1)
+      %this.navPages.add(%pageName @ ";" @ %pageTitle, %navCommand);
+}
+
+function MainMenuGui::findNavPage(%this, %pageName)
+{
+   for(%i=0; %i < %this.navPages.count(); %i++)
+   {
+      %pageData = %this.navPages.getKey(%i);
+      %pgNm = getToken(%pageData, ";", 0);
+      if(%pgNm $= %pageName)
+      {
+         return %i; 
+      }
+   }
+   
+   return -1;
+}
 //
 function makeModuleCard(%moduleId)
 {
@@ -919,8 +971,12 @@ function selectSearchbar()
 
 function navigateBack()
 {
-   if(MainMenuGui.mode $= "Engine Build Settings")
-      populateEngineBuildsList();
+   %breadcrumbCount = getTokenCount(MainMenuGui.navStack, ",;");
+   if(%breadcrumbCount > 1)
+   {
+      %pageName = getToken(MainMenuGui.navStack, ",;", %breadcrumbCount-2);
+      MainMenuGui.goToPage(%pageName);
+   }
 }
 
 //==============================================================================
@@ -968,6 +1024,114 @@ function ManagerWizardWindow::onVisible(%this, %state)
    WizardBackground.setHidden(!%state);
 }
 
+//==============================================================================
+// Breadcrumbs
+//==============================================================================
+function updateBreadcrumbList(%breadcrumbs)
+{
+   BreadcrumbStack.clear();
+   
+   %breadcrumbCount = getTokenCount(%breadcrumbs, ",;");
+   MainMenuGui.navStack = %breadcrumbs;
+   
+   for(%i = 0; %i < %breadcrumbCount - 1; %i++)
+   {
+      %breadcrumb = getToken(%breadcrumbs, ",;", %i);
+      
+      %pageIdx = MainMenuGui.findNavPage(%breadcrumb);
+      if(%pageIdx != -1)
+      {
+         %pageData = MainMenuGui.navPages.getKey(%pageIdx);
+         %pgTitle = getToken(%pageData, ";", 1);
+         %pgNav = MainMenuGui.navPages.getValue(%pageIdx);
+         
+         %crumbWidth = GuiMenuButtonProfile.getStringWidth(%pgTitle) + 5;
+      
+         %crumbCtrl = new GuiButtonCtrl() {
+            text = %pgTitle;
+            command = %pgNav;
+            horizSizing = "right";
+            vertSizing = "center";
+            extent = %crumbWidth SPC BreadcrumbStack.extent.y;
+            position = "0 0";
+            profile = GuiMenuButtonProfile;
+         };
+         
+         BreadcrumbStack.add(%crumbCtrl);
+         
+         %crumbSpaceCtrl = new GuiTextCtrl() { 
+            text = ">";
+            position = "0 0";
+            extent = 20 SPC BreadcrumbStack.extent.y;
+            horizSizing = "right";
+            vertSizing = "center";
+            profile = GuiMenuButtonProfile;
+         };
+         
+         BreadcrumbStack.add(%crumbSpaceCtrl);
+      }
+   }
+   
+   if(%breadcrumbCount != 0)
+   {
+      %breadcrumb = getToken(%breadcrumbs, ",;", %breadcrumbCount-1);  
+      
+      %pageIdx = MainMenuGui.findNavPage(%breadcrumb);
+      if(%pageIdx != -1)
+      {
+         %pageData = MainMenuGui.navPages.getKey(%pageIdx);
+         %pgTitle = getToken(%pageData, ";", 1); 
+      
+         %crumbWidth = GuiMenuButtonProfile.getStringWidth(%pgTitle) + 5;
+         
+         %lastCrumbCtrl = new GuiTextCtrl() { 
+            text = %pgTitle;
+            position = "0 0";
+            extent = %crumbWidth SPC BreadcrumbStack.extent.y;
+            horizSizing = "right";
+            vertSizing = "center";
+            profile = GuiMenuButtonProfile;
+         };
+         
+         BreadcrumbStack.add(%lastCrumbCtrl);
+      }
+   }
+}
+//==============================================================================
+// Nav Animations
+//==============================================================================
+function navToAnimation()
+{
+   return;
+   
+   MainViewScroll.previousPosition = MainViewScroll.position;
+   MainViewScroll.position.x = MainViewScroll.extent.x / 3;
+   
+   MainMenuGui.pageTween = Tweener.toOnce(150, MainViewScroll, "position:" @ MainViewScroll.previousPosition, "");
+   MainMenuGui.pageTween.play();
+}
+
+function navBackAnimation()
+{
+   return;
+   
+   MainViewScroll.previousPosition = MainViewScroll.position;
+   MainViewScroll.position.x = - MainViewScroll.extent.x / 3;
+   
+   MainMenuGui.pageTween = Tweener.toOnce(150, MainViewScroll, "position:" @ MainViewScroll.previousPosition, "");
+   MainMenuGui.pageTween.play();
+}
+
+function pageSlideAnimation()
+{
+   return;
+   
+   MainViewScroll.previousPosition = MainViewScroll.position;
+   MainViewScroll.position.y = MainViewScroll.extent.y / 3;
+   
+   MainMenuGui.pageTween = Tweener.toOnce(150, MainViewScroll, "position:" @ MainViewScroll.previousPosition, "");
+   MainMenuGui.pageTween.play();
+}
 //==============================================================================
 //
 //==============================================================================
@@ -1184,13 +1348,22 @@ function createCard(%mainText, %subText, %tagsList, %tooltip, %hasNavigation, %n
       }
       else if(%actionType $= "Checkbox")
       {
-         %actionExtent = 50 SPC %engineBuildTextHeight;
+         %actionExtent = 60 SPC %engineBuildTextHeight;
          %actionPosition = (%ctrl.extent.x - %actionExtent.x) - 5 SPC 0;
          
          if(%hasNavigation)
             %actionPosition.x -= 20; 
          
-         %optionText = %actionDefaultValue ? "On" : "Off";
+         %onText = "On";
+         %offText = "Off";
+         
+         if(%actionData !$= "" && getTokenCount(%actionData, ";") == 2)
+         {
+             %offText = getToken(%actionData, ",;", 0); 
+             %onText = getToken(%actionData,  ",;", 1);
+         }
+         
+         %optionText = %actionDefaultValue ? %onText : %offText;
       
          %actionCtrl = new GuiCheckboxCtrl() {
             text = %optionText;

@@ -1,6 +1,6 @@
 function populateEngineBuildsList()
 {
-   MainMenuHeaderText.text = "Engine Builds";
+   updateBreadcrumbList("EngineBuildPage");
    
    MainViewStack.hidden = false;
    MainViewStack.clear();
@@ -100,5 +100,8 @@ function navToEngineBuildProps(%bld)
 {
    MainMenuGui.currentPage = "EngineBuildPropertiesPage";
    $CurrentEngineBuild = %bld;
-   populateEngineBuildProperties();  
+
+   populateEngineBuildProperties(); 
+   
+   navToAnimation();
 }

@@ -113,6 +113,14 @@ function setupDefaultEngineBuilds()
    saveData();
 }
 
+function getEngineBuildDownloadPath()
+{
+   %downloadPath = PMSettings.value("Settings/EngineBuilds/downloadPath", "{ManagerDir}/EngineBuilds/");
+   
+   %downloadPath = strreplace(%downloadPath, "{ManagerDir}", getMainDotCsDir());
+   return %downloadPath;
+}
+
 function getEngineBuildTags(%index)
 {
    %bld = getEngineBuild(%index);

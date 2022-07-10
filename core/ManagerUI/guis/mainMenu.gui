@@ -9,16 +9,25 @@ $guiContent = new GuiChunkedBitmapCtrl(MainMenuGui) {
    tooltipProfile = "GuiToolTipProfile";
    isContainer = "1";
    canSaveDynamicFields = "1";
-   Enabled = "1";
-   isDecoy = "0";
-   mode = "Engine Builds";
-   navigationIndex = "-1";
+      currentPage = "EngineBuildPage";
+      Enabled = "1";
+      isDecoy = "0";
+      isRefreshing = "0";
+      mode = "Engine Builds";
+      navigationIndex = "-1";
 
    new GuiPanel() {
       extent = "1025 45";
       horizSizing = "width";
       profile = "GuiMenuBackgroundProfile";
       tooltipProfile = "GuiToolTipProfile";
+
+      new GuiStackControl(BreadcrumbStack) {
+         stackingType = "Horizontal";
+         extent = "105 30";
+         profile = "GuiDefaultProfile";
+         tooltipProfile = "GuiToolTipProfile";
+      };
    };
    new GuiSplitContainer() {
       splitPoint = "188 100";
@@ -60,7 +69,7 @@ $guiContent = new GuiChunkedBitmapCtrl(MainMenuGui) {
                   text = "Engine Builds";
                   extent = "184 25";
                   profile = "GuiMenuButtonProfile";
-                  command = "MainMenuGui.goToPage(\"Engine Builds\");";
+                  command = "MainMenuGui.goToPage(\"EngineBuildPage\");";
                   tooltipProfile = "GuiToolTipProfile";
                };
                new GuiButtonCtrl(MainMenuRPKsBtn) {
@@ -190,13 +199,6 @@ $guiContent = new GuiChunkedBitmapCtrl(MainMenuGui) {
             };
          };
       };
-   };
-   new GuiTextCtrl(MainMenuHeaderText) {
-      text = "Engine Builds";
-      position = "5 3";
-      extent = "412 38";
-      profile = "MenuLargeHeaderText";
-      tooltipProfile = "GuiToolTipProfile";
    };
    new GuiControl(WizardBackground) {
       extent = "1024 768";

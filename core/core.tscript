@@ -67,6 +67,7 @@ function CoreModule::onCreate(%this)
    }
    
    ModuleDatabase.LoadExplicit( "ManagerUI" );
+   ModuleDatabase.LoadExplicit( "twillexModule" );
 }
 
 function CoreModule::onDestroy(%this)

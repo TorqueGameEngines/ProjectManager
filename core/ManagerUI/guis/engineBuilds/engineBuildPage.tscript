@@ -2,6 +2,8 @@ function populateEngineBuildsList()
 {
    updateBreadcrumbList("EngineBuildPage");
    
+   MainMenuGui.setActionBarVisible(true);
+   
    MainMenuSearchBar.hidden = false;
    MainMenuSearchClearBtn.hidden = false;
    
@@ -93,7 +95,7 @@ function populateEngineBuildsList()
       makeIconSquare = true;
       textLocation = "Bottom";
       text = "Add New";
-      command = "openNewEngineBuildWizard();";
+      command = "$NewEngineBuild = new ScriptObject(); MainMenuGui.goToPage(\"NewEngineBuildPage\");";
    };
    
    ActionButtonPanelList.add(%actionBtn);

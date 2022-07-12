@@ -1,0 +1,45 @@
+function populateNewEngineBuildPropertiesList()
+{
+   updateBreadcrumbList("EngineBuildPage;NewEngineBuildPage");
+   
+   MainViewStack.clear();
+   
+   MainMenuGui.setActionBarVisible(false);
+
+   MainViewStack.add(createEditCard("Engine Build Name", "TextEdit", "$NewEngineBuild.buildName", "The name of this engine build", ""));
+   
+   MainViewStack.add(createEditCard("Source Location", "Dropdown", "$NewEngineBuild.isLocalOrGit", "Indicates if this engine build is from the local machine, or a git repo", "Git Repository;Local Path"));
+   
+   if($NewEngineBuild.isLocalOrGit $= "Git Repository")
+   {
+      MainViewStack.add(createEditCard("Git URL Path", "TextEdit", "$NewEngineBuild.gitPath", "What URL for the git repo this engine build is from", ""));
+      
+      MainViewStack.add(createEditCard("Git Branch", "TextEdit", "$NewEngineBuild.branchName", "What branch name for the git repo this engine build is from", ""));
+   }
+   else if($NewEngineBuild.isLocalOrGit $= "Local Path")
+   {
+      MainViewStack.add(createEditCard("Local Directory Path", "Folder", "$NewEngineBuild.localPath", "What local directory path this engine build is drom on the current machine", ""));
+   }
+   
+   MainViewStack.add(createEditCard("Is Binary Build", "checkbox", "$NewEngineBuild.isBinary", "Does this engine build contain precompiled binaries?", ""));
+   
+   if($NewEngineBuild.isBinary)
+   {
+      MainViewStack.add(createEditCard("Windows App Filename", "FilePath", "$NewEngineBuild.winAppName", "Name of the Windows platform executable file if applicable. Include extension", ""));  
+      MainViewStack.add(createEditCard("Linux App Filename", "FilePath", "$NewEngineBuild.linAppName", "Name of the Linux platform executable file, if applicable", ""));
+      MainViewStack.add(createEditCard("MacOS App Filename", "FilePath", "$NewEngineBuild.macAppName", "Name of the MacOS platform executable file, if applicable", ""));
+   }
+         
+   %buttons = createOKCancelCard("Save", "Cancel", "", "MainMenuGUI.goToPage(\"EngineBuildPage\");");
+   
+   if($NewEngineBuild.buildName !$= "")
+   {
+      %buttons-->okButton.setActive(true);
+   }
+   else
+   {
+      %buttons-->okButton.setActive(false);
+   }
+   
+   MainViewStack.add(%buttons);
+}

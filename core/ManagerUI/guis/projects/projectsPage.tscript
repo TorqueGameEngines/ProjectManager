@@ -7,8 +7,6 @@ function populateProjectsList()
    
    MainMenuGui.setActionBarVisible(true);
    
-   MainMenuGui.mode = "Projects";
-   
    ActionButtonPanelList.clear();
    
    %projectCount = getProjectCount();

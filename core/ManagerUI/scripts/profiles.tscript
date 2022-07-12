@@ -163,12 +163,12 @@ new GuiControlProfile( GuiMenuActionButtonProfile )
    border = "0";
    fontSize = 18;
    fontType = "Arial";
-   fontColor = getVariable("$Theme::" @ $CurrentTheme @ "::FontColor");
-   fontColorHL = getVariable("$Theme::" @ $CurrentTheme @ "::FontColorEmphasized");
-   fillColor = getVariable("$Theme::" @ $CurrentTheme @ "::Level2Color");
-   fillColorHL = getVariable("$Theme::" @ $CurrentTheme @ "::Level2ColorHL");
+   fontColor = "204 204 204 255";
+   fontColorHL = "255 255 255 255";
+   fillColor = "55 55 55 255";
+   fillColorHL = "67 67 67 255";
    borderColor = "100 100 100 255";
-   borderColorNA = "0 0 0";
+   borderColorNA = "38 37 37 255";
    borderColorHL = "80 80 80 255";
    fixedExtent = 0;
    justify = "center";
@@ -177,6 +177,11 @@ new GuiControlProfile( GuiMenuActionButtonProfile )
    hasBitmapArray = false;
    category = "Menu";
    borderThickness = "1";
+   fillColorNA = "38 37 37 255";
+   fontColors[0] = "204 204 204 255";
+   fontColors[1] = "255 255 255 255";
+   fontColors[2] = "121 120 120 255";
+   fontColorNA = "121 120 120 255";
 };
 
 if( !isObject( GuiMenuActionBarButtonProfile ) )

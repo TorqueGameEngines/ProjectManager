@@ -24,6 +24,8 @@ function MainMenuGui::onWake(%this)
    
    %this.registerPage("EngineBuildPage", "Engine Builds", "populateEngineBuildsList();");
    %this.registerPage("EngineBuildPropertiesPage", "Properties", "populateEngineBuildProperties();");
+   %this.registerPage("NewEngineBuildPage", "New Engine Build Properties", "populateNewEngineBuildPropertiesList();");
+   
    
    %this.registerPage("ProjectsPage", "Projects", "populateProjectsList();");
    
@@ -857,6 +859,12 @@ function MainMenuGui::setActionBarVisible(%this, %set)
    }
 }
 
+function MainMenuGui::setSearchbarVisible(%this, %set)
+{
+   MainMenuSearchBar.hidden = %set;
+   MainMenuSearchClearBtn.hidden = %set;  
+}
+
 //==============================================================================
 //
 //==============================================================================
@@ -1074,11 +1082,9 @@ function pageSlideAnimation()
 //==============================================================================
 //
 //==============================================================================
-function createCard(%mainText, %subText, %tagsList, %tooltip, %hasNavigation, %navCommand, %actionType, %actionData, %actionDefaultValue, %actionCommand, %enabled)
+function createCard(%mainText, %subText, %tagsList, %tooltip, %hasNavigation, %navCommand, %actionType, %actionData, %actionDefaultValue, %actionCommand, %targetVariable)
 {
-   if(%enabled $= "")
-      %enabled = true;
-      
+   %pad = 5;
    %cardRowHeight = 20;
    %cardHeight = %cardRowHeight * 2;
    %engineBuildCardButtonSize = 40;
@@ -1117,7 +1123,6 @@ function createCard(%mainText, %subText, %tagsList, %tooltip, %hasNavigation, %n
          profile = GuiMenuButtonProfile;
          tooltip = %tooltip;
          internalName = "btn";
-         active = %enabled;
       };
       
       new GuiTextCtrl() { 
@@ -1130,7 +1135,6 @@ function createCard(%mainText, %subText, %tagsList, %tooltip, %hasNavigation, %n
          tooltip = %tooltip;
          internalName = "label";
          margin = "0 10 0 0";
-         active = %enabled;
       };
       
       /*new GuiBitmapButtonCtrl() {
@@ -1173,7 +1177,6 @@ function createCard(%mainText, %subText, %tagsList, %tooltip, %hasNavigation, %n
          profile = MenuBodyText;
          internalName = "tooltip";
          margin = "0 10 0 0";
-         active = %enabled;
       };
       
       %ctrl.add(%subTextLine);
@@ -1221,7 +1224,7 @@ function createCard(%mainText, %subText, %tagsList, %tooltip, %hasNavigation, %n
       
       if(%actionType $= "Button")
       {
-         %actionPosition.x -= 5;
+         %actionPosition.x -= %pad;
          %actionExtent.y = %cardRowHeight;
          %actionPosition.y = (%ctrl.extent.y/2) - (%actionExtent.y/2);
          
@@ -1233,7 +1236,6 @@ function createCard(%mainText, %subText, %tagsList, %tooltip, %hasNavigation, %n
             extent = %actionExtent;
             position = %actionPosition;
             profile = GuiMenuActionButtonProfile;
-            active = %enabled;
          };
          
          %ctrl.add(%actionCtrl);
@@ -1248,13 +1250,12 @@ function createCard(%mainText, %subText, %tagsList, %tooltip, %hasNavigation, %n
             extent = %actionExtent.x SPC 20;
             position = %actionPosition.x SPC 20;
             profile = GuiMenuPopUpMenuProfile;
-            active = %enabled;
          };
          
-         %dropdownList = getTokenCount(%actionData, ",");
+         %dropdownList = getTokenCount(%actionData, ",;");
          for(%j = 0; %j < %dropdownList; %j++)
          {
-            %lineText = getToken(%actionData, ",", %j);
+            %lineText = getToken(%actionData, ",;", %j);
             %actionCtrl.add(%lineText);
          }
          
@@ -1275,15 +1276,16 @@ function createCard(%mainText, %subText, %tagsList, %tooltip, %hasNavigation, %n
             extent = %actionExtent;
             position = %actionPosition;
             profile = GuiMenuTextEditProfile;
-            active = %enabled;
          };
          
          %ctrl.add(%actionCtrl);
          
          //There's some odd secondary scaling happening after the action control is getting added
          //so we'll just force the position and stuff here
+         %actionCtrl.extent.x = %actionCtrlWidth * 2;
+         %actionCtrl.position.x -= %actionCtrlWidth + %pad;
          %actionCtrl.extent.y = %cardRowHeight;
-         %actionCtrl.position.y = %cardRowHeight;
+         %actionCtrl.position.y = %cardRowHeight/2;
       }
       else if(%actionType $= "Checkbox")
       {
@@ -1312,7 +1314,6 @@ function createCard(%mainText, %subText, %tagsList, %tooltip, %hasNavigation, %n
             extent = %actionExtent;
             position = %actionPosition;
             profile = GuiMenuCheckboxProfile;
-            active = %enabled;
          };
          
          %actionCtrl.setStateOn(%actionDefaultValue);
@@ -1339,11 +1340,382 @@ function createCard(%mainText, %subText, %tagsList, %tooltip, %hasNavigation, %n
          %actionCtrl.extent.y = %cardRowHeight;
          %actionCtrl.position.y = %cardRowHeight;
       }
+      
+      %actionCtrl.variable = %targetVariable;
    }
    
    return %ctrl;
 }
 
+function createOKCancelCard(%okButtonText, %cancelButtonText, %okButtonCommand, %cancelButtonCommand)
+{
+   %pad = 5;
+   %cardRowHeight = 20;
+   %cardHeight = %cardRowHeight * 2;
+   %engineBuildCardButtonSize = 40;
+   %engineBuildTextHeight = %cardHeight;
+   %actionCtrlWidth = 150;
+      
+   %ctrl = new GuiControl() {
+      position = "0 0";
+      extent = MainViewStack.extent.x SPC %cardHeight;
+      horizSizing = "width";
+      vertSizing = "bottom";
+      profile = GuiMenuBackgroundProfile;
+      minExtent = "100" SPC %cardHeight;
+      
+      new GuiButtonCtrl() {
+         text = %okButtonText;
+         command = %okButtonCommand;
+         horizSizing = "left";
+         vertSizing = "center";
+         extent = %actionCtrlWidth SPC %cardRowHeight;
+         position = MainViewStack.extent.x - (%actionCtrlWidth * 2) - (%pad * 2) SPC %cardRowHeight/2;
+         profile = GuiMenuActionButtonProfile;
+         internalName = "okButton";
+      };
+      
+      new GuiButtonCtrl() {
+         text = %cancelButtonText;
+         command = %cancelButtonCommand;
+         horizSizing = "left";
+         vertSizing = "center";
+         extent = %actionCtrlWidth SPC %cardRowHeight;
+         position = MainViewStack.extent.x - %actionCtrlWidth - %pad SPC %cardRowHeight/2;
+         profile = GuiMenuActionButtonProfile;
+         internalName = "cancelButton";
+      };
+
+   };
+   
+   return %ctrl;
+}
+
+function createEditCard(%label, %type, %variable, %tooltip, %data)
+{
+   %pad = 5;
+   %cardRowHeight = 20;
+   %cardHeight = %cardRowHeight * 2;
+   %engineBuildCardButtonSize = 40;
+   %engineBuildTextHeight = %cardHeight;
+   %actionCtrlWidth = 150;
+   
+   %getValueCommand = "$result = " @ %variable @ ";";
+   eval(%getValueCommand);
+   %defaultValue = $result;
+      
+   %ctrl = new GuiControl() {
+      position = "0 0";
+      extent = MainViewStack.extent.x SPC %cardHeight;
+      horizSizing = "width";
+      vertSizing = "bottom";
+      profile = GuiMenuButtonProfile;
+      minExtent = "100" SPC %cardHeight;
+      
+      new GuiButtonCtrl() {
+         horizSizing = "width";
+         vertSizing = "height";
+         iconLocation = "Right";
+         sizeIconToButton = true;
+         makeIconSquare = true;
+         buttonMargin = "0 20";
+         position = "0 0";
+         extent = MainViewStack.extent.x SPC %cardHeight;
+         profile = GuiMenuButtonProfile;
+         internalName = "btn";
+      };
+      
+      new GuiTextCtrl() { 
+         text = %label;
+         position = %pad SPC 0;
+         extent = MainViewStack.extent.x -(%engineBuildCardButtonSize * 2) SPC %engineBuildTextHeight;
+         horizSizing = "width";
+         vertSizing = "bottom";
+         profile = MenuSubHeaderText;
+         internalName = "label";
+         margin = "0 10 0 0";
+      };
+   };
+   
+   //ensure the height is right for the button
+   %ctrl-->btn.extent = %ctrl.extent;
+   
+   if(%tooltip !$= "")
+   {
+      //add the additional text line for our local path display  
+      
+      %ctrl-->label.extent.y = %cardRowHeight;
+      
+      %subTextLine = new GuiMLTextCtrl() { 
+         text = %tooltip;
+         position = "0" SPC %cardRowHeight;
+         extent = MainViewStack.extent.x - (%engineBuildCardButtonSize * 2) SPC %cardRowHeight;
+         horizSizing = "width";
+         vertSizing = "bottom";
+         profile = MenuBodyText;
+         internalName = "tooltip";
+         margin = "0 10 0 0";
+      };
+      
+      %ctrl.add(%subTextLine);
+   }
+   
+   %actionExtent = %actionCtrlWidth SPC %engineBuildTextHeight;
+   %actionPosition = (%ctrl.extent.x - %actionExtent.x) SPC 20;
+   
+   if(%type $= "Dropdown")
+   {
+      %actionCtrl = new GuiPopUpMenuCtrlEx() {
+         text = %defaultValue;
+         horizSizing = "left";
+         vertSizing = "center";
+         extent = %actionExtent.x SPC 20;
+         position = %actionPosition.x SPC 20;
+         profile = GuiMenuPopUpMenuProfile;
+      };
+      
+      %dropdownList = getTokenCount(%data, ",;");
+      for(%j = 0; %j < %dropdownList; %j++)
+      {
+         %lineText = getToken(%data, ",;", %j);
+         %actionCtrl.add(%lineText);
+      }
+      
+      %actionCtrl.command = "dropdownCardChanged(" @ %actionCtrl @ ");";
+      
+      %ctrl.add(%actionCtrl);
+      
+      //There's some odd secondary scaling happening after the action control is getting added
+      //so we'll just force the position and stuff here
+      %actionCtrl.extent.y = %cardRowHeight;
+      %actionCtrl.position.x -= %pad;
+      %actionCtrl.position.y = %cardRowHeight/2;
+   }
+   else if(%type $= "TextEdit")
+   {
+      %actionCtrl = new GuiTextEditCtrl() {
+         text = %defaultValue;
+         horizSizing = "left";
+         vertSizing = "center";
+         extent = %actionExtent;
+         position = %actionPosition;
+         profile = GuiMenuTextEditProfile;
+      };
+      
+      %actionCtrl.validate = "textEditCardChanged(" @ %actionCtrl @ ");";
+      
+      %ctrl.add(%actionCtrl);
+      
+      //There's some odd secondary scaling happening after the action control is getting added
+      //so we'll just force the position and stuff here
+      %actionCtrl.extent.x = %actionCtrlWidth * 2;
+      %actionCtrl.position.x -= %actionCtrlWidth + %pad;
+      %actionCtrl.extent.y = %cardRowHeight;
+      %actionCtrl.position.y = %cardRowHeight/2;
+   }
+   else if(%type $= "FilePath")
+   {
+      %actionCtrl = new GuiTextEditCtrl() {
+         text = %defaultValue;
+         horizSizing = "left";
+         vertSizing = "center";
+         extent = %actionExtent.x - %actionExtent.y SPC %actionExtent.y;
+         position = %actionPosition;
+         profile = GuiMenuTextEditProfile;
+         internalName = "fileText";
+      };
+      
+      %actionCtrl.validate = "filePathCardChanged(" @ %actionCtrl @ ");";
+      
+      %actionCtrlBtn = new GuiButtonCtrl() {
+         text = "...";
+         horizSizing = "left";
+         vertSizing = "center";
+         extent = %actionExtent.y SPC %actionExtent.y;
+         position = %actionExtent.x - %actionExtent.y SPC %actionPosition.y;
+         profile = GuiMenuTextEditProfile;
+         internalName = "fileButton";
+      };
+      
+      %actionCtrlBtn.command = "findFilePathCard(" @ %actionCtrl @ ");";
+      
+      %ctrl.add(%actionCtrl);
+      %ctrl.add(%actionCtrlBtn);
+      
+      //There's some odd secondary scaling happening after the action control is getting added
+      //so we'll just force the position and stuff here
+      %actionCtrl.extent.x = %actionCtrlWidth * 2 - %cardRowHeight;
+      %actionCtrl.position.x -= %actionCtrlWidth + %pad;
+      %actionCtrl.extent.y = %cardRowHeight;
+      %actionCtrl.position.y = %cardRowHeight/2;
+      
+      %actionCtrlBtn.extent = %cardRowHeight SPC %cardRowHeight;
+      %actionCtrlBtn.position = %actionCtrl.position + %actionCtrl.extent SPC %actionCtrl.position.y;
+   }
+   else if(%type $= "Folder")
+   {
+      %actionCtrl = new GuiTextEditCtrl() {
+         text = %defaultValue;
+         horizSizing = "left";
+         vertSizing = "center";
+         extent = %actionExtent.x - %actionExtent.y SPC %actionExtent.y;
+         position = %actionPosition;
+         profile = GuiMenuTextEditProfile;
+         internalName = "fileText";
+      };
+      
+      %actionCtrl.validate = "folderPathCardChanged(" @ %actionCtrl @ ");";
+      
+      %actionCtrlBtn = new GuiButtonCtrl() {
+         text = "...";
+         horizSizing = "left";
+         vertSizing = "center";
+         extent = %actionExtent.y SPC %actionExtent.y;
+         position = %actionExtent.x - %actionExtent.y SPC %actionPosition.y;
+         profile = GuiMenuTextEditProfile;
+         internalName = "fileButton";
+      };
+      
+      %actionCtrlBtn.command = "findFolderPathCard(" @ %actionCtrl @ ");";
+      
+      %ctrl.add(%actionCtrl);
+      %ctrl.add(%actionCtrlBtn);
+      
+      //There's some odd secondary scaling happening after the action control is getting added
+      //so we'll just force the position and stuff here
+      %actionCtrl.extent.x = %actionCtrlWidth * 2 - %cardRowHeight;
+      %actionCtrl.position.x -= %actionCtrlWidth + %pad;
+      %actionCtrl.extent.y = %cardRowHeight;
+      %actionCtrl.position.y = %cardRowHeight/2;
+      
+      %actionCtrlBtn.extent = %cardRowHeight SPC %cardRowHeight;
+      %actionCtrlBtn.position = %actionCtrl.position + %actionCtrl.extent SPC %actionCtrl.position.y;
+   }
+   else if(%type $= "Checkbox")
+   {
+      %actionExtent = 60 SPC %engineBuildTextHeight;
+      %actionPosition = (%ctrl.extent.x - %actionExtent.x) - 5 SPC 0;
+      
+      %onText = "On";
+      %offText = "Off";
+      
+      if(%data !$= "" && getTokenCount(%data, ";") == 2)
+      {
+          %offText = getToken(%data, ",;", 0); 
+          %onText = getToken(%data,  ",;", 1);
+      }
+      
+      %optionText = %defaultValue ? %onText : %offText;
+   
+      %actionCtrl = new GuiCheckboxCtrl() {
+         text = %optionText;
+         horizSizing = "left";
+         vertSizing = "center";
+         extent = %actionExtent;
+         position = %actionPosition;
+         profile = GuiMenuCheckboxProfile;
+      };
+
+      %actionCtrl.setStateOn(%defaultValue);
+      
+      %actionCtrl.command = "checkboxCardChanged(" @ %actionCtrl @ ");";
+      
+      %ctrl.add(%actionCtrl);
+   }
+   
+   %actionCtrl.variable = %variable;
+   
+   return %ctrl;
+}
+
+function textEditCardChanged(%ctrl)
+{
+   %evalCommand = %ctrl.variable @ " = \"" @ %ctrl.getText() @ "\";";
+   eval(%evalCommand);
+   
+   MainMenuGui.refresh();
+}
+
+function checkboxCardChanged(%ctrl)
+{
+   %evalCommand = %ctrl.variable @ " = \"" @ %ctrl.isStateOn() @ "\";";
+   eval(%evalCommand);
+   
+   MainMenuGui.refresh();
+}
+
+function dropdownCardChanged(%ctrl)
+{
+   %evalCommand = %ctrl.variable @ " = \"" @ %ctrl.getText() @ "\";";
+   eval(%evalCommand);
+   
+   %ctrl.setText(%ctrl.getText());
+   
+   MainMenuGui.refresh();
+}
+
+function filePathCardChanged(%ctrl)
+{
+   %evalCommand = %ctrl.variable @ " = \"" @ %ctrl.getText() @ "\";";
+   eval(%evalCommand);
+   
+   MainMenuGui.refresh();
+}
+
+function folderPathCardChanged(%ctrl)
+{
+   %evalCommand = %ctrl.variable @ " = \"" @ %ctrl.getText() @ "\";";
+   eval(%evalCommand);
+   
+   MainMenuGui.refresh();
+}
+
+function findFilePathCard(%ctrl)
+{
+   %filters = "All Files (*.*)|*.*|";
+   %dlg = new OpenFileDialog()
+   {
+      Title = "Select File Path";
+      Filters = %filters;
+      DefaultFile = "./";
+      ChangePath = false;
+      MustExist = true;
+      MultipleFiles = false;
+   };
+
+   %dlg.DefaultPath = "./";
+   if(%dlg.Execute())
+   {
+      %path = fileName(%dlg.FileName);
+      
+      %ctrl.setText(%path);
+   }
+
+   %dlg.delete();
+}
+
+function findFolderPathCard(%ctrl)
+{
+   %dlg = new OpenFolderDialog()
+   {
+      Title = "Select Folder";
+      Filters = "";
+      DefaultFile = "./";
+      ChangePath = false;
+      MustExist = true;
+      MultipleFiles = false;
+   };
+
+   %dlg.DefaultPath = "./";
+   if(%dlg.Execute())
+   {
+      %path = makeFullPath(%dlg.FileName);
+      
+      %ctrl.setText(%path);
+   }
+
+   %dlg.delete();
+}
 //==============================================================================
 //
 //==============================================================================

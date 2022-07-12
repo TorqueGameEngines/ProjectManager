@@ -2,6 +2,8 @@ function populateEngineBuildProperties()
 {
    updateBreadcrumbList("EngineBuildPage;EngineBuildPropertiesPage");
    
+   MainMenuGui.setActionBarVisible(true);
+   
    MainMenuSearchBar.hidden = true;
    MainMenuSearchClearBtn.hidden = true;
    

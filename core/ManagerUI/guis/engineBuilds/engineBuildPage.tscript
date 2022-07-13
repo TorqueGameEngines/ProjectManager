@@ -60,22 +60,15 @@ function populateEngineBuildsList()
          
          if(%bld.localPath !$= "" && IsDirectory(%bld.localPath))
          {
-            //%ctrl-->actionButton.command = "startCreateNewProjectWizard(" @ %i @ ");";
             %dlRoll-->stack.add(%ctrl);
          }
          else if(%bld.localPath !$= "" && !IsDirectory(%bld.localPath))
          {
-            //%ctrl-->actionButton.command = "findEngineBuild(" @ %i @ ");";
-            //%ctrl-->ActionButton.setBitmap("ManagerUI:zoom_image");
-            
             %dlRoll-->stack.add(%ctrl);
          }
          else if(%bld.gitPath !$= "")
          {
-            //%ctrl-->actionButton.setBitmap("ManagerUI:download_image");
             %availRoll-->stack.add(%ctrl);
-            
-            //%ctrl-->actionButton.command = "downloadEngineBuild(" @ %i @ ");";
          }
       }
    }
@@ -95,7 +88,7 @@ function populateEngineBuildsList()
       makeIconSquare = true;
       textLocation = "Bottom";
       text = "Add New";
-      command = "$NewEngineBuild = new ScriptObject(); MainMenuGui.goToPage(\"NewEngineBuildPage\");";
+      command = "$NewEngineBuild = new ScriptObject(); $ResetForm = true; MainMenuGui.goToPage(\"NewEngineBuildPage\");";
    };
    
    ActionButtonPanelList.add(%actionBtn);

@@ -11,7 +11,7 @@ function populateEngineBuildProperties()
    MainViewStack.clear();
    
    %enabled = !$CurrentEngineBuild.isDefault;
-   %specialTags = getEngineBuildTags($CurrentEngineBuild.buildId);
+   %specialTags = $CurrentEngineBuild.isDefault ? "Default" : "";
    MainViewStack.add(createCard("Engine Build Name", $CurrentEngineBuild.buildName, %specialTags, "The name of this engine build", false, 
          "", %enabled ? "Button" : "", "", "Change", "changeEngineBuildName($CurrentEngineBuild);"));
          
@@ -21,7 +21,11 @@ function populateEngineBuildProperties()
       MainViewStack.add(createCard("Git Repository URL", %gitPath, "", "The URL for the git repo this build is from", false, 
             "", %enabled ? "Button" : "", "", "Change", "changeEngineBuildGitPath($CurrentEngineBuild);"));
             
-      MainViewStack.add(createCard("Git Repository Branch", $CurrentEngineBuild.branchName, "", "The name of the branch in the git repo this build is from", false, 
+      %branchName = $CurrentEngineBuild.branchName;
+      if(%branchName $= "")
+         %branchName = "(Default}";
+         
+      MainViewStack.add(createCard("Git Repository Branch", %branchName, "", "The name of the branch in the git repo this build is from", false, 
             "", %enabled ? "Button" : "", "", "Change", "changeEngineBuildBranchName($CurrentEngineBuild);"));
    }
          
@@ -36,15 +40,15 @@ function populateEngineBuildProperties()
    if($CurrentEngineBuild.isBinary)
    {
       %winAppName = $CurrentEngineBuild.winAppName !$= "" ? $CurrentEngineBuild.winAppName : "(None)";
-      MainViewStack.add(createCard("Windows Executable Name", $CurrentEngineBuild.winAppName, "", "The name of the windows executable file", false, 
+      MainViewStack.add(createCard("Windows Binary Name", $CurrentEngineBuild.winAppName, "", "The name of the windows executable file", false, 
             "", %enabled ? "Button" : "", "", "Change", "changeEngineBuildWindowsExec($CurrentEngineBuild);"));
             
       %linAppName = $CurrentEngineBuild.linAppName !$= "" ? $CurrentEngineBuild.linAppName : "(None)";
-      MainViewStack.add(createCard("Linux Executable Name", %linAppName, "", "The name of the linux executable file", false, 
+      MainViewStack.add(createCard("Linux Binary Name", %linAppName, "", "The name of the linux executable file", false, 
             "", %enabled ? "Button" : "", "", "Change", "changeEngineBuildLinuxExec($CurrentEngineBuild);"));
             
       %macAppName = $CurrentEngineBuild.macAppName !$= "" ? $CurrentEngineBuild.macAppName : "(None)";
-      MainViewStack.add(createCard("MacOS Executable Name", %macAppName, "", "The name of the macOS executable file", false, 
+      MainViewStack.add(createCard("MacOS Binary Name", %macAppName, "", "The name of the macOS executable file", false, 
             "", %enabled ? "Button" : "", "", "Change", "changeEngineBuildMacOSExec($CurrentEngineBuild);"));
    }
          
@@ -55,7 +59,10 @@ function populateEngineBuildProperties()
    if($CurrentEngineBuild.localPath !$= "")
    {
       AddActionButton("ManagerUI:plus_image", "New Project", "", "");
-      AddActionButton("ManagerUI:download_image", "Pull Updates", "pullUpdateEngineBuild($CurrentEngineBuild);", "");
+      
+      if($CurrentEngineBuild.gitPath !$= "")
+         AddActionButton("ManagerUI:download_image", "Pull Updates", "pullUpdateEngineBuild($CurrentEngineBuild);", "");
+         
       AddActionButton("ManagerUI:trashcan_image", "Delete Local Copy", "", "");
    }
    else
@@ -64,7 +71,7 @@ function populateEngineBuildProperties()
    if(!$CurrentEngineBuild.isDefault)
       AddActionButton("ManagerUI:trashcan_image", "Remove From List", "", "");
    
-   if(!$CurrentEngineBuild.gitPath !$= "")
+   if($CurrentEngineBuild.gitPath !$= "")
    {
       AddActionButton("ManagerUI:share1_image", "Visit Repo Page", "openEngineBuildGitPage($CurrentEngineBuild);", 
                "Visit the repository page of this engine build.");

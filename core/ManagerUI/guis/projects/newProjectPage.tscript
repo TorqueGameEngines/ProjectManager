@@ -1,0 +1,163 @@
+function populateNewProjectPage()
+{
+   if($ResetForm == true)
+   {
+      $ResetForm = false;
+      $NewProject = new ScriptObject();
+      
+      if($platform $= "Windows")
+         $NewProject.enableD3D = 1;
+      
+      $NewProject.enableOpenGL = 1;
+   }
+   
+   updateBreadcrumbList("ProjectsPage;NewProjectPage");
+   
+   MainViewStack.clear();
+   
+   MainMenuGui.setActionBarVisible(false);
+
+   MainViewStack.add(createEditCard("Project Name", "TextEdit", "$NewProject.projectName", "The name of this project", ""));
+   
+    MainViewStack.add(createEditCard("Project Preview Image", "FilePath", "$NewProject.previewImage", "The preview image displayed in the project manager for this project. (Optional)", ""));
+   
+   %buildList = getUsableEngineBuildsList();
+   MainViewStack.add(createEditCard("Engine Build", "Dropdown", "$NewProject.targetBuildName", "What Engine build is this project using", %buildList));
+   
+   %targetBuildIdx = findEngineBuildByName($NewProject.targetBuildName);
+   
+   if(%targetBuildIdx != 0)
+   {
+      %targetBuild = getEngineBuild(%targetBuildIdx);
+      
+      if(!%targetBuild.isBinary)
+      {
+         %compilerList = getCompilerList();
+         MainViewStack.add(createEditCard("Cmake Generator", "Dropdown", "$NewProject.generatorName", "What generator for CMake to run to generate source project files", %compilerList));
+         
+         %cmakeRoll = new GuiRolloutCtrl() { 
+            caption = "CMake Settings";
+            extent = MainViewStack.extent.x SPC 40;
+            profile = GuiMenuRolloutProfile;
+            margin = "5 5 5 5";
+            
+            new GuiStackControl() {
+               internalName = "stack";
+               padding = "5";
+            };
+         };
+         
+         MainViewStack.add(%cmakeRoll);
+         
+         if($platform $= "Windows")
+            %cmakeRoll-->stack.add(createEditCard("Enable D3D Renderer", "checkbox", "$NewProject.enableD3D", "Enable the D3D11 Renderer"));
+            
+         %cmakeRoll-->stack.add(createEditCard("Enable OpenGL Renderer", "checkbox", "$NewProject.enableOpenGL", "Enable the OpenGL Renderer"));
+         
+         %cmakeRoll-->stack.add(createEditCard("Enable PhysX Physics Plugin", "checkbox", "$NewProject.enablePhysX", "Makes the engine utilize the PhysX Physics Plugin"));
+         %cmakeRoll-->stack.add(createEditCard("Enable Bullet Physics Plugin", "checkbox", "$NewProject.enableBullet", "Makes the engine utilize the Bullet Physics Plugin"));
+         %cmakeRoll-->stack.add(createEditCard("Enable SQLite Support", "checkbox", "$NewProject.enableSQLite", "Adds SQLite database support"));
+      }
+      
+      %moduleRoll = new GuiRolloutCtrl() { 
+         caption = "Modules";
+         extent = MainViewStack.extent.x SPC 40;
+         profile = GuiMenuRolloutProfile;
+         margin = "5 5 5 5";
+         
+         new GuiStackControl() {
+            internalName = "stack";
+            padding = "5";
+         };
+      };
+      
+      MainViewStack.add(%moduleRoll);
+   }
+         
+   %buttons = createOKCancelCard("Create", "Cancel", "saveNewProject();", "MainMenuGUI.goToPage(\"ProjectPage\");");
+   
+   %valid = true;
+   
+   if(%valid)
+      %buttons-->okButton.setActive(true);
+   else
+      %buttons-->okButton.setActive(false);
+   
+   MainViewStack.add(%buttons);
+}
+
+function saveNewProject()
+{
+   if(!isObject($NewProject))
+      return;
+   
+   incrementProjectCount();
+   
+   %newBuildId = getProjectCount();
+   
+   $NewProject.buildId = %newBuildId;
+   
+   saveProject($NewProject);
+   
+   MainMenuGui.goToPage("ProjectPage");
+}
+
+function getUsableEngineBuildsList()
+{
+   %buildCount = getEngineBuildCount();
+   
+   %buildList = "";
+   for(%i=1; %i <= %buildCount; %i++)
+   {
+      %bld = getEngineBuild(%i);
+      
+      %buildName = %bld.buildName;
+      
+      if(%bld.localPath $= "")
+         continue;
+         
+      if(%bld.isBinary)
+      {
+         if(!%bld.hasWindowsBinary && !%bld.hasMacOSBinary && !%bld.hasLinuxBinary)
+            continue;
+            
+         if($platform $= "windows" && !%bld.hasWindowsBinary)
+            continue;
+         
+         if($platform $= "macOS" && !%bld.hasMacOSBinary)
+            continue;
+         
+         if($platform $= "linux" && !%bld.hasLinuxBinary)
+            continue;
+      }
+
+      if(%buildList $= "")
+         %buildList = %buildName;
+      else
+         %buildList = %buildList @ ";" @ %buildName; 
+   }
+   
+   if(%buildList $= "")
+      %buildList = "No Valid Engine Builds";
+      
+   return %buildList;
+}
+
+function getCompilerList()
+{
+   %compilerList = "";
+   if($platform $= "windows")
+   {
+      %compilerList = "Visual Studio 17 2022;Visual Studio 16 2019"; 
+   }  
+   else if($platform $= "macOS")
+   {
+      %compilerList = "XCode";
+   } 
+   else if($platform $= "linux")
+   {
+      %compilerList = "Unix Makefile";
+   }   
+   
+   return %compilerList;
+}

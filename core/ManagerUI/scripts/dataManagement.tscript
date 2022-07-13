@@ -26,7 +26,7 @@ function findEngineBuildByName(%name)
 {
    %buildCount = getEngineBuildCount();
    if(%buildCount == 0)
-      return -1;
+      return 0;
    
    for(%i=1; %i <= %buildCount; %i++)
    {
@@ -34,7 +34,7 @@ function findEngineBuildByName(%name)
          return %i;
    }
    
-   return -1;
+   return 0;
 }
 
 function getEngineBuild(%index)
@@ -52,7 +52,18 @@ function getEngineBuild(%index)
    %bld.isDefault = PMSettings.value("EngineBuilds/" @ %index @ "/isDefault", "");
    %bld.isBinary = PMSettings.value("EngineBuilds/" @ %index @ "/isBinary", "");
    %bld.tags = PMSettings.value("EngineBuilds/" @ %index @ "/tags", "");
+   
+   %bld.hasWindowsBinary = PMSettings.value("EngineBuilds/" @ %index @ "/hasWindowsBinary", "");
+   %bld.winAppBranch = PMSettings.value("EngineBuilds/" @ %index @ "/winAppBranch", "");
    %bld.winAppName = PMSettings.value("EngineBuilds/" @ %index @ "/winAppName", "");
+   
+   %bld.hasLinuxBinary = PMSettings.value("EngineBuilds/" @ %index @ "/hasLinuxBinary", "");
+   %bld.linAppBranch = PMSettings.value("EngineBuilds/" @ %index @ "/linAppBranch", "");
+   %bld.linAppName = PMSettings.value("EngineBuilds/" @ %index @ "/linAppName", "");
+   
+   %bld.hasMacOSBinary = PMSettings.value("EngineBuilds/" @ %index @ "/hasMacOSBinary", "");
+   %bld.macAppBranch = PMSettings.value("EngineBuilds/" @ %index @ "/macAppBranch", "");
+   %bld.macAppName = PMSettings.value("EngineBuilds/" @ %index @ "/macAppName", "");
    
    return %bld;
 }
@@ -72,12 +83,25 @@ function saveEngineBuild(%build)
    PMSettings.setValue("EngineBuilds/" @ %index @ "/isDefault", %build.isDefault);
    PMSettings.setValue("EngineBuilds/" @ %index @ "/isBinary", %build.isBinary);
    PMSettings.setValue("EngineBuilds/" @ %index @ "/tags", %build.tags);
+   
+   PMSettings.setValue("EngineBuilds/" @ %index @ "/hasWindowsBinary", %build.hasWindowsBinary);
+   PMSettings.setValue("EngineBuilds/" @ %index @ "/winAppBranch", %build.winAppBranch);
    PMSettings.setValue("EngineBuilds/" @ %index @ "/winAppName", %build.winAppName);
+   
+   PMSettings.setValue("EngineBuilds/" @ %index @ "/hasLinuxBinary", %build.hasLinuxBinary);
+   PMSettings.setValue("EngineBuilds/" @ %index @ "/linAppBranch", %build.linAppBranch);
+   PMSettings.setValue("EngineBuilds/" @ %index @ "/linAppName", %build.linAppName);
+   
+   PMSettings.setValue("EngineBuilds/" @ %index @ "/hasMacOSBinary", %build.hasMacOSBinary);
+   PMSettings.setValue("EngineBuilds/" @ %index @ "/macAppBranch", %build.macAppBranch);
+   PMSettings.setValue("EngineBuilds/" @ %index @ "/macAppName", %build.macAppName);
+   
+   saveData();
 }
 
 function setupDefaultEngineBuilds()
 {
-   if(findEngineBuildByName("Torque 3D 4.0 Preview Source") == -1)
+   if(findEngineBuildByName("Torque 3D 4.0 Preview Source") == 0)
    {
       %buildId = incrementEngineBuildCount();
       
@@ -93,7 +117,7 @@ function setupDefaultEngineBuilds()
       saveEngineBuild(%bld);
    }
 
-   if(findEngineBuildByName("Torque 3D 4.0 Preview Binaries") == -1)
+   if(findEngineBuildByName("Torque 3D 4.0 Preview Binaries") == 0)
    {
       %buildId = incrementEngineBuildCount();
       
@@ -101,16 +125,16 @@ function setupDefaultEngineBuilds()
       %bld.buildId = %buildId;
       %bld.buildName = "Torque 3D 4.0 Preview Binaries";
       %bld.gitPath = "https://github.com/TorqueGameEngines/Torque3D-Binaries";
-      %bld.branchName = "Torque3D_win_20220409";
+      %bld.branchName = "";
       %bld.localPath = "";
       %bld.isDefault = 1;
       %bld.isBinary = 1;
+      %bld.hasWindowsBinary = 1;
+      %bld.winAppBranch = "Torque3D_win_20220409";
       %bld.winAppName = "Torque3D.exe";
 
       saveEngineBuild(%bld);
    }
-   
-   saveData();
 }
 
 function getEngineBuildDownloadPath()
@@ -158,7 +182,7 @@ function getEngineBuildTags(%index)
       %tokenCount++;
    }
    
-   if(%bld.winAppName !$= "")
+   if(%bld.hasWindowsBinary !$= "")
    {
       if(%tokenCount == 0)
          %tags = "Windows";
@@ -168,7 +192,7 @@ function getEngineBuildTags(%index)
       %tokenCount++;
    }
    
-   if(%bld.linAppName !$= "")
+   if(%bld.hasLinuxBinary !$= "")
    {
       if(%tokenCount == 0)
          %tags = "Linux";
@@ -178,7 +202,7 @@ function getEngineBuildTags(%index)
       %tokenCount++;
    }
    
-   if(%bld.macAppName !$= "")
+   if(%bld.hasMacOSBinary !$= "")
    {
       if(%tokenCount == 0)
          %tags = "macAppName";

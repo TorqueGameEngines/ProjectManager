@@ -47,7 +47,7 @@ function populateProjectsList()
       makeIconSquare = true;
       textLocation = "Bottom";
       text = "Add New";
-      command = "startCreateNewProjectWizard();";
+      command = "$ResetForm = true; MainMenuGui.gotoPage(\"NewProjectPage\");";
    };
    
    ActionButtonPanelList.add(%actionBtn);

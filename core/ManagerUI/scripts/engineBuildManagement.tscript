@@ -17,6 +17,8 @@ function downloadEngineBuild(%build)
    %buildName = strReplace(%buildName, ".", "");
    %buildName = strReplace(%buildName, " ", "_");
    
+   %buildName = %build.buildId @ "_" @ %buildName;
+   
    %targetPath = %downloadPath @ "/" @ %buildName @ "/";
    
    %targetPath = strReplace(%targetPath, "//", "/");

@@ -28,6 +28,9 @@ function MainMenuGui::onWake(%this)
    
    
    %this.registerPage("ProjectsPage", "Projects", "populateProjectsList();");
+   %this.registerPage("ProjectPropertiesPage", "Properties", "populateProjectProperties();");
+   %this.registerPage("NewProjectPage", "New Project Properties", "populateNewProjectPage();");
+   
    
    setupDefaultEngineBuilds();
    
@@ -1689,6 +1692,8 @@ function findFilePathCard(%ctrl)
       %path = fileName(%dlg.FileName);
       
       %ctrl.setText(%path);
+      
+      eval(%ctrl.validate);
    }
 
    %dlg.delete();
@@ -1712,6 +1717,8 @@ function findFolderPathCard(%ctrl)
       %path = makeFullPath(%dlg.FileName);
       
       %ctrl.setText(%path);
+      
+      eval(%ctrl.validate);
    }
 
    %dlg.delete();

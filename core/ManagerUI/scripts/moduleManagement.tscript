@@ -305,7 +305,7 @@ function findModulePath(%buildIdx)
 //==============================================================================
 // Properties
 //==============================================================================
-function populateModuleProperties(%moduleId)
+/*function populateModuleProperties(%moduleId)
 {
    Canvas.pushDialog(ManagerPropertiesGUI);
    ManagerPropertiesList.clear();
@@ -360,7 +360,7 @@ function populateModuleProperties(%moduleId)
       managerPropertiesInspector.addField("$tmpEngineBuildLocalPath", "Local Folder Path", "string", "Directory Path to the locally downloaded copy of this build.", 
                %localPath, "", "");
    }*/
-}
+//}
 
 function changeModuleName(%buildIdx)
 {

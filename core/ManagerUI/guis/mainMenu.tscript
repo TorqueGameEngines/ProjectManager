@@ -24,13 +24,17 @@ function MainMenuGui::onWake(%this)
    
    %this.registerPage("EngineBuildPage", "Engine Builds", "populateEngineBuildsList();");
    %this.registerPage("EngineBuildPropertiesPage", "Properties", "populateEngineBuildProperties();");
-   %this.registerPage("NewEngineBuildPage", "New Engine Build Properties", "populateNewEngineBuildPropertiesList();");
-   
+   %this.registerPage("NewEngineBuildPage", "New Engine Build Properties", "populateEngineBuildProperties(true);");
    
    %this.registerPage("ProjectsPage", "Projects", "populateProjectsList();");
    %this.registerPage("ProjectPropertiesPage", "Properties", "populateProjectProperties();");
-   %this.registerPage("NewProjectPage", "New Project Properties", "populateNewProjectPage();");
+   %this.registerPage("NewProjectPage", "New Project Properties", "populateProjectProperties(true);");
    
+   %this.registerPage("ModulesPage", "Modules", "populateModulesList();");
+   %this.registerPage("ModulePropertiesPage", "Properties", "populateModuleProperties();");
+   %this.registerPage("NewModulePage", "New Module Properties", "populateModuleProperties(true);");
+   
+   %this.registerPage("SettingsdPage", "Settings", "populateSettings();");
    
    setupDefaultEngineBuilds();
    
@@ -58,7 +62,8 @@ function MainMenuGui::onWake(%this)
    
    $showMenubar = true;
    
-   //MainPanel.setRootPage(RootPage);
+   //cheat a little so we can ensure that the font's ready to be processed for string length checks and the like
+   GuiTagButtonProfile.getStringWidth("This is a preload sentence");
    
    //display the page
    %this.goToPage("EngineBuildPage");
@@ -286,7 +291,7 @@ function makeModuleCard(%moduleId)
    return %ctrl;
 }
 
-function populateModulesList()
+/*function populateModulesList()
 {
    MainViewStack.hidden = false;
    MainViewStack.clear();
@@ -391,7 +396,7 @@ function populateModulesList()
    };
    
    ActionButtonPanelList.add(%actionBtn);
-}
+}*/
 
 //
 function makeRPKCard(%buildName)
@@ -1199,7 +1204,7 @@ function createCard(%mainText, %subText, %tagsList, %tooltip, %hasNavigation, %n
       
       for(%t=0; %t < %tagCount; %t++)
       {
-         %tag = getToken(%tagsList, " ,;\t", %t);
+         %tag = getToken(%tagsList, ",;", %t);
          %tagWidth = GuiTagButtonProfile.getStringWidth(%tag) + 5;
          %tagBtn = new GuiButtonCtrl() {
             profile = GuiTagButtonProfile;
@@ -1394,8 +1399,11 @@ function createOKCancelCard(%okButtonText, %cancelButtonText, %okButtonCommand, 
    return %ctrl;
 }
 
-function createEditCard(%label, %type, %variable, %tooltip, %data)
+function createEditCard(%label, %type, %variable, %tooltip, %data, %enabled)
 {
+   if(%enabled $= "")
+      %enabled = true;
+      
    %pad = 5;
    %cardRowHeight = 20;
    %cardHeight = %cardRowHeight * 2;
@@ -1475,6 +1483,7 @@ function createEditCard(%label, %type, %variable, %tooltip, %data)
          extent = %actionExtent.x SPC 20;
          position = %actionPosition.x SPC 20;
          profile = GuiMenuPopUpMenuProfile;
+         internalName = "actionCtrl";
       };
       
       %dropdownList = getTokenCount(%data, ",;");
@@ -1487,12 +1496,16 @@ function createEditCard(%label, %type, %variable, %tooltip, %data)
       %actionCtrl.command = "dropdownCardChanged(" @ %actionCtrl @ ");";
       
       %ctrl.add(%actionCtrl);
-      
+
       //There's some odd secondary scaling happening after the action control is getting added
       //so we'll just force the position and stuff here
+      %actionCtrl.extent.x = %actionCtrlWidth * 2;
+      %actionCtrl.position.x -= %actionCtrlWidth + %pad;
       %actionCtrl.extent.y = %cardRowHeight;
-      %actionCtrl.position.x -= %pad;
       %actionCtrl.position.y = %cardRowHeight/2;
+      
+      %id = %actionCtrl.findText(%defaultValue);
+      %actionCtrl.setSelected(%id);
    }
    else if(%type $= "TextEdit")
    {
@@ -1503,6 +1516,7 @@ function createEditCard(%label, %type, %variable, %tooltip, %data)
          extent = %actionExtent;
          position = %actionPosition;
          profile = GuiMenuTextEditProfile;
+         internalName = "actionCtrl";
       };
       
       %actionCtrl.validate = "textEditCardChanged(" @ %actionCtrl @ ");";
@@ -1515,6 +1529,8 @@ function createEditCard(%label, %type, %variable, %tooltip, %data)
       %actionCtrl.position.x -= %actionCtrlWidth + %pad;
       %actionCtrl.extent.y = %cardRowHeight;
       %actionCtrl.position.y = %cardRowHeight/2;
+      
+      //%actionCtrl.setText(%defaultValue);
    }
    else if(%type $= "FilePath")
    {
@@ -1626,14 +1642,16 @@ function createEditCard(%label, %type, %variable, %tooltip, %data)
       %ctrl.add(%actionCtrl);
    }
    
-   %actionCtrl.variable = %variable;
+   %actionCtrl.active = %enabled;
+   
+   %actionCtrl.targetVar = %variable;
    
    return %ctrl;
 }
 
 function textEditCardChanged(%ctrl)
 {
-   %evalCommand = %ctrl.variable @ " = \"" @ %ctrl.getText() @ "\";";
+   %evalCommand = %ctrl.targetVar @ " = \"" @ %ctrl.getText() @ "\";";
    eval(%evalCommand);
    
    MainMenuGui.refresh();
@@ -1641,7 +1659,7 @@ function textEditCardChanged(%ctrl)
 
 function checkboxCardChanged(%ctrl)
 {
-   %evalCommand = %ctrl.variable @ " = \"" @ %ctrl.isStateOn() @ "\";";
+   %evalCommand = %ctrl.targetVar @ " = \"" @ %ctrl.isStateOn() @ "\";";
    eval(%evalCommand);
    
    MainMenuGui.refresh();
@@ -1649,7 +1667,7 @@ function checkboxCardChanged(%ctrl)
 
 function dropdownCardChanged(%ctrl)
 {
-   %evalCommand = %ctrl.variable @ " = \"" @ %ctrl.getText() @ "\";";
+   %evalCommand = %ctrl.targetVar @ " = \"" @ %ctrl.getText() @ "\";";
    eval(%evalCommand);
    
    %ctrl.setText(%ctrl.getText());
@@ -1659,7 +1677,7 @@ function dropdownCardChanged(%ctrl)
 
 function filePathCardChanged(%ctrl)
 {
-   %evalCommand = %ctrl.variable @ " = \"" @ %ctrl.getText() @ "\";";
+   %evalCommand = %ctrl.targetVar @ " = \"" @ %ctrl.getText() @ "\";";
    eval(%evalCommand);
    
    MainMenuGui.refresh();
@@ -1667,7 +1685,7 @@ function filePathCardChanged(%ctrl)
 
 function folderPathCardChanged(%ctrl)
 {
-   %evalCommand = %ctrl.variable @ " = \"" @ %ctrl.getText() @ "\";";
+   %evalCommand = %ctrl.targetVar @ " = \"" @ %ctrl.getText() @ "\";";
    eval(%evalCommand);
    
    MainMenuGui.refresh();

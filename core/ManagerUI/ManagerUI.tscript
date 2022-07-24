@@ -42,11 +42,12 @@ function ManagerUI::initClient(%this)
    //
    %this.queueExec("./guis/engineBuilds/engineBuildPage");
    %this.queueExec("./guis/engineBuilds/engineBuildPropertiesPage");
-   %this.queueExec("./guis/engineBuilds/newEngineBuildPage");
    
    %this.queueExec("./guis/projects/projectsPage");
    %this.queueExec("./guis/projects/projectPropertiesPage");
-   %this.queueExec("./guis/projects/newProjectPage");
+   
+   %this.queueExec("./guis/modules/modulesPage");
+   %this.queueExec("./guis/modules/modulesPropertiesPage");
    
    //   
    %this.queueExec("./scripts/actionMenu");
@@ -85,6 +86,8 @@ function ManagerUI::initClient(%this)
    GlobalActionMap.bind("keyboard", "ctrl f", "selectSearchbar");
    
    GlobalActionMap.bind("keyboard", "escape", "navigateBack");
+   
+   %this.queueExec("./scripts/webFeed");
 }
 
 function ManagerUI::onCreateClientConnection(%this){}

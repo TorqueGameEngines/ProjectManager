@@ -1,8 +1,14 @@
-function populateEngineBuildProperties()
+function populateEngineBuildProperties(%isNew)
 {
-   updateBreadcrumbList("EngineBuildPage;EngineBuildPropertiesPage");
+   if(%isNew $= "")
+      %isNew = false;
+      
+   if(%isNew)
+      updateBreadcrumbList("EngineBuildPage;NewEngineBuildPage");
+   else
+      updateBreadcrumbList("EngineBuildPage;EngineBuildPropertiesPage");
    
-   MainMenuGui.setActionBarVisible(true);
+   MainMenuGui.setActionBarVisible(!%isNew);
    
    MainMenuSearchBar.hidden = true;
    MainMenuSearchClearBtn.hidden = true;
@@ -10,74 +16,120 @@ function populateEngineBuildProperties()
    MainViewStack.hidden = false;
    MainViewStack.clear();
    
-   %enabled = !$CurrentEngineBuild.isDefault;
-   %specialTags = $CurrentEngineBuild.isDefault ? "Default" : "";
-   MainViewStack.add(createCard("Engine Build Name", $CurrentEngineBuild.buildName, %specialTags, "The name of this engine build", false, 
-         "", %enabled ? "Button" : "", "", "Change", "changeEngineBuildName($CurrentEngineBuild);"));
+   MainViewStack.add(createEditCard("Engine Build Name", "TextEdit", "$CurrentEngineBuild.buildName", "The name of this engine build", ""));
          
-   if($CurrentEngineBuild.gitPath !$= "")
+   if(%isNew)
    {
-      %gitPath = $CurrentEngineBuild.gitPath !$= "" ? $CurrentEngineBuild.gitPath : "(None)";
-      MainViewStack.add(createCard("Git Repository URL", %gitPath, "", "The URL for the git repo this build is from", false, 
-            "", %enabled ? "Button" : "", "", "Change", "changeEngineBuildGitPath($CurrentEngineBuild);"));
-            
-      %branchName = $CurrentEngineBuild.branchName;
-      if(%branchName $= "")
-         %branchName = "(Default}";
-         
-      MainViewStack.add(createCard("Git Repository Branch", %branchName, "", "The name of the branch in the git repo this build is from", false, 
-            "", %enabled ? "Button" : "", "", "Change", "changeEngineBuildBranchName($CurrentEngineBuild);"));
+      MainViewStack.add(createEditCard("Source Location", "Dropdown", "$CurrentEngineBuild.isLocalOrGit", "Indicates if this engine build is from the local machine, or a git repo", "Git Repository;Local Path"));  
+      
+      MainViewStack.add(createEditCard("Is Binary Build", "checkbox", "$CurrentEngineBuild.isBinary", "Does this engine build contain precompiled binaries?", "No;Yes"));
+      
+      if($CurrentEngineBuild.isLocalOrGit $= "Git Repository")
+      {
+         $CurrentEngineBuild.localPath = "";
+      }
+      else if($CurrentEngineBuild.isLocalOrGit $= "Local Path")
+      {
+         $CurrentEngineBuild.gitPath = "";
+         $CurrentEngineBuild.branchName = "";
+      }
+      
+      if($CurrentEngineBuild.isLocalOrGit $= "Git Repository")
+      {
+         MainViewStack.add(createEditCard("Git URL Path", "TextEdit", "$CurrentEngineBuild.gitPath", "What URL for the git repo this engine build is from", ""));
+         MainViewStack.add(createEditCard("Git Branch", "TextEdit", "$CurrentEngineBuild.branchName", "What branch name for the git repo this engine build is from. Leave blank to use the repository default", ""));
+      }
+      else if($CurrentEngineBuild.isLocalOrGit $= "Local Path")
+      {
+         MainViewStack.add(createEditCard("Local Directory Path", "Folder", "$CurrentEngineBuild.localPath", "What local directory path this engine build is drom on the current machine", ""));
+      }
+   }
+   else
+   {
+      MainViewStack.add(createEditCard("Git URL Path", "TextEdit", "$CurrentEngineBuild.gitPath", "What URL for the git repo this engine build is from", ""));
+      MainViewStack.add(createEditCard("Git Branch", "TextEdit", "$CurrentEngineBuild.branchName", "What branch name for the git repo this engine build is from. Leave blank to use the repository default", ""));
+      MainViewStack.add(createEditCard("Local Directory Path", "Folder", "$CurrentEngineBuild.localPath", "What local directory path this engine build is drom on the current machine", ""));
    }
          
-   %localPath = $CurrentEngineBuild.localPath !$= "" ? $CurrentEngineBuild.localPath : "(Not Downloaded)";
-   %buttonText = $CurrentEngineBuild.localPath !$= "" ? "Change" : "Find";
-   MainViewStack.add(createCard("Local File Path", %localPath, "", "The local file path for this engine build on the current machine", false, 
-         "", "Button", "", %buttonText, "changeEngineBuildLocalPath($CurrentEngineBuild);"));
-         
-   //MainViewStack.add(createCard("Is Binary Build", "", "", "Does this engine build have precompiled binaries", false, 
-   //      "", "Checkbox", "False;True", $CurrentEngineBuild.isBinary, "changeEngineBuildIsBinary($CurrentEngineBuild);"));
-         
-   if($CurrentEngineBuild.isBinary)
+   if($CurrentEngineBuild.isDefault)
    {
-      %winAppName = $CurrentEngineBuild.winAppName !$= "" ? $CurrentEngineBuild.winAppName : "(None)";
-      MainViewStack.add(createCard("Windows Binary Name", $CurrentEngineBuild.winAppName, "", "The name of the windows executable file", false, 
-            "", %enabled ? "Button" : "", "", "Change", "changeEngineBuildWindowsExec($CurrentEngineBuild);"));
-            
-      %linAppName = $CurrentEngineBuild.linAppName !$= "" ? $CurrentEngineBuild.linAppName : "(None)";
-      MainViewStack.add(createCard("Linux Binary Name", %linAppName, "", "The name of the linux executable file", false, 
-            "", %enabled ? "Button" : "", "", "Change", "changeEngineBuildLinuxExec($CurrentEngineBuild);"));
-            
-      %macAppName = $CurrentEngineBuild.macAppName !$= "" ? $CurrentEngineBuild.macAppName : "(None)";
-      MainViewStack.add(createCard("MacOS Binary Name", %macAppName, "", "The name of the macOS executable file", false, 
-            "", %enabled ? "Button" : "", "", "Change", "changeEngineBuildMacOSExec($CurrentEngineBuild);"));
+      for(%i=0; %i < MainViewStack.getCount(); %i++)
+      {
+         %child = MainViewStack.getObject(%i);
+         
+         //we'll skip local directory path stuff as we need to be able to change the local install
+         //even on default builds
+         if(%child-->label.text !$= "Local Directory Path")
+         {
+            %child.callOnChildren("setActive", false);
+         }
+      }
    }
          
-   //
+   if(%isNew)
+   {
+      %buttons = createOKCancelCard("Create", "Cancel", "saveNewEngineBuild();", "MainMenuGUI.goToPage(\"EngineBuildPage\");");
+   
+      %valid = true;
+      
+      if($CurrentEngineBuild.buildName $= "")
+         %valid = false;
+         
+      if($CurrentEngineBuild.isLocalOrGit $= "")
+         %valid = false;
+      
+      if($CurrentEngineBuild.isLocalOrGit $= "Git Repository" && $CurrentEngineBuild.gitPath $= "")
+         %valid = false;
+         
+      if($CurrentEngineBuild.isLocalOrGit $= "Git Repository" && $CurrentEngineBuild.gitPath !$= "")
+      {
+         %valid = false;
+      }
+      
+      if($CurrentEngineBuild.isLocalOrGit $= "Local Path" && $CurrentEngineBuild.localPath $= "")
+         %valid = false;
+      
+      if(%valid)
+         %buttons-->okButton.setActive(true);
+      else
+         %buttons-->okButton.setActive(false);
+      
+      MainViewStack.add(%buttons);  
+   }
+   else
+   {
+      %buttons = createOKCancelCard("Save", "Cancel", "saveEngineBuild($CurrentEngineBuild);", "");
+      MainViewStack.add(%buttons); 
+   }
+         
    //Now add our action panel buttons
    ActionButtonPanelList.clear();
    
-   if($CurrentEngineBuild.localPath !$= "")
+   if(!%isNew)
    {
-      AddActionButton("ManagerUI:plus_image", "New Project", "", "");
+      if($CurrentEngineBuild.localPath !$= "")
+      {
+         AddActionButton("ManagerUI:plus_image", "New Project", "CreateNewProject();", "");
+         
+         if($CurrentEngineBuild.gitPath !$= "")
+            AddActionButton("ManagerUI:download_image", "Pull Updates", "pullUpdateEngineBuild($CurrentEngineBuild);", "");
+            
+         AddActionButton("ManagerUI:trashcan_image", "Delete Local Copy", "", "");
+      }
+      else
+         AddActionButton("ManagerUI:download_image", "Download", "downloadEngineBuild($CurrentEngineBuild);", "");
+      
+      if(!$CurrentEngineBuild.isDefault)
+         AddActionButton("ManagerUI:trashcan_image", "Remove From List", "", "");
       
       if($CurrentEngineBuild.gitPath !$= "")
-         AddActionButton("ManagerUI:download_image", "Pull Updates", "pullUpdateEngineBuild($CurrentEngineBuild);", "");
-         
-      AddActionButton("ManagerUI:trashcan_image", "Delete Local Copy", "", "");
-   }
-   else
-      AddActionButton("ManagerUI:download_image", "Download", "downloadEngineBuild($CurrentEngineBuild);", "");
-   
-   if(!$CurrentEngineBuild.isDefault)
-      AddActionButton("ManagerUI:trashcan_image", "Remove From List", "", "");
-   
-   if($CurrentEngineBuild.gitPath !$= "")
-   {
-      AddActionButton("ManagerUI:share1_image", "Visit Repo Page", "openEngineBuildGitPage($CurrentEngineBuild);", 
-               "Visit the repository page of this engine build.");
-               
-      AddActionButton("ManagerUI:share1_image", "Visit Issues Page", "openEngineBuildIssuesPage($CurrentEngineBuild);", 
-            "Visit the issues page of this engine build.");
+      {
+         AddActionButton("ManagerUI:share1_image", "Visit Repo Page", "openEngineBuildGitPage($CurrentEngineBuild);", 
+                  "Visit the repository page of this engine build.");
+                  
+         AddActionButton("ManagerUI:share1_image", "Visit Issues Page", "openEngineBuildIssuesPage($CurrentEngineBuild);", 
+               "Visit the issues page of this engine build.");
+      }
    }
 }
 
@@ -85,4 +137,28 @@ function changeEngineBuildIsBinary(%bld)
 {
      %bld.isBinary = !%bld.isBinary;
      MainMenuGui.refresh();
+}
+
+function saveCurrentEngineBuild()
+{
+   if(!isObject($CurrentEngineBuild))
+      return;
+      
+   saveEngineBuild($CurrentEngineBuild);
+}
+
+function saveNewEngineBuild()
+{
+   if(!isObject($CurrentEngineBuild))
+      return;
+   
+   incrementEngineBuildCount();
+   
+   %newBuildId = getEngineBuildCount();
+   
+   $CurrentEngineBuild.buildId = %newBuildId;
+   
+   saveEngineBuild($CurrentEngineBuild);
+   
+   MainMenuGui.goToPage("EngineBuildPage");
 }

@@ -100,7 +100,7 @@ new GuiControlProfile(MenuHeaderTextCenter)
 
 new GuiControlProfile(MenuSubHeaderText)
 {
-   fontType = "Arial";
+   fontType = "Arial Bold";
    fontSize = "16";
    fontColor = getVariable("$Theme::" @ $CurrentTheme @ "::FontColorEmphasized");
    fontColorHL = getVariable("$Theme::" @ $CurrentTheme @ "::FontColorEmphasized");
@@ -410,8 +410,8 @@ new GuiControlProfile( GuiTextArrayProfile : GuiTextProfile )
 if( !isObject( GuiMenuTextEditProfile ) )
 new GuiControlProfile( GuiMenuTextEditProfile : GuiTextEditProfile )
 {
-   fontColor = getVariable("$Theme::" @ $CurrentTheme @ "::FontColor");
-   fontColorHL = getVariable("$Theme::" @ $CurrentTheme @ "::FontColorEmphasized");
+   fontColor = "200 200 200 255";
+   fontColorHL = "50 50 50 255";
    fontColorSEL = "200 200 200 255";
    fontColorNA = "108 108 108 255";
    
@@ -421,7 +421,7 @@ new GuiControlProfile( GuiMenuTextEditProfile : GuiTextEditProfile )
    border = "1";
    borderColor ="87 87 87 255";
    borderColorHL = "87 87 87";
-   borderColorNA = "22 22 22 255";
+   borderColorNA = "87 87 87 255";
    borderColorSEL = "255 255 255";
    
    category = "Menu";
@@ -437,6 +437,7 @@ new GuiControlProfile( GuiMenuTextEditProfile : GuiTextEditProfile )
    fontColors[3] = "200 200 200 255";
    fontColors[4] = "255 0 255 255";
    fontColorLink = "255 0 255 255";
+   fillColorNA = "22 22 22 255";
 };
 
 // ----------------------------------------------------------------------------

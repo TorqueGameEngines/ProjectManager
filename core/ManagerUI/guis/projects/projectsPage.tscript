@@ -10,7 +10,7 @@ function populateProjectsList()
    ActionButtonPanelList.clear();
    
    %projectCount = getProjectCount();
-   for(%i=0; %i < %projectCount; %i++)
+   for(%i=1; %i <= %projectCount; %i++)
    {
       %project = getProject(%i);
       %projectName = %project.projectName;
@@ -26,7 +26,8 @@ function populateProjectsList()
          
          %tags = getEngineBuildTags(%project.engineBuildId);
          
-         %card = createCard(%project.projectName, %project.localPath, %tags, "", true, "", "PreviewImage", "", %project.previewImage, "");
+         %localPath = IsDirectory(%project.localPath) ? %project.localPath : %project.localPath SPC "(Not Found)";
+         %card = createCard(%project.projectName, %localPath, %tags, "", true, "navToProjectProps("@%project@");", "PreviewImage", "", %project.previewImage, "");
          
          MainViewStack.add(%card);
       }
@@ -47,8 +48,18 @@ function populateProjectsList()
       makeIconSquare = true;
       textLocation = "Bottom";
       text = "Add New";
-      command = "$ResetForm = true; MainMenuGui.gotoPage(\"NewProjectPage\");";
+      command = "$CurrentEngineBuild = \"\";CreateNewProject();";
    };
    
    ActionButtonPanelList.add(%actionBtn);
+}
+
+function navToProjectProps(%project)
+{
+   MainMenuGui.currentPage = "ProjectPropertiesPage";
+   $CurrentProject = %project;
+
+   populateProjectProperties(); 
+   
+   navToAnimation();
 }

@@ -56,7 +56,8 @@ function populateEngineBuildsList()
                continue;
          }
          
-         %ctrl = createCard(%bld.buildName, %bld.localPath, %tags, "", true, "navToEngineBuildProps("@%bld@");");
+         %localPath = IsDirectory(%bld.localPath) ? %bld.localPath : %bld.localPath SPC "(Not Found)";
+         %ctrl = createCard(%bld.buildName, %localPath, %tags, "", true, "navToEngineBuildProps("@%bld@");");
          
          if(%bld.localPath !$= "" && IsDirectory(%bld.localPath))
          {
@@ -88,7 +89,7 @@ function populateEngineBuildsList()
       makeIconSquare = true;
       textLocation = "Bottom";
       text = "Add New";
-      command = "$NewEngineBuild = new ScriptObject(); $ResetForm = true; MainMenuGui.goToPage(\"NewEngineBuildPage\");";
+      command = "$CurrentEngineBuild = new ScriptObject(); $ResetForm = true; MainMenuGui.goToPage(\"NewEngineBuildPage\");";
    };
    
    ActionButtonPanelList.add(%actionBtn);

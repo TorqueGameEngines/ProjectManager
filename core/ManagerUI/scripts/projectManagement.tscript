@@ -153,7 +153,7 @@ function findProjectPath(%buildIdx)
 //==============================================================================
 // Properties
 //==============================================================================
-function populateProjectProperties(%buildIdx)
+/*function populateProjectProperties(%buildIdx)
 {
    Canvas.pushDialog(ManagerPropertiesGUI);
    ManagerPropertiesList.clear();
@@ -170,8 +170,8 @@ function populateProjectProperties(%buildIdx)
    /*%previewImage = getProjectPreviewImageByIndex(%buildIdx);
    %field = makeSettingsCard("Change Preview Image", "$tmpProjectImagePath", "button", %previewImage, %previewImage, "Change Project Preview Image", 
       "changePreviewImage("@%buildIdx@");");
-   ManagerPropertiesList.add(%field);*/
-}
+   ManagerPropertiesList.add(%field);
+}*/
 
 function changeProjectName(%buildIdx)
 {
@@ -662,7 +662,7 @@ function CreateNewProjectPage3::openPage(%this)
    }
 }
 
-function makeProjectComplete(%resultCode)
+/*function makeProjectComplete(%resultCode)
 {
    saveData();
    
@@ -673,29 +673,28 @@ function makeProjectComplete(%resultCode)
    
    //Hop over to the projects page so we can check out our new project
    populateProjectsList();
-}
+}*/
 
 function openSolutionFile(%resultCode)
 {
-   if(!isEngineBuildBinary($newProjectEngineBuildId))
+   %engineBuild = getEngineBuild($NewProject.engineBuildId);
+   if(!%engineBuild.isBinary)
    {
-      %projectId = getProjectIndexByName($TorqueManager::newProjectName);
-      %buildPath = getProjectBuildPathByIndex(%projectId);
+      %buildPath = $NewProject.buildPath;
       
       if($platform $= "windows")
       {
-         %solutionPath = %buildPath @ $TorqueManager::newProjectName @ ".sln";
+         %solutionPath = %buildPath @ $NewProject.projectName @ ".sln";
          if(isFile(%solutionPath))
          {
-            %openCommand = "cd \"" @ %buildPath @ "\" && start " @ $TorqueManager::newProjectName @ ".sln";
+            %openCommand = "cd \"" @ %buildPath @ "\" && start " @ $NewProject.projectName @ ".sln";
             systemCommand(%openCommand, "");
          }
       }
    }
    else
    {
-      %projectId = getProjectIndexByName($TorqueManager::newProjectName);
-      %localPath = getProjectLocalPathByIndex(%projectId);
+      %localPath = $NewProject.localPath;
       
       if(%localPath !$= "" && isDirectory(%localPath))
       {

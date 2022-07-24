@@ -34,66 +34,13 @@ function populateNewEngineBuildPropertiesList()
    if($NewEngineBuild.isLocalOrGit $= "Git Repository")
    {
       MainViewStack.add(createEditCard("Git URL Path", "TextEdit", "$NewEngineBuild.gitPath", "What URL for the git repo this engine build is from", ""));
-      
-      if($NewEngineBuild.isBinary == false)
-         MainViewStack.add(createEditCard("Git Branch", "TextEdit", "$NewEngineBuild.branchName", "What branch name for the git repo this engine build is from. Leave blank to use the repository default", ""));
+      MainViewStack.add(createEditCard("Git Branch", "TextEdit", "$NewEngineBuild.branchName", "What branch name for the git repo this engine build is from. Leave blank to use the repository default", ""));
    }
    else if($NewEngineBuild.isLocalOrGit $= "Local Path")
    {
       MainViewStack.add(createEditCard("Local Directory Path", "Folder", "$NewEngineBuild.localPath", "What local directory path this engine build is drom on the current machine", ""));
    }
    
-   if($NewEngineBuild.isBinary)
-   {
-      if($NewEngineBuild.localPath !$= "")
-      {
-         MainViewStack.add(createEditCard("Has Window Binary", "checkbox", "$NewEngineBuild.hasWindowsBinary", "Does this engine build have a precompiled Windows binary?", "No;Yes"));  
-         if($NewEngineBuild.hasWindowsBinary)
-         {
-            MainViewStack.add(createEditCard("Windows Binary Filename", "FilePath", "$NewEngineBuild.winAppName", "Name of the Windows platform executable file if applicable. Include extension", "")); 
-         }
-         
-         MainViewStack.add(createEditCard("Has Linux Binary", "checkbox", "$NewEngineBuild.hasLinuxBinary", "Does this engine build have a precompiled Linux binary?", "No;Yes"));  
-         if($NewEngineBuild.hasLinuxBinary)
-         { 
-            MainViewStack.add(createEditCard("Linux Binary Filename", "FilePath", "$NewEngineBuild.linAppName", "Name of the Linux platform executable file, if applicable", ""));
-         }
-         
-         MainViewStack.add(createEditCard("Has MacOS Binary", "checkbox", "$NewEngineBuild.hasMacOSBinary", "Does this engine build have a precompiled MacOS binary?", "No;Yes"));  
-         if($NewEngineBuild.hasMacOSBinary)
-         {
-            MainViewStack.add(createEditCard("MacOS Binary Filename", "FilePath", "$NewEngineBuild.macAppName", "Name of the MacOS platform executable file, if applicable", ""));
-         }
-      }
-      
-      if($NewEngineBuild.gitPath !$= "")
-      {
-         MainViewStack.add(createEditCard("Has Window Binary", "checkbox", "$NewEngineBuild.hasWindowsBinary", "Does this engine build have a precompiled Windows binary?", "No;Yes"));  
-         
-         if($NewEngineBuild.hasWindowsBinary)
-         {
-            MainViewStack.add(createEditCard("Windows Build Branch", "TextEdit", "$NewEngineBuild.winAppBranch", "Name of the branch on the target repository with the Windows binary", ""));  
-            MainViewStack.add(createEditCard("Windows Binary Filename", "TextEdit", "$NewEngineBuild.winAppName", "Name of the Windows platform executable file if applicable. Include extension", ""));  
-         }
-         
-         MainViewStack.add(createEditCard("Has Linux Binary", "checkbox", "$NewEngineBuild.hasLinuxBinary", "Does this engine build have a precompiled Linux binary?", "No;Yes"));  
-         
-         if($NewEngineBuild.hasLinuxBinary)
-         {
-            MainViewStack.add(createEditCard("Linux Build Branch", "TextEdit", "$NewEngineBuild.linAppBranch", "Name of the branch on the target repository with the Linux binary", "")); 
-            MainViewStack.add(createEditCard("Linux Binary Filename", "TextEdit", "$NewEngineBuild.linAppName", "Name of the Linux platform executable file, if applicable", ""));
-         }
-         
-         MainViewStack.add(createEditCard("Has MacOS Binary", "checkbox", "$NewEngineBuild.hasMacOSBinary", "Does this engine build have a precompiled MacOS binary?", "No;Yes"));  
-         
-         if($NewEngineBuild.hasMacOSBinary)
-         {
-            MainViewStack.add(createEditCard("MacOS Build Branch", "TextEdit", "$NewEngineBuild.macAppBranch", "Name of the branch on the target repository with the MacOS binary", "")); 
-            MainViewStack.add(createEditCard("MacOS Binary Filename", "TextEdit", "$NewEngineBuild.macAppName", "Name of the MacOS platform executable file, if applicable", ""));
-         }
-      }
-   }
-         
    %buttons = createOKCancelCard("Save", "Cancel", "saveNewEngineBuild();", "MainMenuGUI.goToPage(\"EngineBuildPage\");");
    
    %valid = true;
@@ -129,18 +76,3 @@ function populateNewEngineBuildPropertiesList()
    MainViewStack.add(%buttons);
 }
 
-function saveNewEngineBuild()
-{
-   if(!isObject($NewEngineBuild))
-      return;
-   
-   incrementEngineBuildCount();
-   
-   %newBuildId = getEngineBuildCount();
-   
-   $NewEngineBuild.buildId = %newBuildId;
-   
-   saveEngineBuild($NewEngineBuild);
-   
-   MainMenuGui.goToPage("EngineBuildPage");
-}

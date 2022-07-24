@@ -9,6 +9,9 @@ function populateNewProjectPage()
          $NewProject.enableD3D = 1;
       
       $NewProject.enableOpenGL = 1;
+      
+      if($NewProjectTargetEngineBuild !$= "")
+         $NewProject.targetBuildName = $NewProjectTargetEngineBuild.buildName;
    }
    
    updateBreadcrumbList("ProjectsPage;NewProjectPage");
@@ -19,7 +22,9 @@ function populateNewProjectPage()
 
    MainViewStack.add(createEditCard("Project Name", "TextEdit", "$NewProject.projectName", "The name of this project", ""));
    
-    MainViewStack.add(createEditCard("Project Preview Image", "FilePath", "$NewProject.previewImage", "The preview image displayed in the project manager for this project. (Optional)", ""));
+   MainViewStack.add(createEditCard("Project Preview Image", "FilePath", "$NewProject.previewImage", "The preview image displayed in the project manager for this project. (Optional)", ""));
+   
+   MainViewStack.add(createEditCard("Project Path", "Folder", "$NewProject.localPath", "The folder the project will be put into", ""));
    
    %buildList = getUsableEngineBuildsList();
    MainViewStack.add(createEditCard("Engine Build", "Dropdown", "$NewProject.targetBuildName", "What Engine build is this project using", %buildList));
@@ -50,13 +55,13 @@ function populateNewProjectPage()
          MainViewStack.add(%cmakeRoll);
          
          if($platform $= "Windows")
-            %cmakeRoll-->stack.add(createEditCard("Enable D3D Renderer", "checkbox", "$NewProject.enableD3D", "Enable the D3D11 Renderer"));
+            %cmakeRoll-->stack.add(createEditCard("Enable D3D Renderer", "checkbox", "$NewProject.enableD3D", "Enable the D3D11 Renderer", "No;Yes"));
             
-         %cmakeRoll-->stack.add(createEditCard("Enable OpenGL Renderer", "checkbox", "$NewProject.enableOpenGL", "Enable the OpenGL Renderer"));
+         %cmakeRoll-->stack.add(createEditCard("Enable OpenGL Renderer", "checkbox", "$NewProject.enableOpenGL", "Enable the OpenGL Renderer", "No;Yes"));
          
-         %cmakeRoll-->stack.add(createEditCard("Enable PhysX Physics Plugin", "checkbox", "$NewProject.enablePhysX", "Makes the engine utilize the PhysX Physics Plugin"));
-         %cmakeRoll-->stack.add(createEditCard("Enable Bullet Physics Plugin", "checkbox", "$NewProject.enableBullet", "Makes the engine utilize the Bullet Physics Plugin"));
-         %cmakeRoll-->stack.add(createEditCard("Enable SQLite Support", "checkbox", "$NewProject.enableSQLite", "Adds SQLite database support"));
+         %cmakeRoll-->stack.add(createEditCard("Enable PhysX Physics Plugin", "checkbox", "$NewProject.enablePhysX", "Makes the engine utilize the PhysX Physics Plugin", "No;Yes"));
+         %cmakeRoll-->stack.add(createEditCard("Enable Bullet Physics Plugin", "checkbox", "$NewProject.enableBullet", "Makes the engine utilize the Bullet Physics Plugin", "No;Yes"));
+         %cmakeRoll-->stack.add(createEditCard("Enable SQLite Support", "checkbox", "$NewProject.enableSQLite", "Adds SQLite database support", "No;Yes"));
       }
       
       %moduleRoll = new GuiRolloutCtrl() { 
@@ -86,78 +91,3 @@ function populateNewProjectPage()
    MainViewStack.add(%buttons);
 }
 
-function saveNewProject()
-{
-   if(!isObject($NewProject))
-      return;
-   
-   incrementProjectCount();
-   
-   %newBuildId = getProjectCount();
-   
-   $NewProject.buildId = %newBuildId;
-   
-   saveProject($NewProject);
-   
-   MainMenuGui.goToPage("ProjectPage");
-}
-
-function getUsableEngineBuildsList()
-{
-   %buildCount = getEngineBuildCount();
-   
-   %buildList = "";
-   for(%i=1; %i <= %buildCount; %i++)
-   {
-      %bld = getEngineBuild(%i);
-      
-      %buildName = %bld.buildName;
-      
-      if(%bld.localPath $= "")
-         continue;
-         
-      if(%bld.isBinary)
-      {
-         if(!%bld.hasWindowsBinary && !%bld.hasMacOSBinary && !%bld.hasLinuxBinary)
-            continue;
-            
-         if($platform $= "windows" && !%bld.hasWindowsBinary)
-            continue;
-         
-         if($platform $= "macOS" && !%bld.hasMacOSBinary)
-            continue;
-         
-         if($platform $= "linux" && !%bld.hasLinuxBinary)
-            continue;
-      }
-
-      if(%buildList $= "")
-         %buildList = %buildName;
-      else
-         %buildList = %buildList @ ";" @ %buildName; 
-   }
-   
-   if(%buildList $= "")
-      %buildList = "No Valid Engine Builds";
-      
-   return %buildList;
-}
-
-function getCompilerList()
-{
-   %compilerList = "";
-   if($platform $= "windows")
-   {
-      %compilerList = "Visual Studio 17 2022;Visual Studio 16 2019"; 
-   }  
-   else if($platform $= "macOS")
-   {
-      %compilerList = "XCode";
-   } 
-   else if($platform $= "linux")
-   {
-      %compilerList = "Unix Makefile";
-   }   
-   
-   return %compilerList;
-}

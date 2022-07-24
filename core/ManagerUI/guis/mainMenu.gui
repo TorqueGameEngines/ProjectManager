@@ -87,7 +87,7 @@ $guiContent = new GuiChunkedBitmapCtrl(MainMenuGui) {
                   position = "0 30";
                   extent = "184 25";
                   profile = "GuiMenuButtonProfile";
-                  command = "MainMenuGui.goToPage(\"Modules\");";
+                  command = "MainMenuGui.goToPage(\"ModulesPage\");";
                   tooltipProfile = "GuiToolTipProfile";
                };
                new GuiButtonCtrl(MainMenuProjectsBtn) {

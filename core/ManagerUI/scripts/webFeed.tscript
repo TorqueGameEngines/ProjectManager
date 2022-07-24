@@ -1,0 +1,68 @@
+//http://ghc-games.com/TTRpublic/aaaaaaa.txt
+
+// Handle an issue with resolving the server's name
+function RSSFeed::onDNSFailed(%this)
+{
+   // Store this state
+   %this.lastState = "DNSFailed";
+
+   // Handle DNS failure
+   echo("RSSFeed - " @ %this.lastState);
+}
+
+function RSSFeed::onConnectFailed(%this)
+{
+   // Store this state
+  %this.lastState = "ConnectFailed";
+   // Handle connection failure
+   echo("RSSFeed - " @ %this.lastState);
+}
+
+function RSSFeed::onDNSResolved(%this)
+{
+   // Store this state
+   %this.lastState = "DNSResolved";
+   echo("RSSFeed - " @ %this.lastState);
+}
+
+function RSSFeed::onConnected(%this)
+{
+  // Store this state
+   %this.lastState = "Connected";
+   echo("RSSFeed - " @ %this.lastState);
+}
+
+function RSSFeed::onDisconnect(%this)
+{
+   // Store this state
+   %this.lastState = "Disconnected";
+   echo("RSSFeed - " @ %this.lastState);
+}
+
+// Handle a line from the server\n"
+function RSSFeed::onLine(%this, %line)
+{
+   // Print the line to the console\n"
+   echo( %line );
+}
+
+function RSSFeed::onPacket(%this, %data)
+{
+   echo( %data );
+}
+
+function getFeed()
+{
+   // Create the TCPObject
+   %rss = new TCPObject(RSSFeed);
+
+   // Define a dynamic field to store the last connection state
+   %rss.lastState = "None";
+
+   // Connect to the server
+   %rss.connect("www.ghc-games.com:80");
+
+   // Send the RSS feed request to the server.  Response will be
+   // handled in onLine() callback above
+   %rss.send("GET /TTRpublic/aaaaaaa/ HTTP/1.1\\r\\nHost: ghc-games.com");
+}

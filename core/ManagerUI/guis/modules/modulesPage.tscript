@@ -1,0 +1,94 @@
+function populateModulesList()
+{
+   updateBreadcrumbList("ModulesPage");
+   
+   MainViewStack.hidden = false;
+   MainViewStack.clear();
+   
+   MainMenuGui.setActionBarVisible(true);
+   
+   ActionButtonPanelList.clear();
+   
+   %dlRoll = new GuiRolloutCtrl() { 
+      caption = "Downloaded";
+      extent = MainViewStack.extent.x SPC 40;
+      profile = GuiMenuRolloutProfile;
+      margin = "5 5 5 5";
+      
+      new GuiStackControl() {
+         internalName = "stack";
+         padding = "5";
+      };
+   };
+   
+   MainViewStack.add(%dlRoll);
+   
+   %availRoll = new GuiRolloutCtrl() { 
+      caption = "Available For Download";
+      extent = MainViewStack.extent.x SPC 40;
+      profile = GuiMenuRolloutProfile;
+      margin = "5 5 5 5";
+      
+      new GuiStackControl() {
+         internalName = "stack";
+         padding = "5";
+      };
+   };
+   
+   MainViewStack.add(%availRoll);
+   
+   %count = getModuleCount();
+   for(%i=1; %i <= %count; %i++)
+   {
+      %module = getModule(%i);
+      
+      if(%module.moduleName !$= "")
+      {
+         if(MainMenuGui.searchText !$= "")
+         {
+            if(!strIsMatchExpr("*" @ MainMenuGui.searchText @ "*", %module.moduleName))
+               continue;
+         }
+         
+         %tags = getModuleTags(%i);
+         
+         %localPath = IsDirectory(%module.localPath) ? %module.localPath : %module.localPath SPC "(Not Found)";
+         %card = createCard(%module.moduleName, %localPath, %tags, "", true, "navToModuleProps("@%module@");", "", "", "", "");
+         
+         if(%module.localPath !$= "")
+            %dlRoll-->stack.add(%card);
+         else if(%module.gitPath !$= "")
+            %availRoll-->stack.add(%card);
+      }
+   }
+   
+   //Now add our action panel buttons
+   ActionButtonPanelList.clear();
+   
+   %actionBtn = new GuiIconButtonCtrl()
+   {
+      position = "0 0";
+      extent = "100 45";
+      profile = GuiMenuButtonProfile;
+      buttonMargin = "0 -10";
+      bitmapAsset = "ManagerUI:plus_image";
+      iconLocation = "Center";
+      sizeIconToButton = true;
+      makeIconSquare = true;
+      textLocation = "Bottom";
+      text = "Add New";
+      command = "$CurrentModule = \"\";CreateNewModule();";
+   };
+   
+   ActionButtonPanelList.add(%actionBtn);
+}
+
+function navToModuleProps(%module)
+{
+   MainMenuGui.currentPage = "ModulePropertiesPage";
+   $CurrentModule = %module;
+
+   populateModuleProperties(); 
+   
+   navToAnimation();
+}

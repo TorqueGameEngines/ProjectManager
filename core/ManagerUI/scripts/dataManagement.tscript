@@ -75,6 +75,19 @@ function saveEngineBuild(%build)
    saveData();
 }
 
+function removeEngineBuild(%build)
+{
+   %build.buildName = "";
+   %build.gitPath = "";
+   %build.branchName = "";
+   %build.localPath = "";
+   %build.isDefault = "";
+   %build.isBinary = "";
+   %build.tags = "";  
+   
+   saveEngineBuild(%build);
+}
+
 function setupDefaultEngineBuilds()
 {
    if(findEngineBuildByName("Torque 3D 4.0 Preview Source") == 0)
@@ -237,6 +250,7 @@ function getModule(%index)
    %module.moduleName = PMSettings.value("Modules/" @ %index @ "/moduleName", "");
    %module.gitPath = PMSettings.value("Modules/" @ %index @ "/gitPath", "");
    %module.branchName = PMSettings.value("Modules/" @ %index @ "/branchName", "");
+   %module.description = PMSettings.value("Modules/" @ %index @ "/description", "");
    %module.localPath = PMSettings.value("Modules/" @ %index @ "/localPath", "");
    %module.isDefault = PMSettings.value("Modules/" @ %index @ "/isDefault", "");
    %module.dependencies = PMSettings.value("Modules/" @ %index @ "/dependencies", "");
@@ -246,24 +260,40 @@ function getModule(%index)
    return %module;
 }
 
-function saveModule(%build)
+function saveModule(%module)
 {
-   %index = %build.moduleId;
+   %index = %module.moduleId;
    
-   %buildCount = getModuleCount();
-   if(%index < 0 || %index > %buildCount)
+   %count = getModuleCount();
+   if(%index < 0 || %index > %count)
       return 0;
    
-   PMSettings.setValue("Modules/" @ %index @ "/moduleName", %build.moduleName);
-   PMSettings.setValue("Modules/" @ %index @ "/gitPath", %build.gitPath);
-   PMSettings.setValue("Modules/" @ %index @ "/branchName", %build.branchName);
-   PMSettings.setValue("Modules/" @ %index @ "/localPath", %build.localPath);
-   PMSettings.setValue("Modules/" @ %index @ "/isDefault", %build.isDefault);
-   PMSettings.setValue("Modules/" @ %index @ "/dependencies", %build.dependencies);
-   PMSettings.setValue("Modules/" @ %index @ "/installInNewProj", %build.installInNewProj);
-   PMSettings.setValue("Modules/" @ %index @ "/tags", %build.tags);
+   PMSettings.setValue("Modules/" @ %index @ "/moduleName", %module.moduleName);
+   PMSettings.setValue("Modules/" @ %index @ "/gitPath", %module.gitPath);
+   PMSettings.setValue("Modules/" @ %index @ "/branchName", %module.branchName);
+   PMSettings.setValue("Modules/" @ %index @ "/description", %module.description);
+   PMSettings.setValue("Modules/" @ %index @ "/localPath", %module.localPath);
+   PMSettings.setValue("Modules/" @ %index @ "/isDefault", %module.isDefault);
+   PMSettings.setValue("Modules/" @ %index @ "/dependencies", %module.dependencies);
+   PMSettings.setValue("Modules/" @ %index @ "/installInNewProj", %module.installInNewProj);
+   PMSettings.setValue("Modules/" @ %index @ "/tags", %module.tags);
    
    saveData();
+}
+
+function removeModule(%module)
+{
+   %module.moduleName = "";
+   %module.gitPath = "";
+   %module.branchName = "";
+   %module.description = "";
+   %module.localPath = "";   
+   %module.isDefault = ""; 
+   %module.dependencies = "";   
+   %module.installInNewProj = "";   
+   %module.tags = "";   
+   
+   saveModule(%module);
 }
 
 function setupDefaultModules()
@@ -276,6 +306,7 @@ function setupDefaultModules()
       %module.moduleId = %moduleId;
       %module.moduleName = "Action-Adventure Kit";
       %module.gitPath = "https://github.com/Torque3DResources/AAK";
+      %module.description = "Implements gameplay and controls for a standard Action-Adventure style third person game";
       %module.branchName = "";
       %module.localPath = "";
       %module.isDefault = 1;
@@ -286,18 +317,76 @@ function setupDefaultModules()
       saveModule(%module);
    }
    
-   if(findModuleByName("FPS Gameplay") == 0)
+   if(findModuleByName("FPSGameplay") == 0)
    {
       %moduleId = incrementModuleCount();
       
       %module = new ScriptObject();
       %module.moduleId = %moduleId;
-      %module.moduleName = "FPS Gameplay";
+      %module.moduleName = "FPSGameplay";
       %module.gitPath = "https://github.com/Torque3DResources/FPSGameplay";
+      %module.description = "Rapid Prototype Kit module that implements standard multiplayer FPS gameplay";
       %module.branchName = "";
       %module.localPath = "";
       %module.isDefault = 1;
       %module.dependencies = "FPSEquipment;FPSPlayer;inventorySystem;";
+      %module.installInNewProj = false;
+      %module.tags = "";
+
+      saveModule(%module);
+   }
+   
+   if(findModuleByName("FPSEquipment") == 0)
+   {
+      %moduleId = incrementModuleCount();
+      
+      %module = new ScriptObject();
+      %module.moduleId = %moduleId;
+      %module.moduleName = "FPSEquipment";
+      %module.gitPath = "https://github.com/Torque3DResources/FPSEquipment";
+      %module.description = "Implements various default weapons and equipment for an Scifi FPS game";
+      %module.branchName = "";
+      %module.localPath = "";
+      %module.isDefault = 1;
+      %module.dependencies = "";
+      %module.installInNewProj = false;
+      %module.tags = "";
+
+      saveModule(%module);
+   }
+   
+   if(findModuleByName("FPSPlayer") == 0)
+   {
+      %moduleId = incrementModuleCount();
+      
+      %module = new ScriptObject();
+      %module.moduleId = %moduleId;
+      %module.moduleName = "FPSPlayer";
+      %module.gitPath = "https://github.com/Torque3DResources/FPSPlayer";
+      %module.description = "Implements a basic example controllable player for use with a Scifi FPS game";
+      %module.branchName = "";
+      %module.localPath = "";
+      %module.isDefault = 1;
+      %module.dependencies = "";
+      %module.installInNewProj = false;
+      %module.tags = "";
+
+      saveModule(%module);
+   }
+   
+   if(findModuleByName("InventorySystem") == 0)
+   {
+      %moduleId = incrementModuleCount();
+      
+      %module = new ScriptObject();
+      %module.moduleId = %moduleId;
+      %module.moduleName = "InventorySystem";
+      %module.gitPath = "https://github.com/Torque3DResources/inventorySystem";
+      %module.description = "Implements a simple inventory system";
+      %module.branchName = "";
+      %module.localPath = "";
+      %module.isDefault = 1;
+      %module.dependencies = "";
       %module.installInNewProj = false;
       %module.tags = "";
 
@@ -416,4 +505,21 @@ function saveProject(%project)
    PMSettings.setValue("Projects/" @ %index @ "/enableSQLite", %project.enableSQLite);
    
    saveData();
+}
+
+function removeProject(%project)
+{
+   %project.projectName = "";
+   %project.buildPath = "";
+   %project.localPath = "";
+   %project.previewImage = "";
+   %project.engineBuildId = "";
+   %project.generatorName = "";
+   %project.enableD3D = "";
+   %project.enableOpenGL = "";
+   %project.enablePhysX = "";
+   %project.enableBullet = "";
+   %project.enableSQLite = "";
+   
+   saveProject(%project);
 }

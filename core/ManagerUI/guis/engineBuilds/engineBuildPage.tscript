@@ -24,19 +24,22 @@ function populateEngineBuildsList()
    
    MainViewStack.add(%dlRoll);
    
-   %availRoll = new GuiRolloutCtrl() { 
-      caption = "Available For Download";
-      extent = MainViewStack.extent.x SPC 40;
-      profile = GuiMenuRolloutProfile;
-      margin = "5 5 5 5";
-      
-      new GuiStackControl() {
-         internalName = "stack";
-         padding = "5";
+   if(!$TorqueManager::gitNotFound)
+   {
+      %availRoll = new GuiRolloutCtrl() { 
+         caption = "Available For Download";
+         extent = MainViewStack.extent.x SPC 40;
+         profile = GuiMenuRolloutProfile;
+         margin = "5 5 5 5";
+         
+         new GuiStackControl() {
+            internalName = "stack";
+            padding = "5";
+         };
       };
-   };
-   
-   MainViewStack.add(%availRoll);
+      
+      MainViewStack.add(%availRoll);
+   }
    
    %buildCount = getEngineBuildCount();
    for(%i=1; %i <= %buildCount; %i++)
@@ -65,11 +68,16 @@ function populateEngineBuildsList()
          }
          else if(%bld.localPath !$= "" && !IsDirectory(%bld.localPath))
          {
+            //if we have a localPath defined but it's not a valid dir, we'll just indicate it's 
+            //(Not Found) to let the user resolve the discrepency
             %dlRoll-->stack.add(%ctrl);
          }
-         else if(%bld.gitPath !$= "")
+         else if(!$TorqueManager::gitNotFound)
          {
-            %availRoll-->stack.add(%ctrl);
+            if(%bld.gitPath !$= "")
+            {
+               %availRoll-->stack.add(%ctrl);
+            }
          }
       }
    }

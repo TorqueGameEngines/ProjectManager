@@ -23,19 +23,22 @@ function populateModulesList()
    
    MainViewStack.add(%dlRoll);
    
-   %availRoll = new GuiRolloutCtrl() { 
-      caption = "Available For Download";
-      extent = MainViewStack.extent.x SPC 40;
-      profile = GuiMenuRolloutProfile;
-      margin = "5 5 5 5";
-      
-      new GuiStackControl() {
-         internalName = "stack";
-         padding = "5";
+   if(!$TorqueManager::gitNotFound)
+   {
+      %availRoll = new GuiRolloutCtrl() { 
+         caption = "Available For Download";
+         extent = MainViewStack.extent.x SPC 40;
+         profile = GuiMenuRolloutProfile;
+         margin = "5 5 5 5";
+         
+         new GuiStackControl() {
+            internalName = "stack";
+            padding = "5";
+         };
       };
-   };
-   
-   MainViewStack.add(%availRoll);
+      
+      MainViewStack.add(%availRoll);
+   }
    
    %count = getModuleCount();
    for(%i=1; %i <= %count; %i++)
@@ -52,13 +55,16 @@ function populateModulesList()
          
          %tags = getModuleTags(%i);
          
-         %localPath = IsDirectory(%module.localPath) ? %module.localPath : %module.localPath SPC "(Not Found)";
-         %card = createCard(%module.moduleName, %localPath, %tags, "", true, "navToModuleProps("@%module@");", "", "", "", "");
+         //%localPath = IsDirectory(%module.localPath) ? %module.localPath : %module.localPath SPC "(Not Found)";
+         %card = createCard(%module.moduleName, %module.description, %tags, "", true, "navToModuleProps("@%module@");", "", "", "", "");
          
          if(%module.localPath !$= "")
             %dlRoll-->stack.add(%card);
-         else if(%module.gitPath !$= "")
-            %availRoll-->stack.add(%card);
+         else if(!$TorqueManager::gitNotFound)
+         { 
+            if(%module.gitPath !$= "")
+               %availRoll-->stack.add(%card);
+         }
       }
    }
    

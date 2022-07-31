@@ -99,7 +99,7 @@ function populateProjectProperties(%isNew)
    %projectNameCard = createEditCard("Project Name", "TextEdit", "$CurrentProject.projectName", "The name of this project", "");
    MainViewStack.add(%projectNameCard);
    
-   MainViewStack.add(createEditCard("Project Preview Image", "FilePath", "$CurrentProject.previewImage", "The preview image displayed in the project manager for this project. (Optional)", ""));
+   //MainViewStack.add(createEditCard("Project Preview Image", "FilePath", "$CurrentProject.previewImage", "The preview image displayed in the project manager for this project. (Optional)", ""));
    
    MainViewStack.add(createEditCard("Project Path", "Folder", "$CurrentProject.localPath", "The folder the project will be put into", ""));
    
@@ -162,8 +162,20 @@ function populateProjectProperties(%isNew)
       };
       
       MainViewStack.add(%moduleRoll);
+      
+      %gamePath = getProjectGamePath($CurrentProject);
+      
+      for( %file = findFirstFile( %gamePath @ "data/*.module" );
+           %file !$= "";
+           %file = findNextFile( %gamePath @ "data/*.module" ))
+      {
+         %moduleName = fileBase(%file);
+         
+         %moduleCard = createCard(%moduleName, "", "", "", false, "", "button", "", "Remove", "dostuff();");
+         %moduleRoll-->stack.add(%moduleCard);
+      }
    }
-
+   
    if(!%isNew)
    {
       %projectNameCard.callonChildren("setActive", false);
@@ -171,7 +183,7 @@ function populateProjectProperties(%isNew)
       if(!%targetBuild.isBinary)
       {
          %generatorCard.callonChildren("setActive", false);
-         %cmakeRoll.callonChildren("setActive", false);
+         //%cmakeRoll.callonChildren("setActive", false);
       }
    }
          
@@ -195,32 +207,21 @@ function populateProjectProperties(%isNew)
    //Now add our action panel buttons
    ActionButtonPanelList.clear();
    
+   if($CurrentProject.localPath !$= "")
+   {
+      AddActionButton("ManagerUI:right_image", "Play", "", "");
+      AddActionButton("ManagerUI:plus_image", "Add Module", "", "");
+      AddActionButton("ManagerUI:textField_image", "Open GUI Editor", "", "");
+      AddActionButton("ManagerUI:toolPencil_image", "Open Editor", "", "");
+      
+      if(isObject(%targetBuild) && !%targetBuild.isBinary && !$TorqueManager::cmakeNotFound)
+      {
+         AddActionButton("ManagerUI:open_image", "Regen Project", "", "");
+      }
+   }
+   
    AddActionButton("ManagerUI:trashcan_image", "Delete Project", "", "");
    AddActionButton("ManagerUI:trashcan_image", "Remove From List", "", "");
-   
-   /*if($CurrentEngineBuild.localPath !$= "")
-   {
-      AddActionButton("ManagerUI:plus_image", "New Project", "$ResetForm=true;$NewProjectTargetEngineBuild=$CurrentEngineBuild;MainMenuGui.gotoPage(\"NewProjectPage\");", "");
-      
-      if($CurrentEngineBuild.gitPath !$= "")
-         AddActionButton("ManagerUI:download_image", "Pull Updates", "pullUpdateEngineBuild($CurrentEngineBuild);", "");
-         
-      AddActionButton("ManagerUI:trashcan_image", "Delete Local Copy", "", "");
-   }
-   else
-      AddActionButton("ManagerUI:download_image", "Download", "downloadEngineBuild($CurrentEngineBuild);", "");
-   
-   if(!$CurrentEngineBuild.isDefault)
-      AddActionButton("ManagerUI:trashcan_image", "Remove From List", "", "");
-   
-   if($CurrentEngineBuild.gitPath !$= "")
-   {
-      AddActionButton("ManagerUI:share1_image", "Visit Repo Page", "openEngineBuildGitPage($CurrentEngineBuild);", 
-               "Visit the repository page of this engine build.");
-               
-      AddActionButton("ManagerUI:share1_image", "Visit Issues Page", "openEngineBuildIssuesPage($CurrentEngineBuild);", 
-            "Visit the issues page of this engine build.");
-   }*/
 }
 
 function saveCurrentProject()
@@ -264,6 +265,7 @@ function generateNewProject()
       createPath(%fullProjectPath);
    }
 
+   displayLoadingSplashGui();
    if(!%engineBuild.isBinary)
    {
       %buildPath = %fullProjectPath @ "Build/"; 
@@ -278,6 +280,14 @@ function generateNewProject()
       {
          MessageBoxOK("Failed.", "Failed to copy the Engine Build to the new project path. Please try again.");  
          return;
+      }
+      
+      //Install Template files
+      %templatePath = %fullProjectPath @ "Templates/BaseGame/";
+      %projectGamePath = %fullProjectPath @ "My Projects/" @ $CurrentProject.projectName @ "/";
+      if(!copyProjectFolder(%templatePath, %projectGamePath))
+      {
+         MessageBoxOK("Error.", "Failed to copy the Template game files. Please run the INSTALL project in your IDE.");  
       }
    
       //Install modules
@@ -316,6 +326,11 @@ function generateNewProject()
       %commandString = %commandString @ "-B \"" @ %buildPath @ "\" ";
       %commandString = %commandString @ "-G \"" @ $CurrentProject.generatorName @ "\" ";
       %commandString = %commandString @ "-DTORQUE_APP_NAME:STRING=" @ $CurrentProject.projectName @ " -DCMAKE_GENERATOR_PLATFORM=x64";
+      %commandString = %commandString @ " -DTORQUE_D3D11:BOOL=" @ $CurrentProject.enableD3D;
+      %commandString = %commandString @ " -DTORQUE_OPENGL:BOOL=" @ $CurrentProject.enableOpenGL;
+      %commandString = %commandString @ " -DTORQUE_PHYSICS_PHYSX3:BOOL=" @ $CurrentProject.enablePhysX;
+      %commandString = %commandString @ " -DTORQUE_PHYSICS_BULLET:BOOL=" @ $CurrentProject.enableBullet;
+      %commandString = %commandString @ " -DTORQUE_SQLITE:BOOL=" @ $CurrentProject.enableSqlite;
 
       systemCommand(%commandString, "makeProjectComplete");  
    }
@@ -380,6 +395,8 @@ function makeProjectComplete(%resultCode)
    
    openSolutionFile(%resultCode);
    
+   hideLoadingSplashGui();
+   
    //Hop over to the projects page so we can check out our new project
    MainMenuGui.goToPage("ProjectsPage");
 }
@@ -396,6 +413,9 @@ function getUsableEngineBuildsList()
       %buildName = %bld.buildName;
       
       if(%bld.localPath $= "")
+         continue;
+         
+      if(!%bld.isBinary && $TorqueManager::cmakeNotFound)
          continue;
 
       if(%buildList $= "")

@@ -27,7 +27,7 @@ function populateProjectsList()
          %tags = getEngineBuildTags(%project.engineBuildId);
          
          %localPath = IsDirectory(%project.localPath) ? %project.localPath : %project.localPath SPC "(Not Found)";
-         %card = createCard(%project.projectName, %localPath, %tags, "", true, "navToProjectProps("@%project@");", "PreviewImage", "", %project.previewImage, "");
+         %card = createCard(%project.projectName, %localPath, %tags, "", true, "navToProjectProps("@%project@");", "", "", %project.previewImage, "");
          
          MainViewStack.add(%card);
       }

@@ -1,3 +1,6 @@
+// BEGIN TORSION
+dbgSetParameters( 6060, "password", true );
+// END TORSION
 $Core::windowIcon = "core/icon.png";
 $Core::splashWindowImage = "core/splash.png";
 
@@ -31,7 +34,11 @@ else
 
 //load prefs
 exec( "core/defaults." @ $TorqueScriptFileExtension );
+
 $prefPath = getPrefpath();
+if(!IsDirectory($prefPath))
+   createFolder($prefPath);
+   
 if ( isFile($prefPath @ "/clientPrefs." @ $TorqueScriptFileExtension ) )
    exec( $prefPath @ "/clientPrefs." @ $TorqueScriptFileExtension );
    

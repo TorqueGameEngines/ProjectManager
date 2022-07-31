@@ -107,16 +107,16 @@ function populateEngineBuildProperties(%isNew)
    
    if(!%isNew)
    {
-      if($CurrentEngineBuild.localPath !$= "")
+      if($CurrentEngineBuild.localPath !$= "" && ($CurrentEngineBuild.isBinary || !$TorqueManager::cmakeNotFound))
       {
          AddActionButton("ManagerUI:plus_image", "New Project", "CreateNewProject();", "");
          
-         if($CurrentEngineBuild.gitPath !$= "")
+         if($CurrentEngineBuild.gitPath !$= "" && !$TorqueManager::gitNotFound)
             AddActionButton("ManagerUI:download_image", "Pull Updates", "pullUpdateEngineBuild($CurrentEngineBuild);", "");
             
          AddActionButton("ManagerUI:trashcan_image", "Delete Local Copy", "", "");
       }
-      else
+      else if(!$TorqueManager::gitNotFound)
          AddActionButton("ManagerUI:download_image", "Download", "downloadEngineBuild($CurrentEngineBuild);", "");
       
       if(!$CurrentEngineBuild.isDefault)

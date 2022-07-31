@@ -1,19 +1,23 @@
-function downloadModule(%buildIdx)
+function downloadModule(%module)
 {
    displayLoadingSplashGui();
    
-   $downloadingModuleIdx = %buildIdx;
+   $downloadingModuleIdx = %module.moduleId;
    
-   %gitPath = getModuleGitPathByIndex(%buildIdx);
-   %branchName = getModuleBranchNameByIndex(%buildIdx);
-   %moduleName = getModuleNameByIndex(%buildIdx);
+   %gitPath = %module.gitPath;
+   %branchName = %module.branchName;
+   %moduleName = %module.moduleName;
    
    %downloadPath = getModuleDownloadPath();
    
    //sanitize
+   %moduleName = strReplace(%moduleName, "(", "");
+   %moduleName = strReplace(%moduleName, ")", "");
    %moduleName = trim(%moduleName);
    %moduleName = strReplace(%moduleName, ".", "");
    %moduleName = strReplace(%moduleName, " ", "_");
+   
+   %moduleName = %module.moduleId @ "_" @ %moduleName;
    
    %targetPath = %downloadPath @ "/" @ %moduleName @ "/";
    
@@ -51,9 +55,9 @@ function downloadModuleComplete(%resultCode)
    
    if(%resultCode $= 0)
    {
-      setModuleLocalPath($downloadingModuleIdx, $downloadingModuleTargetPath);
+      $CurrentModule.localPath = $downloadingModuleTargetPath;
       
-      saveData();
+      saveModule($CurrentModule);
       
       MainMenuGui.refresh();
    }
@@ -61,13 +65,13 @@ function downloadModuleComplete(%resultCode)
    hideLoadingSplashGui();
 }
 
-function pullUpdateModule(%buildIdx)
+function pullUpdateModule(%module)
 {
-   $downloadingModuleIdx = %buildIdx;
+   $downloadingModuleIdx = %module.moduleId;
    
-   %gitPath = getModuleGitPathByIndex(%buildIdx);
-   %branchName = getModuleBranchNameByIndex(%buildIdx);
-   %moduleName = getModuleNameByIndex(%buildIdx);
+   %gitPath = %module.gitPath;
+   %branchName = %module.branchName;
+   %moduleName = %module.moduleName;
    
    %downloadPath = getModuleDownloadPath();
    
@@ -165,11 +169,11 @@ function openModuleActionMenu(%buildIdx, %buttonCtrl)
 }
 
 //
-function deleteModule(%buildIdx)
+function deleteModule(%module)
 {
-   $TorqueManager::selectedModule = %buildIdx;
-   %moduleName = getModuleNameByIndex($TorqueManager::selectedModule);
-   %localPath = getModuleLocalPathByIndex($TorqueManager::selectedModule);
+   $CurrentModule = %module;
+   %moduleName = $CurrentModule.moduleName;
+   %localPath = $CurrentModule.localPath;
    
    MessageBoxOKCancel("Delete Module?", 
       "Are you sure you wish to delete the '" @ %moduleName @"' Module?\nFile path: " @ %localPath,
@@ -181,7 +185,7 @@ function doDeleteModule()
    displayLoadingSplashGui();
    
    //do da delete.
-   %localPath = getModuleLocalPathByIndex($TorqueManager::selectedModule);
+   %localPath = $CurrentModule.localPath;
    
    if(isDirectory(%localPath))
    {
@@ -193,11 +197,11 @@ function doDeleteModule()
       }
    }
    
-   setModuleLocalPath($TorqueManager::selectedModule, "");
+   setModuleLocalPath($CurrentModule, "");
    
    //check if it was a build that had a gitpath
    //if not, then we'll just fully remove the registration as well, as it's completely gone
-   %gitPath = getModuleGitPathByIndex($TorqueManager::selectedModule);
+   %gitPath = $CurrentModule.gitPath;
    if(%gitPath $= "")
    {
       doRemoveModuleFromListing();
@@ -208,20 +212,11 @@ function doDeleteModule()
    hideLoadingSplashGui();
 }
 
-function doModuleRename(%newName)
+function removeModuleFromListing(%module)
 {
-   setModuleName(ActionMenuDropdown.targetId, %newName);
+   $CurrentModule = %module;
    
-   saveData();
-   
-   MainMenuGui.refresh();
-}
-
-function removeModuleFromListing(%buildIdx)
-{
-   $TorqueManager::selectedModule = %buildIdx;
-   
-   %moduleName = getModuleNameByIndex($TorqueManager::selectedModule);
+   %moduleName = $CurrentModule.moduleName;
    MessageBoxOKCancel("Remove Module?", 
       "Are you sure you wish to remove the '" @ %moduleName @"' Module from the Manager?\nIf there is a local copy on this machine it will not be deleted.",
       "doRemoveModuleFromListing();", "");
@@ -231,14 +226,8 @@ function doRemoveModuleFromListing()
 {
    displayLoadingSplashGui();
    
-   PMSettings.remove("Modules/" @ $TorqueManager::selectedModule @ "/gitPath");
-   PMSettings.remove("Modules/" @ $TorqueManager::selectedModule @ "/moduleName");
-   PMSettings.remove("Modules/" @ $TorqueManager::selectedModule @ "/branchName");
-   PMSettings.remove("Modules/" @ $TorqueManager::selectedModule @ "/localPath");
-   PMSettings.remove("Modules/" @ $TorqueManager::selectedModule @ "/isDefault");
-   PMSettings.remove("Modules/" @ $TorqueManager::selectedModule @ "/isBinary");
-   
-   saveData();
+   if(!$CurrentModule.isDefault)
+      removeModule($CurrentModule);
    
    MainMenuGui.refresh();
    

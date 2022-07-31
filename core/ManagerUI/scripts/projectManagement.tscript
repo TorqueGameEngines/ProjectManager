@@ -153,6 +153,20 @@ function findProjectPath(%buildIdx)
 //==============================================================================
 // Properties
 //==============================================================================
+function getProjectGamePath(%project)
+{
+   %targetBuild = getEngineBuild(%project.engineBuildId);
+   
+   if(isObject(%targetBuild))
+   {
+      if(%targetBuild.isBinary)
+         return %project.localPath;
+      else
+         return %project.localPath @ "/My Projects/" @ %project.projectName @ "/game/";
+   }
+   
+   return %project.localPath;
+}
 /*function populateProjectProperties(%buildIdx)
 {
    Canvas.pushDialog(ManagerPropertiesGUI);

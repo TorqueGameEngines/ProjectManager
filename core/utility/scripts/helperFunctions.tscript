@@ -179,6 +179,15 @@ function getPrefpath()
 	return $prefPath;
 }
 
+function createFolder(%folderPath)
+{
+   %file = new FileObject();
+   %file.openForWrite(%folderPath @ "/test");
+   %file.close();
+   
+   fileDelete(%folderPath @ "/test");
+}
+
 /// A helper function which will return the ghosted client object
 /// from a server object when connected to a local server.
 function serverToClientObject( %serverObject )

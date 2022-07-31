@@ -24,6 +24,8 @@ function populateModuleProperties(%isNew)
    MainViewStack.clear();
    
    MainViewStack.add(createEditCard("Module Name", "TextEdit", "$CurrentModule.moduleName", "The name of this engine build", ""));
+   
+   MainViewStack.add(createEditCard("Description", "TextEdit", "$CurrentModule.description", "A description of what the module does", ""));
          
    if(%isNew)
    {
@@ -70,6 +72,38 @@ function populateModuleProperties(%isNew)
          }
       }
    }
+   
+   if($CurrentModule.dependencies !$= "")
+   {
+       %depRoll = new GuiRolloutCtrl() { 
+         caption = "Dependencies";
+         extent = MainViewStack.extent.x SPC 40;
+         profile = GuiMenuRolloutProfile;
+         margin = "5 5 5 5";
+         
+         new GuiStackControl() {
+            internalName = "stack";
+            padding = "5";
+         };
+      };
+      
+      MainViewStack.add(%depRoll);
+      
+      %depCount = getTokenCount($CurrentModule.dependencies, ",;");
+      for(%i=0; %i < %depCount; %i++)
+      {
+         %depName = getToken($CurrentModule.dependencies, ",;", %i);
+         %depModuleId = findModuleByName(%depName);
+         if(%depModuleId != 0)
+         {
+            %depModule = getModule(%depModuleId);
+            %subtext = %depModule.localPath !$= "" ? "(Downloaded)" : "(Not Downloaded)";
+            %depModuleCard = createCard(%depModule.moduleName, %subtext, "", "", true, "navToModuleProp("@%depModule@");", "", "", "", "", "");  
+            
+            %depRoll-->stack.add(%depModuleCard);
+         }
+      }
+   }
          
    if(%isNew)
    {
@@ -111,8 +145,32 @@ function populateModuleProperties(%isNew)
    //Now add our action panel buttons
    ActionButtonPanelList.clear();
    
-   AddActionButton("ManagerUI:trashcan_image", "Delete Module", "", "");
-   AddActionButton("ManagerUI:trashcan_image", "Remove From List", "", "");
+   if(!%isNew)
+   {
+      if($CurrentModule.localPath !$= "")
+      {
+         AddActionButton("ManagerUI:plus_image", "Install in Project", "installModule($CurrentModule);", "");
+         
+         if($CurrentModule.gitPath !$= "" && !$TorqueManager::gitNotFound)
+            AddActionButton("ManagerUI:download_image", "Pull Updates", "pullUpdateModule($CurrentModule);", "");
+            
+         AddActionButton("ManagerUI:trashcan_image", "Delete Local Copy", "deleteModule($CurrentModule);", "");
+      }
+      else if(!$TorqueManager::gitNotFound)
+         AddActionButton("ManagerUI:download_image", "Download", "downloadModule($CurrentModule);", "");
+      
+      if(!$CurrentModule.isDefault)
+         AddActionButton("ManagerUI:trashcan_image", "Remove From List", "removeModuleFromListing($CurrentModule);", "");
+      
+      if($CurrentModule.gitPath !$= "")
+      {
+         AddActionButton("ManagerUI:share1_image", "Visit Repo Page", "openModuleGitPage($CurrentModule);", 
+                  "Visit the repository page of this module.");
+                  
+         AddActionButton("ManagerUI:share1_image", "Visit Issues Page", "openModuleIssuesPage($CurrentModule);", 
+               "Visit the issues page of this module.");
+      }
+   }
    
    /*if($CurrentEngineBuild.localPath !$= "")
    {
@@ -139,209 +197,24 @@ function populateModuleProperties(%isNew)
    }*/
 }
 
-function saveCurrentProject()
+function saveCurrentModule()
 {
-   if(!isObject($CurrentProject))
+   if(!isObject($CurrentModule))
       return;
       
-   saveEngineBuild($CurrentProject);
+   saveEngineBuild($CurrentModule);
 }
 
-function saveNewProject()
+function saveNewModule()
 {
-   if(!isObject($CurrentProject))
+   if(!isObject($CurrentModule))
       return;
    
-   incrementProjectCount();
+   incrementModuleCount();
    
-   %newProjectId = getProjectCount();
+   %newModuleId = getModuleCount();
    
-   $CurrentProject.projectId = %newProjectId;
+   $CurrentModule.moduleId = %newModuleId;
    
-   generateNewProject();
-}
-
-function generateNewProject()
-{
-   %engineBuildId = findEngineBuildByName($CurrentProject.targetBuildName);
-   $CurrentProject.engineBuildId = %engineBuildId;
-   %engineBuild = getEngineBuild(%engineBuildId);
-   %engineBuildPath = %engineBuild.localPath;
-   %newProjectPath = $CurrentProject.localPath;
-   
-   %fullProjectPath = %newProjectPath @ "/";
-   
-   //sanitize the paths to be sure
-   %engineBuildPath = strReplace(%engineBuildPath, "//", "/");
-   %fullProjectPath = strReplace(%fullProjectPath, "//", "/");
-   
-   if(!IsDirectory(%fullProjectPath))
-   {
-      createPath(%fullProjectPath);
-   }
-
-   if(!%engineBuild.isBinary)
-   {
-      %buildPath = %fullProjectPath @ "Build/"; 
-      if(!IsDirectory(%buildPath))
-      {
-         createPath(%buildPath);
-      } 
-      
-      $CurrentProject.buildPath = %buildPath;
-      
-      if(!copyProjectFolder(%engineBuildPath, %fullProjectPath))
-      {
-         MessageBoxOK("Failed.", "Failed to copy the Engine Build to the new project path. Please try again.");  
-         return;
-      }
-   
-      //Install modules
-      /*%moduleCount = getModuleCount();
-      for(%m=0; %m < %moduleCount; %m++)
-      {
-         %doInstall = getVariable("$TorqueManager::installModule[" @ %m @ "]");
-         if(%doInstall)
-         {
-            %moduleName = getModuleNameByIndex(%m);
-            %localPath = getModuleLocalPathByIndex(%m);
-            %moduleInstallPath = %fullProjectPath @ "/My Projects/" @ %projName @ "/game/data/" @ %moduleName @ "/";
-            if(!IsDirectory(%moduleInstallPath))
-            {
-               createPath(%moduleInstallPath);  
-            }
-            
-            if(!copyProjectFolder(%localPath, %moduleInstallPath))
-            {
-               error("Failed to install module " @ %moduleName @ " from path: " @ %localPath @ " to new project: " @ %projName);
-            }
-         }
-      }*/
-      
-      //run cmake
-      if(isDirectory("core/libs/cmake/bin"))
-      {
-         %commandString = "cd \"" @ makeFullPath(getMainDotCsDir()) @ "/core/libs/cmake/bin/\"";
-         %commandString = %commandString @ " && cmake.exe ";
-      }
-      else
-      {
-         %commandString = "cmake ";
-      }
-      %commandString = %commandString @ "-S \"" @ %fullProjectPath @ "\" ";
-      %commandString = %commandString @ "-B \"" @ %buildPath @ "\" ";
-      %commandString = %commandString @ "-G \"" @ $CurrentProject.generatorName @ "\" ";
-      %commandString = %commandString @ "-DTORQUE_APP_NAME:STRING=" @ $CurrentProject.projectName @ " -DCMAKE_GENERATOR_PLATFORM=x64";
-
-      systemCommand(%commandString, "makeProjectComplete");  
-   }
-   else
-   {
-      if(!copyProjectFolder(%engineBuildPath, %fullProjectPath))
-      {
-         MessageBoxOK("Failed.", "Failed to copy the Engine Build to the new project path. Please try again.");  
-         return;
-      }
-      
-      //Do the rename on the exe, torsion, etc files to comply them to the new project name  
-      %appPath = findFirstFile( %fullProjectPath @ "/*.exe", false);
-      if(%appPath !$= "")
-      {
-         %binaryName = fileBase(%appPath);
-         
-         %newAppPath = strReplace(%appPath, %binaryName, $CurrentProject.projectName);
-         pathCopy(%appPath, %newAppPath);
-         fileDelete(%appPath);
-      }
-      
-      %appPath = findFirstFile( %fullProjectPath @ "/*.torsion", false);
-      if(%appPath !$= "")
-      {
-         %binaryName = fileBase(%appPath);
-         
-         %newAppPath = strReplace(%appPath, %binaryName, $CurrentProject.projectName);
-         pathCopy(%appPath, %newAppPath);
-         fileDelete(%appPath);
-      }
-      
-      //Install modules
-      /*%moduleCount = getModuleCount();
-      for(%m=0; %m < %moduleCount; %m++)
-      {
-         %doInstall = getVariable("$TorqueManager::installModule[" @ %m @ "]");
-         if(%doInstall)
-         {
-            %moduleName = getModuleNameByIndex(%m);
-            %localPath = getModuleLocalPathByIndex(%m);
-            %moduleInstallPath = %fullProjectPath @ "/data/" @ %moduleName @ "/";
-            if(!IsDirectory(%moduleInstallPath))
-            {
-               createPath(%moduleInstallPath);  
-            }
-            
-            if(!copyProjectFolder(%localPath, %moduleInstallPath))
-            {
-               error("Failed to install module " @ %moduleName @ " from path: " @ %localPath @ " to new project: " @ %projName);
-            }
-         }
-      }*/
-      
-      makeProjectComplete();
-   }   
-}
-
-function makeProjectComplete(%resultCode)
-{
-   saveProject($CurrentProject);
-   
-   openSolutionFile(%resultCode);
-   
-   //Hop over to the projects page so we can check out our new project
-   MainMenuGui.goToPage("ProjectsPage");
-}
-
-function getUsableEngineBuildsList()
-{
-   %buildCount = getEngineBuildCount();
-   
-   %buildList = "";
-   for(%i=1; %i <= %buildCount; %i++)
-   {
-      %bld = getEngineBuild(%i);
-      
-      %buildName = %bld.buildName;
-      
-      if(%bld.localPath $= "")
-         continue;
-
-      if(%buildList $= "")
-         %buildList = %buildName;
-      else
-         %buildList = %buildList @ ";" @ %buildName; 
-   }
-   
-   if(%buildList $= "")
-      %buildList = "No Valid Engine Builds";
-      
-   return %buildList;
-}
-
-function getCompilerList()
-{
-   %compilerList = "";
-   if($platform $= "windows")
-   {
-      %compilerList = "Visual Studio 17 2022;Visual Studio 16 2019"; 
-   }  
-   else if($platform $= "macOS")
-   {
-      %compilerList = "XCode";
-   } 
-
-   if(%compilerList $= "")
-      %compilerList = "Unix Makefile";
-   else 
-      %compilerList = %compilerList @ ";Unix Makefile";
-   
-   return %compilerList;
+   saveModule($CurrentModule);
 }

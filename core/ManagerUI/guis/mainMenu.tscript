@@ -7,8 +7,8 @@ function MainMenuGui::onAdd(%this)
 
 function MainMenuGui::onWake(%this)
 {
-   $TorqueManager::needToInstallGit = false;
-   $TorqueManager::needToInstallCmake = false;
+   $TorqueManager::gitNotFound = false;
+   $TorqueManager::cmakeNotFound = false;
    
    //Set up our settings object
    %prefPath = getPrefpath();
@@ -43,22 +43,16 @@ function MainMenuGui::onWake(%this)
    setupWizard();
    
    //check we have git and cmake commandline access
-   //if we have the portable libraries in the core directory, we can skip the real
-   //checks
-   //if not, we need to check that the commands are installed and usable
-   //ensure these work on linux and mac as well
-   if(!isDirectory("core/libs/cmake/bin/"))
-   {
-      systemCommand("where cmake >nul 2>nul", "cmakeCheck");
-   }
-   
-   if(!isDirectory("core/libs/git/bin/"))
-   {
-      systemCommand("where git >nul 2>nul", "gitCheck");
-   }
+   %cmakeTestFilePath = getPrefpath() @ "/cmakeTest.txt";
+   systemCommand("where cmake >nul 2>nul > " @ %cmakeTestFilePath);
+   cmakeCheck();
+
+   %gitTestFilePath = getPrefpath() @ "/gitTest.txt";
+   systemCommand("where git >nul 2>nul > " @ %gitTestFilePath);
+   gitCheck();
    
    //If needed, we'll run the setup for these
-   setupCommandLinePrograms();
+   //setupCommandLinePrograms();
    
    $showMenubar = true;
    
@@ -935,19 +929,39 @@ function navigateBack()
 }
 
 //==============================================================================
-function gitCheck(%resultCode)
+function gitCheck()
 {
-   if(%resultCode == 1)
+   %testFilePath = getPrefpath() @ "/gitTest.txt";
+   if(isFile(%testFilePath))
    {
-      $TorqueManager::needToInstallGit = true;
+      %fl = new FileObject();
+      %fl.openForRead(%testFilePath);
+      if(!%fl.isEOF())
+         %lineResult = %fl.readLine();
+      %fl.delete();
+      
+      if(%lineResult $= "" || strstr(%lineResult, "not found") !$= -1)
+      {
+         $TorqueManager::gitNotFound = true;
+      }
    }
 }
 
-function cmakeCheck(%resultCode)
+function cmakeCheck()
 {
-   if(%resultCode == 1)
+   %testFilePath = getPrefpath() @ "/cmakeTest.txt";
+   if(isFile(%testFilePath))
    {
-      $TorqueManager::needToInstallCmake = true;
+      %fl = new FileObject();
+      %fl.openForRead(%testFilePath);
+      if(!%fl.isEOF())
+         %lineResult = %fl.readLine();
+      %fl.delete();
+      
+      if(%lineResult $= "" || strstr(%lineResult, "not found") !$= -1)
+      {
+         $TorqueManager::cmakeNotFound = true;
+      }
    }
 }
 
@@ -1108,6 +1122,8 @@ function createCard(%mainText, %subText, %tagsList, %tooltip, %hasNavigation, %n
    {
       %cardHeight += %cardRowHeight + 5; //add another 'row' to the card
    }
+   
+   %navArrowMargin = (%cardHeight > (%cardRowHeight * 2)) ? 20 : 8;
       
    %ctrl = new GuiControl() {
       position = "0 0";
@@ -1125,7 +1141,7 @@ function createCard(%mainText, %subText, %tagsList, %tooltip, %hasNavigation, %n
          iconLocation = "Right";
          sizeIconToButton = true;
          makeIconSquare = true;
-         buttonMargin = "0 20";
+         buttonMargin = "0" SPC %navArrowMargin;
          position = "0 0";
          extent = MainViewStack.extent.x SPC %cardHeight;
          profile = GuiMenuButtonProfile;

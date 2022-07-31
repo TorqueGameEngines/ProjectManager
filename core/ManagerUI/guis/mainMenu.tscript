@@ -44,11 +44,11 @@ function MainMenuGui::onWake(%this)
    
    //check we have git and cmake commandline access
    %cmakeTestFilePath = getPrefpath() @ "/cmakeTest.txt";
-   systemCommand("where cmake >nul 2>nul > " @ %cmakeTestFilePath);
+   systemCommand("where cmake > " @ %cmakeTestFilePath);
    cmakeCheck();
 
    %gitTestFilePath = getPrefpath() @ "/gitTest.txt";
-   systemCommand("where git >nul 2>nul > " @ %gitTestFilePath);
+   systemCommand("where git > " @ %gitTestFilePath);
    gitCheck();
    
    //If needed, we'll run the setup for these

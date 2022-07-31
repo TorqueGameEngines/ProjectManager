@@ -1,6 +1,3 @@
-// BEGIN TORSION
-dbgSetParameters( 6060, "password", true );
-// END TORSION
 $Core::windowIcon = "core/icon.png";
 $Core::splashWindowImage = "core/splash.png";
 

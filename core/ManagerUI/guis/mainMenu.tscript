@@ -60,7 +60,10 @@ function MainMenuGui::onWake(%this)
    GuiTagButtonProfile.getStringWidth("This is a preload sentence");
    
    //display the page
-   %this.goToPage("EngineBuildPage");
+   if(getProjectCount() != 0)
+      %this.goToPage("ProjectsPage");
+   else
+      %this.goToPage("EngineBuildPage");
 }
 
 function MainMenuGui::onSleep(%this)
@@ -1587,6 +1590,45 @@ function createEditCard(%label, %type, %variable, %tooltip, %data, %enabled)
       %actionCtrlBtn.extent = %cardRowHeight SPC %cardRowHeight;
       %actionCtrlBtn.position = %actionCtrl.position + %actionCtrl.extent SPC %actionCtrl.position.y;
    }
+   else if(%type $= "ModuleFile")
+   {
+      %actionCtrl = new GuiTextEditCtrl() {
+         text = %defaultValue;
+         horizSizing = "left";
+         vertSizing = "center";
+         extent = %actionExtent.x - %actionExtent.y SPC %actionExtent.y;
+         position = %actionPosition;
+         profile = GuiMenuTextEditProfile;
+         internalName = "fileText";
+      };
+      
+      %actionCtrl.validate = "filePathCardChanged(" @ %actionCtrl @ ");";
+      
+      %actionCtrlBtn = new GuiButtonCtrl() {
+         text = "...";
+         horizSizing = "left";
+         vertSizing = "center";
+         extent = %actionExtent.y SPC %actionExtent.y;
+         position = %actionExtent.x - %actionExtent.y SPC %actionPosition.y;
+         profile = GuiMenuTextEditProfile;
+         internalName = "fileButton";
+      };
+      
+      %actionCtrlBtn.command = "findModuleFilePath(" @ %actionCtrl @ ");";
+      
+      %ctrl.add(%actionCtrl);
+      %ctrl.add(%actionCtrlBtn);
+      
+      //There's some odd secondary scaling happening after the action control is getting added
+      //so we'll just force the position and stuff here
+      %actionCtrl.extent.x = %actionCtrlWidth * 2 - %cardRowHeight;
+      %actionCtrl.position.x -= %actionCtrlWidth + %pad;
+      %actionCtrl.extent.y = %cardRowHeight;
+      %actionCtrl.position.y = %cardRowHeight/2;
+      
+      %actionCtrlBtn.extent = %cardRowHeight SPC %cardRowHeight;
+      %actionCtrlBtn.position = %actionCtrl.position + %actionCtrl.extent SPC %actionCtrl.position.y;
+   }
    else if(%type $= "Folder")
    {
       %actionCtrl = new GuiTextEditCtrl() {
@@ -1733,6 +1775,33 @@ function findFilePathCard(%ctrl)
    %dlg.delete();
 }
 
+function findModuleFilePath(%ctrl)
+{
+   %filters = "Module Files (*.module)|*.module|";
+   %dlg = new OpenFileDialog()
+   {
+      Title = "Select File Path";
+      Filters = %filters;
+      DefaultFile = "./";
+      ChangePath = false;
+      MustExist = true;
+      MultipleFiles = false;
+   };
+
+   %dlg.DefaultPath = "./";
+   if(%dlg.Execute())
+   {
+      %path = %dlg.FileName;
+      
+      %ctrl.setText(%path);
+      
+      eval(%ctrl.validate);
+   }
+
+   %dlg.delete();
+}
+
+
 function findFolderPathCard(%ctrl)
 {
    %dlg = new OpenFolderDialog()
@@ -1778,4 +1847,6 @@ function AddActionButton(%image, %text, %command, %tooltip)
       tooltip = %tooltip;
    };
    ActionButtonPanelList.add(%actionBtn);
+   
+   return %actionBtn;
 }

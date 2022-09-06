@@ -189,10 +189,10 @@ function populateProjectProperties(%isNew)
          
    if(%isNew)
    {
-      %buttons = createOKCancelCard("Create", "Cancel", "saveNewProject();", "MainMenuGUI.goToPage(\"ProjectPage\");");
+      %buttons = createOKCancelCard("Create", "Cancel", "saveNewProject();", "MainMenuGUI.goToPage(\"ProjectsPage\");");
    }
    else
-      %buttons = createOKCancelCard("Save", "Cancel", "saveCurrentProject();", "");
+      %buttons = createOKCancelCard("Save", "Cancel", "saveCurrentProject();", "MainMenuGUI.goToPage(\"ProjectsPage\");");
    
    %valid = true;
    
@@ -209,14 +209,23 @@ function populateProjectProperties(%isNew)
    
    if($CurrentProject.localPath !$= "")
    {
-      AddActionButton("ManagerUI:right_image", "Play", "", "");
+      %playButton = AddActionButton("ManagerUI:right_image", "Play", "runProject();", "");
       AddActionButton("ManagerUI:plus_image", "Add Module", "", "");
-      AddActionButton("ManagerUI:textField_image", "Open GUI Editor", "", "");
-      AddActionButton("ManagerUI:toolPencil_image", "Open Editor", "", "");
       
-      if(isObject(%targetBuild) && !%targetBuild.isBinary && !$TorqueManager::cmakeNotFound)
+      if(!isFile(getProjectExecutablePath()))
+         %playButton.setActive(false);
+         
+      //AddActionButton("ManagerUI:textField_image", "Open GUI Editor", "", "");
+      //AddActionButton("ManagerUI:toolPencil_image", "Open Editor", "", "");
+      
+      if(isObject(%targetBuild) && !%targetBuild.isBinary)
       {
-         AddActionButton("ManagerUI:open_image", "Regen Project", "", "");
+         AddActionButton("ManagerUI:return_image", "Regen Project", "regenerateProject();", "");
+         
+         if($platform $= "windows")
+            AddActionButton("ManagerUI:open_image", "Open Solution", "openSolutionFile();", "");
+         else
+            AddActionButton("ManagerUI:open_image", "Open Build Dir", "openFileLocation($CurrentProject.buildPath);", "");
       }
    }
    
@@ -229,7 +238,7 @@ function saveCurrentProject()
    if(!isObject($CurrentProject))
       return;
       
-   saveEngineBuild($CurrentProject);
+   saveProject($CurrentProject);
 }
 
 function saveNewProject()
@@ -313,15 +322,8 @@ function generateNewProject()
       }*/
       
       //run cmake
-      if(isDirectory("core/libs/cmake/bin"))
-      {
-         %commandString = "cd \"" @ makeFullPath(getMainDotCsDir()) @ "/core/libs/cmake/bin/\"";
-         %commandString = %commandString @ " && cmake.exe ";
-      }
-      else
-      {
-         %commandString = "cmake ";
-      }
+      %commandString = "cmake ";
+
       %commandString = %commandString @ "-S \"" @ %fullProjectPath @ "\" ";
       %commandString = %commandString @ "-B \"" @ %buildPath @ "\" ";
       %commandString = %commandString @ "-G \"" @ $CurrentProject.generatorName @ "\" ";
@@ -393,7 +395,7 @@ function makeProjectComplete(%resultCode)
 {
    saveProject($CurrentProject);
    
-   openSolutionFile(%resultCode);
+   openSolutionFile();
    
    hideLoadingSplashGui();
    

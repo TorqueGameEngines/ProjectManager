@@ -23,10 +23,6 @@ function populateModuleProperties(%isNew)
    MainViewStack.hidden = false;
    MainViewStack.clear();
    
-   MainViewStack.add(createEditCard("Module Name", "TextEdit", "$CurrentModule.moduleName", "The name of this engine build", ""));
-   
-   MainViewStack.add(createEditCard("Description", "TextEdit", "$CurrentModule.description", "A description of what the module does", ""));
-         
    if(%isNew)
    {
       MainViewStack.add(createEditCard("Source Location", "Dropdown", "$CurrentModule.isLocalOrGit", "Indicates if this engine build is from the local machine, or a git repo", "Git Repository;Local Path"));  
@@ -34,6 +30,7 @@ function populateModuleProperties(%isNew)
       if($CurrentModule.isLocalOrGit $= "Git Repository")
       {
          $CurrentModule.localPath = "";
+         $CurrentModule.dependencies = "";
       }
       else if($CurrentModule.isLocalOrGit $= "Local Path")
       {
@@ -45,17 +42,75 @@ function populateModuleProperties(%isNew)
       {
          MainViewStack.add(createEditCard("Git URL Path", "TextEdit", "$CurrentModule.gitPath", "What URL for the git repo this module is from", ""));
          MainViewStack.add(createEditCard("Git Branch", "TextEdit", "$CurrentModule.branchName", "What branch name for the git repo this module is from. Leave blank to use the repository default", ""));
+         
+         MainViewStack.add(createEditCard("Module Name", "TextEdit", "$CurrentModule.moduleName", "The name of this engine build", ""));
+         MainViewStack.add(createEditCard("Description", "TextEdit", "$CurrentModule.description", "A description of what the module does", ""));
       }
-      else if($CurrentEngineBuild.isLocalOrGit $= "Local Path")
+      else if($CurrentModule.isLocalOrGit $= "Local Path")
       {
-         MainViewStack.add(createEditCard("Local Directory Path", "Folder", "$CurrentModule.localPath", "What local directory path this module is drom on the current machine", ""));
+         MainViewStack.add(createEditCard("Local Directory Path", "ModuleFile", "$CurrentModule.localPath", "What local directory path this module is drom on the current machine", ""));
+         
+         $CurrentModule.localPath = makeFullPath($CurrentModule.localPath);
+         if(fileExt($CurrentModule.localPath) $= ".module")
+         {
+            %moduleDefFile = loadFileText($CurrentModule.localPath);
+            %moduleIdPos = strpos(%moduleDefFile, "ModuleId=\"", 0);
+            if(%moduleIdPos != -1)
+            {
+               %moduleIdPos += 10;
+               %moduleIdEndPos = strpos(%moduleDefFile, "\"", %moduleIdPos);
+               $CurrentModule.moduleName = getSubStr(%moduleDefFile, %moduleIdPos, %moduleIdEndPos - %moduleIdPos);
+            }
+            
+            %descPos = strpos(%moduleDefFile, "Description=\"", 0);
+            if(%descPos != -1)
+            {
+               %descPos += 13;
+               %descEndPos = strpos(%moduleDefFile, "\"", %descPos);
+               $CurrentModule.description = getSubStr(%moduleDefFile, %descPos, %descEndPos - %descPos);
+            }
+            
+            %dependenciesPos = strpos(%moduleDefFile, "Dependencies=\"", 0);
+            if(%dependenciesPos != -1)
+            {
+               %dependenciesPos += 14;
+               %dependenciesEndPos = strpos(%moduleDefFile, "\"", %dependenciesPos);
+               $CurrentModule.dependencies = getSubStr(%moduleDefFile, %dependenciesPos, %dependenciesEndPos - %dependenciesPos);
+            }
+         }
+         
+         %moduleNameField = createEditCard("Module Name", "TextEdit", "$CurrentModule.moduleName", "The name of this engine build", "");
+         %moduleNameField.callonChildren("setActive", false);
+         MainViewStack.add(%moduleNameField);
+   
+         %moduleDescriptionField = createEditCard("Description", "TextEdit", "$CurrentModule.description", "A description of what the module does", "");
+         %moduleDescriptionField.callonChildren("setActive", false);
+         MainViewStack.add(%moduleDescriptionField);
       }
    }
    else
    {
-      MainViewStack.add(createEditCard("Git URL Path", "TextEdit", "$CurrentModule.gitPath", "What URL for the git repo this module is from", ""));
-      MainViewStack.add(createEditCard("Git Branch", "TextEdit", "$CurrentModule.branchName", "What branch name for the git repo this module is from. Leave blank to use the repository default", ""));
+      %moduleNameField = createEditCard("Module Name", "TextEdit", "$CurrentModule.moduleName", "The name of this engine build", "");
+      MainViewStack.add(%moduleNameField);
+
+      %moduleDescriptionField = createEditCard("Description", "TextEdit", "$CurrentModule.description", "A description of what the module does", "");
+      MainViewStack.add(%moduleDescriptionField);
+   
+      %gitPathField = createEditCard("Git URL Path", "TextEdit", "$CurrentModule.gitPath", "What URL for the git repo this module is from", "");
+      %gitPathField.callonChildren("setActive", false); 
+      MainViewStack.add(%gitPathField);
+      
+      %gitBranchField = createEditCard("Git Branch", "TextEdit", "$CurrentModule.branchName", "What branch name for the git repo this module is from. Leave blank to use the repository default", "");
+      %gitBranchField.callonChildren("setActive", false); 
+      MainViewStack.add(%gitBranchField);
+      
       MainViewStack.add(createEditCard("Local Directory Path", "Folder", "$CurrentModule.localPath", "What local directory path this module is drom on the current machine", ""));
+      
+      if($CurrentModule.localPath !$= "")
+      {
+         %moduleNameField.callonChildren("setActive", false);  
+         %moduleDescriptionField.callonChildren("setActive", false);
+      }
    }
          
    if($CurrentModule.isDefault)
@@ -98,7 +153,7 @@ function populateModuleProperties(%isNew)
          {
             %depModule = getModule(%depModuleId);
             %subtext = %depModule.localPath !$= "" ? "(Downloaded)" : "(Not Downloaded)";
-            %depModuleCard = createCard(%depModule.moduleName, %subtext, "", "", true, "navToModuleProp("@%depModule@");", "", "", "", "", "");  
+            %depModuleCard = createCard(%depModule.moduleName, %subtext, "", "", false, "", "", "", "", "", "");  
             
             %depRoll-->stack.add(%depModuleCard);
          }
@@ -119,11 +174,6 @@ function populateModuleProperties(%isNew)
       
       if($CurrentModule.isLocalOrGit $= "Git Repository" && $CurrentModule.gitPath $= "")
          %valid = false;
-         
-      if($CurrentModule.isLocalOrGit $= "Git Repository" && $CurrentModule.gitPath !$= "")
-      {
-         %valid = false;
-      }
       
       if($CurrentModule.isLocalOrGit $= "Local Path" && $CurrentModule.localPath $= "")
          %valid = false;
@@ -202,7 +252,7 @@ function saveCurrentModule()
    if(!isObject($CurrentModule))
       return;
       
-   saveEngineBuild($CurrentModule);
+   saveModule($CurrentModule);
 }
 
 function saveNewModule()
@@ -217,4 +267,6 @@ function saveNewModule()
    $CurrentModule.moduleId = %newModuleId;
    
    saveModule($CurrentModule);
+   
+   MainMenuGUI.goToPage("ModulesPage");
 }

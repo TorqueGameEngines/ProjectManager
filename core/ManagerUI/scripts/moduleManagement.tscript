@@ -1,5 +1,9 @@
 function downloadModule(%module)
 {
+   if(hasMissingModuleDependencies())
+   {
+      MessageBoxOKCancel("Download?", "This module depends on other modules you have not downloaded. Download them as well?", "", "");
+   }
    displayLoadingSplashGui();
    
    $downloadingModuleIdx = %module.moduleId;
@@ -30,16 +34,7 @@ function downloadModule(%module)
    
    $downloadingModuleTargetPath = %targetPath;
    
-   if(isDirectory("core/libs/git/bin"))
-   {
-      %commandString = "cd \"" @ makeFullPath(getMainDotCsDir()) @ "/core/libs/git/bin/\"";
-      
-      %commandString = %commandString @ " && git.exe clone ";
-   }
-   else
-   {
-      %commandString = "git clone ";  
-   }
+   %commandString = "git clone ";  
    
    if(%branchName !$= "")
       %commandString = %commandString @ "--branch " @ %moduleName @ " ";
@@ -75,16 +70,7 @@ function pullUpdateModule(%module)
    
    %downloadPath = getModuleDownloadPath();
    
-   if(isDirectory("core/libs/git/bin"))
-   {
-      %commandString = "cd \"" @ makeFullPath(getMainDotCsDir()) @ "/core/libs/git/bin/\"";
-      
-      %commandString = %commandString @ " && git.exe pull ";
-   }
-   else
-   {
-      %commandString = "git pull ";  
-   }
+   %commandString = "cd \"" @ filePath(makeFullPath(%module.localPath)) @ "\" && git pull"; 
    
    systemCommand(%commandString, "pullUpdateModuleComplete");
 }
@@ -238,7 +224,7 @@ function changeModuleDownloadPath()
 {
    %dlg = new OpenFolderDialog()
    {
-      Title = "Select Engine Build Folder";
+      Title = "Select Module Download Folder";
       Filters = "";
       DefaultFile = "./";
       ChangePath = false;
@@ -271,8 +257,8 @@ function findModulePath(%buildIdx)
 {
    %dlg = new OpenFolderDialog()
    {
-      Title = "Select Module Folder";
-      Filters = "";
+      Title = "Select Module File";
+      Filters = "Module Files (*.module)|*.module|";
       ChangePath = false;
       MustExist = true;
       MultipleFiles = false;
@@ -403,6 +389,30 @@ function changeModuleInstallStatus(%buildIdx)
    MainMenuGui.refresh();
 }
 
+function hasMissingModuleDependencies()
+{
+   %missing = false;
+   if($CurrentModule.dependencies !$= "")
+   {
+      %depCount = getTokenCount($CurrentModule.dependencies, ",;");
+      for(%i=0; %i < %depCount; %i++)
+      {
+         %depName = getToken($CurrentModule.dependencies, ",;", %i);
+         %depModuleId = findModuleByName(%depName);
+         if(%depModuleId != 0)
+         {
+            %depModule = getModule(%depModuleId);
+            if(%depModule.localPath $= "")
+            {
+               %missing = true;
+               break;  
+            }
+         }
+      }
+   }  
+   
+   return %missing;
+}
 //==============================================================================
 // Wizard Stuff
 //==============================================================================

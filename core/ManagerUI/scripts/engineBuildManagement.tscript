@@ -30,17 +30,8 @@ function downloadEngineBuild(%build)
    
    $downloadingBuildTargetPath = %targetPath;
    
-   if(isDirectory("core/libs/git/bin"))
-   {
-      %commandString = "cd \"" @ makeFullPath(getMainDotCsDir()) @ "/core/libs/git/bin/\"";
-      
-      %commandString = %commandString @ " && git.exe clone ";
-   }
-   else
-   {
-      %commandString = "git clone ";  
-   }
-   
+   %commandString = "git clone ";  
+  
    if(%branchName !$= "")
       %commandString = %commandString @ "--branch " @ %branchName @ " ";
       
@@ -76,16 +67,7 @@ function pullUpdateEngineBuild(%build)
    
    %downloadPath = getEngineBuildDownloadPath();
    
-   if(isDirectory("core/libs/git/bin"))
-   {
-      %commandString = "cd \"" @ makeFullPath(getMainDotCsDir()) @ "/core/libs/git/bin/\"";
-      
-      %commandString = %commandString @ " && git.exe pull ";
-   }
-   else
-   {
-      %commandString = "git pull ";  
-   }
+   %commandString = "cd \"" @ makeFullPath(%build.localPath) @ "\" && git pull";  
    
    systemCommand(%commandString, "pullUpdateEngineBuildComplete");
 }

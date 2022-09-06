@@ -296,6 +296,14 @@ function removeModule(%module)
    saveModule(%module);
 }
 
+function getModuleDownloadPath()
+{
+   %downloadPath = PMSettings.value("Settings/Modules/downloadPath", "{ManagerDir}/Modules/");
+   
+   %downloadPath = strreplace(%downloadPath, "{ManagerDir}", getMainDotCsDir());
+   return %downloadPath;
+}
+
 function setupDefaultModules()
 {
    if(findModuleByName("Action-Adventure Kit") == 0)
@@ -522,4 +530,57 @@ function removeProject(%project)
    %project.enableSQLite = "";
    
    saveProject(%project);
+}
+
+
+function getResourcesData() 
+{
+   if(!isObject(PMHttpObj))
+      new HTTPObject(PMHttpObj);
+      
+   if(!isObject(ResourcesData))
+      new ArrayObject(ResourcesData);
+   else
+      ResourcesData.clear();
+      
+   //%http.get("https://torque3dresources.github.io", "/resourcesData.xml");
+   PMHttpObj.get("http://resources.torque3d.org", "/resourcesData.xml");
+}
+
+function PMHttpObj::onLine(%this, %line) 
+{
+   ResourcesData.add(%line);
+}
+
+function PMHttpObj::onConnectFailed(%this) 
+{
+   MessageBoxOK("Error", "Unable to fetch Torque3D Resources data. Please try again.");
+   PMHttpObj.delete();
+}
+
+function PMHttpObj::onDisconncted(%this) 
+{
+   PMHttpObj.delete();
+   
+   %resourcesDataFile = "core/cache/resourcesData.xml";
+   
+   %file = new FileObject();
+   if(%file.openForWrite(%resourcesDataFile))
+   {
+      for(%i=0; %i < ResourcesData.count(); %i++)
+      {
+          %file.writeline(ResourcesData.getKey(%i)); 
+      }
+   }
+      
+   %file.close();
+   
+   if(isObject(ResourcesList))
+      ResourcesList.delete();
+      
+   new Settings(ResourcesList) { 
+      file = %resourcesDataFile; 
+   };
+   
+   ResourcesList.read();
 }

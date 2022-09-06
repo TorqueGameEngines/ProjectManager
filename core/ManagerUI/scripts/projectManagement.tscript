@@ -23,15 +23,17 @@ function openProjectActionMenu(%buildIdx, %buttonCtrl)
    }
 }
 
-function runProject(%projectId)
+function runProject(%launchArgs)
 {
-   %buildId = getProjectBuildIdByIndex(%projectId);
-   %projectTags = getEngineBuildTags(%buildId);
-   %projectName = getProjectNameByIndex(%projectId);
+   %buildId = $CurrentProject.projectId;
+   %engineBuildId = $CurrentProject.engineBuildId;
+   %projectName = $CurrentProject.projectName;
    
-   %projectPath = getProjectLocalPathByIndex(%projectId);
+   %projectPath = $CurrentProject.localPath;
    
-   if(isSearchTextInTags(%projectTags, "Source"))
+   %engineBuild = getEngineBuild(%engineBuildId);
+   
+   if(!%engineBuild.isBinary)
    {
       %projectPath = %projectPath @ "/My Projects/" @ %projectName @ "/game/";
    }
@@ -52,6 +54,37 @@ function runProject(%projectId)
    }
   
    systemCommand(%openCommand, "");
+}
+
+function getProjectExecutablePath()
+{
+   %appPath = "";
+   %buildId = $CurrentProject.projectId;
+   %engineBuildId = $CurrentProject.engineBuildId;
+   %projectName = $CurrentProject.projectName;
+   
+   %projectPath = $CurrentProject.localPath;
+   
+   %engineBuild = getEngineBuild(%engineBuildId);
+   
+   if(!%engineBuild.isBinary)
+   {
+      %projectPath = %projectPath @ "/My Projects/" @ %projectName @ "/game/";
+   }
+   
+   if($platform $= "windows")
+   {
+      %appPath = %projectPath @ %projectName @ ".exe";
+      if(!isFile(%appPath))
+         %appPath = %projectPath @ %projectName @ "_DEBUG.exe";
+   }
+   else
+   {
+      %appPath = %projectPath @ %projectName;
+   }
+   
+   //return %appPath;
+   return "";
 }
 
 //
@@ -592,15 +625,8 @@ function CreateNewProjectPage3::openPage(%this)
       }
       
       //run cmake
-      if(isDirectory("core/libs/cmake/bin"))
-      {
-         %commandString = "cd \"" @ makeFullPath(getMainDotCsDir()) @ "/core/libs/cmake/bin/\"";
-         %commandString = %commandString @ " && cmake.exe ";
-      }
-      else
-      {
-         %commandString = "cmake ";
-      }
+      %commandString = "cmake ";
+
       %commandString = %commandString @ "-S \"" @ %fullProjectPath @ "\" ";
       %commandString = %commandString @ "-B \"" @ %buildPath @ "\" ";
       %commandString = %commandString @ "-G \"" @ $newProjectCompiler @ "\" ";
@@ -689,26 +715,26 @@ function CreateNewProjectPage3::openPage(%this)
    populateProjectsList();
 }*/
 
-function openSolutionFile(%resultCode)
+function openSolutionFile()
 {
-   %engineBuild = getEngineBuild($NewProject.engineBuildId);
+   %engineBuild = getEngineBuild($CurrentProject.engineBuildId);
    if(!%engineBuild.isBinary)
    {
-      %buildPath = $NewProject.buildPath;
+      %buildPath = $CurrentProject.buildPath;
       
       if($platform $= "windows")
       {
-         %solutionPath = %buildPath @ $NewProject.projectName @ ".sln";
+         %solutionPath = %buildPath @ $CurrentProject.projectName @ ".sln";
          if(isFile(%solutionPath))
          {
-            %openCommand = "cd \"" @ %buildPath @ "\" && start " @ $NewProject.projectName @ ".sln";
+            %openCommand = "cd \"" @ %buildPath @ "\" && start " @ $CurrentProject.projectName @ ".sln";
             systemCommand(%openCommand, "");
          }
       }
    }
-   else
+   /*else
    {
-      %localPath = $NewProject.localPath;
+      %localPath = $CurrentProject.localPath;
       
       if(%localPath !$= "" && isDirectory(%localPath))
       {
@@ -723,5 +749,39 @@ function openSolutionFile(%resultCode)
             systemCommand(%cmd);
          }
       }
-   }   
+   }*/
+}
+
+function regenerateProject()
+{
+   %engineBuild = getEngineBuild($CurrentProject.engineBuildId);
+   
+   %buildPath = $CurrentProject.buildPath;
+      
+   if(isDirectory(%buildPath))
+   {
+      %regenCommand = "cmake \"" @ %buildPath @ "\" ";
+      %regenCommand = %regenCommand @ "-DTORQUE_APP_NAME:STRING=" @ $CurrentProject.projectName @ " -DCMAKE_GENERATOR_PLATFORM=x64";
+      %regenCommand = %regenCommand @ " -DTORQUE_D3D11:BOOL=" @ $CurrentProject.enableD3D;
+      %regenCommand = %regenCommand @ " -DTORQUE_OPENGL:BOOL=" @ $CurrentProject.enableOpenGL;
+      %regenCommand = %regenCommand @ " -DTORQUE_PHYSICS_PHYSX3:BOOL=" @ $CurrentProject.enablePhysX;
+      %regenCommand = %regenCommand @ " -DTORQUE_PHYSICS_BULLET:BOOL=" @ $CurrentProject.enableBullet;
+      %regenCommand = %regenCommand @ " -DTORQUE_SQLITE:BOOL=" @ $CurrentProject.enableSqlite;
+      systemCommand(%regenCommand, "");
+   }
+}
+
+function openFileLocation(%path)
+{
+   %fullPath = makeFullPath(%path);
+   if($platform $= "windows")
+   {
+      %cmd = "cd \"" @ %fullPath @ "\" && start .";
+      systemCommand(%cmd);
+   }
+   else
+   {
+      %cmd = "open \"" @ %fullPath @ "\"";
+      systemCommand(%cmd);
+   }  
 }

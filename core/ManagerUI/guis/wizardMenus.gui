@@ -16,8 +16,10 @@ $guiContent = new GuiControl(wizardMenus) {
       new GuiContainer() {
          extent = "541 441";
          profile = "GuiDefaultProfile";
+         visible = "0";
          tooltipProfile = "GuiToolTipProfile";
          internalName = "CreateNewProject";
+         hidden = "1";
 
          new GuiContainer(CreateNewProjectPage0) {
             position = "1 1";
@@ -33,7 +35,7 @@ $guiContent = new GuiControl(wizardMenus) {
                text = "Project Name:";
                position = "0 117";
                extent = "542 18";
-               profile = "MenuHeaderText";
+               profile = "GuiMLTextProfile";
                tooltipProfile = "GuiToolTipProfile";
             };
             new GuiTextEditCtrl() {
@@ -47,7 +49,7 @@ $guiContent = new GuiControl(wizardMenus) {
                text = "Project Folder:";
                position = "-1 197";
                extent = "466 18";
-               profile = "MenuHeaderText";
+               profile = "GuiMLTextProfile";
                tooltipProfile = "GuiToolTipProfile";
             };
             new GuiMLTextCtrl() {
@@ -80,7 +82,7 @@ $guiContent = new GuiControl(wizardMenus) {
                text = "Project Options:";
                position = "-1 21";
                extent = "532 18";
-               profile = "MenuHeaderText";
+               profile = "GuiMLTextProfile";
                tooltipProfile = "GuiToolTipProfile";
             };
             new GuiScrollCtrl() {
@@ -116,7 +118,7 @@ $guiContent = new GuiControl(wizardMenus) {
                position = "1 21";
                extent = "524 18";
                horizSizing = "width";
-               profile = "MenuHeaderText";
+               profile = "GuiMLTextProfile";
                tooltipProfile = "GuiToolTipProfile";
             };
             new GuiMLTextCtrl() {
@@ -160,7 +162,7 @@ $guiContent = new GuiControl(wizardMenus) {
                text = "Generating...";
                position = "159 186";
                extent = "119 18";
-               profile = "MenuHeaderText";
+               profile = "GuiMLTextProfile";
                tooltipProfile = "GuiToolTipProfile";
             };
             new GuiMLTextCtrl() {
@@ -186,7 +188,7 @@ $guiContent = new GuiControl(wizardMenus) {
                text = "Select Engine Build to Use:";
                position = "0 157";
                extent = "542 18";
-               profile = "MenuHeaderText";
+               profile = "GuiMLTextProfile";
                tooltipProfile = "GuiToolTipProfile";
             };
             new GuiPopUpMenuCtrl() {
@@ -211,7 +213,7 @@ $guiContent = new GuiControl(wizardMenus) {
                text = "Select Compiler to Use:";
                position = "0 157";
                extent = "542 18";
-               profile = "MenuHeaderText";
+               profile = "GuiMLTextProfile";
                tooltipProfile = "GuiToolTipProfile";
             };
             new GuiPopUpMenuCtrl() {
@@ -245,7 +247,7 @@ $guiContent = new GuiControl(wizardMenus) {
                text = "Engine Build Location:";
                position = "-1 69";
                extent = "328 18";
-               profile = "MenuHeaderText";
+               profile = "GuiMLTextProfile";
                tooltipProfile = "GuiToolTipProfile";
             };
             new GuiRadioCtrl(engineBuildGitBtn) {
@@ -337,7 +339,7 @@ $guiContent = new GuiControl(wizardMenus) {
                text = "Engine Build Name:";
                position = "0 141";
                extent = "328 18";
-               profile = "MenuHeaderText";
+               profile = "GuiMLTextProfile";
                tooltipProfile = "GuiToolTipProfile";
             };
             new GuiCheckBoxCtrl() {
@@ -370,14 +372,14 @@ $guiContent = new GuiControl(wizardMenus) {
                text = "Registering Engine Build....";
                position = "117 192";
                extent = "252 18";
-               profile = "MenuHeaderText";
+               profile = "GuiMLTextProfile";
                tooltipProfile = "GuiToolTipProfile";
             };
             new GuiMLTextCtrl() {
                text = "Complete!";
                position = "317 192";
                extent = "182 18";
-               profile = "MenuHeaderText";
+               profile = "GuiMLTextProfile";
                tooltipProfile = "GuiToolTipProfile";
                internalName = "engineBuildMakeComplete";
             };
@@ -405,7 +407,7 @@ $guiContent = new GuiControl(wizardMenus) {
                text = "New Git Info:";
                position = "1 129";
                extent = "328 18";
-               profile = "MenuHeaderText";
+               profile = "GuiMLTextProfile";
                tooltipProfile = "GuiToolTipProfile";
             };
             new GuiTextCtrl() {
@@ -454,14 +456,14 @@ $guiContent = new GuiControl(wizardMenus) {
                text = "Updating Build\'s Git Info...";
                position = "111 189";
                extent = "206 18";
-               profile = "MenuHeaderText";
+               profile = "GuiMLTextProfile";
                tooltipProfile = "GuiToolTipProfile";
             };
             new GuiMLTextCtrl() {
                text = "Complete!";
                position = "303 189";
                extent = "93 18";
-               profile = "MenuHeaderText";
+               profile = "GuiMLTextProfile";
                tooltipProfile = "GuiToolTipProfile";
                internalName = "updateCompleteTxt";
             };
@@ -489,7 +491,7 @@ $guiContent = new GuiControl(wizardMenus) {
                text = "Engine Build Location:";
                position = "-1 69";
                extent = "328 18";
-               profile = "MenuHeaderText";
+               profile = "GuiMLTextProfile";
                tooltipProfile = "GuiToolTipProfile";
             };
             new GuiRadioCtrl(ModuleGitBtn) {
@@ -581,7 +583,7 @@ $guiContent = new GuiControl(wizardMenus) {
                text = "Module Name:";
                position = "0 141";
                extent = "328 18";
-               profile = "MenuHeaderText";
+               profile = "GuiMLTextProfile";
                tooltipProfile = "GuiToolTipProfile";
             };
             new GuiCheckBoxCtrl() {
@@ -612,14 +614,14 @@ $guiContent = new GuiControl(wizardMenus) {
                text = "Registering Module....";
                position = "117 192";
                extent = "252 18";
-               profile = "MenuHeaderText";
+               profile = "GuiMLTextProfile";
                tooltipProfile = "GuiToolTipProfile";
             };
             new GuiMLTextCtrl() {
                text = "Complete!";
                position = "317 192";
                extent = "182 18";
-               profile = "MenuHeaderText";
+               profile = "GuiMLTextProfile";
                tooltipProfile = "GuiToolTipProfile";
                internalName = "ModuleMakeComplete";
             };
@@ -628,10 +630,8 @@ $guiContent = new GuiControl(wizardMenus) {
       new GuiContainer() {
          extent = "541 441";
          profile = "GuiDefaultProfile";
-         visible = "0";
          tooltipProfile = "GuiToolTipProfile";
          internalName = "installModule";
-         hidden = "1";
 
          new GuiContainer(InstallModulePage0) {
             position = "1 1";
@@ -644,18 +644,26 @@ $guiContent = new GuiControl(wizardMenus) {
             hidden = "1";
 
             new GuiMLTextCtrl() {
-               text = "Select Project to Install Module Into:";
-               position = "0 157";
+               text = "Select Project";
+               position = "0 5";
                extent = "542 18";
-               profile = "MenuHeaderText";
+               profile = "MenuHeaderTextCenter";
                tooltipProfile = "GuiToolTipProfile";
             };
-            new GuiPopUpMenuCtrl() {
-               position = "11 166";
-               extent = "515 45";
-               profile = "GuiPopUpMenuProfile";
+            new GuiScrollCtrl() {
+               hScrollBar = "dynamic";
+               vScrollBar = "dynamic";
+               position = "2 26";
+               extent = "539 415";
+               profile = "GuiScrollProfile";
                tooltipProfile = "GuiToolTipProfile";
-               internalName = "projectList";
+
+               new GuiStackControl(InstallModule_SelectProjectStack) {
+                  position = "1 1";
+                  extent = "521 64";
+                  profile = "GuiDefaultProfile";
+                  tooltipProfile = "GuiToolTipProfile";
+               };
             };
          };
          new GuiContainer(InstallModulePage1) {
@@ -667,19 +675,50 @@ $guiContent = new GuiControl(wizardMenus) {
             internalName = "page1";
 
             new GuiMLTextCtrl() {
-               text = "Installing...";
-               position = "187 186";
-               extent = "119 18";
-               profile = "MenuHeaderText";
+               text = "Select Modules";
+               position = "0 5";
+               extent = "542 18";
+               profile = "MenuHeaderTextCenter";
+               tooltipProfile = "GuiToolTipProfile";
+            };
+            new GuiScrollCtrl() {
+               hScrollBar = "dynamic";
+               vScrollBar = "dynamic";
+               position = "2 26";
+               extent = "539 415";
+               profile = "GuiScrollProfile";
+               tooltipProfile = "GuiToolTipProfile";
+
+               new GuiStackControl(InstallModule_SelectModulesStack) {
+                  position = "1 1";
+                  extent = "521 64";
+                  profile = "GuiDefaultProfile";
+                  tooltipProfile = "GuiToolTipProfile";
+               };
+            };
+         };
+         new GuiContainer(InstallModulePage2) {
+            position = "1 1";
+            extent = "541 441";
+            horizSizing = "width";
+            profile = "GuiDefaultProfile";
+            tooltipProfile = "GuiToolTipProfile";
+            internalName = "page2";
+
+            new GuiMLTextCtrl() {
+               text = "Installing Modules...";
+               position = "117 192";
+               extent = "252 14";
+               profile = "GuiMLTextProfile";
                tooltipProfile = "GuiToolTipProfile";
             };
             new GuiMLTextCtrl() {
                text = "Complete!";
-               position = "275 187";
-               extent = "77 18";
-               profile = "MenuHeaderTextCenter";
+               position = "317 192";
+               extent = "182 14";
+               profile = "GuiMLTextProfile";
                tooltipProfile = "GuiToolTipProfile";
-               internalName = "installModuleCompleteTxt";
+               internalName = "installModuleComplete";
             };
          };
       };

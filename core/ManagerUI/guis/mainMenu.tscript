@@ -1716,6 +1716,8 @@ function textEditCardChanged(%ctrl)
    eval(%evalCommand);
    
    MainMenuGui.refresh();
+   if(ManagerWizardWindow.isAwake())
+      ManagerWizardWindow.refreshPage();
 }
 
 function checkboxCardChanged(%ctrl)
@@ -1724,6 +1726,8 @@ function checkboxCardChanged(%ctrl)
    eval(%evalCommand);
    
    MainMenuGui.refresh();
+   if(ManagerWizardWindow.isAwake())
+      ManagerWizardWindow.refreshPage();
 }
 
 function dropdownCardChanged(%ctrl)
@@ -1734,6 +1738,8 @@ function dropdownCardChanged(%ctrl)
    %ctrl.setText(%ctrl.getText());
    
    MainMenuGui.refresh();
+   if(ManagerWizardWindow.isAwake())
+      ManagerWizardWindow.refreshPage();
 }
 
 function filePathCardChanged(%ctrl)
@@ -1742,6 +1748,8 @@ function filePathCardChanged(%ctrl)
    eval(%evalCommand);
    
    MainMenuGui.refresh();
+   if(ManagerWizardWindow.isAwake())
+      ManagerWizardWindow.refreshPage();
 }
 
 function folderPathCardChanged(%ctrl)
@@ -1750,6 +1758,8 @@ function folderPathCardChanged(%ctrl)
    eval(%evalCommand);
    
    MainMenuGui.refresh();
+   if(ManagerWizardWindow.isAwake())
+      ManagerWizardWindow.refreshPage();
 }
 
 function findFilePathCard(%ctrl)

@@ -83,8 +83,7 @@ function getProjectExecutablePath()
       %appPath = %projectPath @ %projectName;
    }
    
-   //return %appPath;
-   return "";
+   return %appPath;
 }
 
 //

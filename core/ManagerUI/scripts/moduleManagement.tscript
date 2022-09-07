@@ -681,9 +681,18 @@ function changeModuleGitInfoPage1::openPage(%this)
 //==============================================================================
 // Install Module
 //==============================================================================
-function openInstallModuleWizard(%moduleId)
+function openInstallModuleWizard(%project, %module)
 {
-   $TorqueManager::toInstallModuleId = %moduleId;
+   $TorqueManager::targetProject = %project;
+   $askedToInstallDependencies = false;
+   
+   %moduleCount = getModuleCount();
+   for(%i=0; %i < %moduleCount; %i++)
+   {
+      setVariable("$TorqueManager::toInstallModules_" @ %i, false);
+   }
+   
+   setVariable("$TorqueManager::toInstallModules_" @ %module.moduleId, true);
    
    setupWizard();
    
@@ -691,6 +700,7 @@ function openInstallModuleWizard(%moduleId)
    
    ManagerWizardWindow.addWizardPage(InstallModulePage0);
    ManagerWizardWindow.addWizardPage(InstallModulePage1);
+   ManagerWizardWindow.addWizardPage(InstallModulePage2);
    
    ManagerWizardWindow.setStep(0); 
    
@@ -700,26 +710,104 @@ function openInstallModuleWizard(%moduleId)
 
 function InstallModulePage0::openPage(%this)
 {
-   %this-->projectList.clear();
-   
-   %count = getProjectCount();
-   for(%i=0; %i < %count; %i++)
+   if($TorqueManager::targetProject !$= "")
    {
-      %name = getProjectNameByIndex(%i);
-
-      %this-->projectList.add(%name, %i); 
+      ManagerWizardWindow.nextStep();
+      return;
    }
+      
+   InstallModule_SelectProjectStack.clear();
+   
+   %projectCount = getProjectCount();
+   for(%i=1; %i <= %projectCount; %i++)
+   {
+      %project = getProject(%i);
+      
+      %projectCard = createCard(%project.projectName, "","","", true, 
+            "$TorqueManager::targetProject=" @ %project @ ";ManagerWizardWindow.nextStep();");
+            
+      InstallModule_SelectProjectStack.add(%projectCard); 
+   }
+
+   ManagerWizardWindow-->nextButton.setHidden(true);
+   ManagerWizardWindow-->backButton.setHidden(true);
 }
 
 function InstallModulePage1::openPage(%this)
 {
-   if(InstallModulePage0-->projectList.getText() $= "")
+   ManagerWizardWindow-->nextButton.setHidden(false);
+   
+   if($TorqueManager::targetProject $= "")
    {
        ManagerWizardWindow.previousStep();
        return;
    }
       
-   %this-->installModuleCompleteTxt.setHidden(true);
+   InstallModule_SelectModulesStack.clear();
+   
+   %moduleCount = getModuleCount();
+   for(%i=0; %i < %moduleCount; %i++)
+   {
+      %module = getModule(%i);
+      
+      if(%module.localPath $= "")
+         continue;
+      
+      %moduleCard = createEditCard(%module.moduleName, "checkbox", "$TorqueManager::toInstallModules_" @ %module.moduleId, "", "No;Yes");
+            
+      InstallModule_SelectModulesStack.add(%moduleCard); 
+   }
+}
+
+function InstallModulePage2::openPage(%this)
+{
+   %this-->installModuleComplete.setHidden(true);
+   ManagerWizardWindow-->nextButton.setActive(false);  
+   Canvas.repaint();
+   
+   %gamePath = makeFullPath(getProjectGamePath($TorqueManager::targetProject));
+   
+   %moduleCount = getModuleCount();
+   for(%i=1; %i <= %moduleCount; %i++)
+   {
+      %module = getModule(%i);
+      
+      if(getVariable("$TorqueManager::toInstallModules_" @ %module.moduleId) == 1)
+      {
+         %modulePath = makeFullPath(filePath(%module.localPath));
+         %installPath = %gamePath @ "/data/" @ %module.moduleName @ "/";
+         
+         if(!IsDirectory(%installPath))
+         {
+            createPath(%installPath);  
+         }
+         
+         if(!copyProjectFolder(%modulePath, %installPath))
+         {
+            error("Failed to install module " @ %module.moduleName @ " from path: " @ %modulePath @ " to new project: " @ $TorqueManager::targetProject.projectName);
+         }
+         else
+         {
+            %tags = %module.tags;
+            %tagCount = getTokenCount(%tags, ",;");  
+            
+            for(%t=0; %t < %tagCount; %t++)
+            {
+               %tag = getToken(%tags, ",;", %t);
+               if(%tag $= "Source Files" || %tag $= "Has Source Files" || %tag $= "Special Installation Instruction")
+               {
+                  MessageBoxOK("", "The module " @ %module.moduleName @ " has source files or special installation instructions. You should check any manual steps needed and then regenerate the project.", "");
+                  break;  
+               }
+            }
+         }
+      }
+   }
+   
+   %this-->installModuleComplete.setHidden(false);
+   ManagerWizardWindow-->nextButton.setActive(true);  
+   Canvas.repaint();
+   /*%this-->installModuleCompleteTxt.setHidden(true);
    ManagerWizardWindow-->nextButton.setActive(false);  
    Canvas.repaint();
    
@@ -753,5 +841,5 @@ function InstallModulePage1::openPage(%this)
    }
 
    %this-->installModuleCompleteTxt.setHidden(false);
-   ManagerWizardWindow-->nextButton.setActive(true); 
+   ManagerWizardWindow-->nextButton.setActive(true); */
 }

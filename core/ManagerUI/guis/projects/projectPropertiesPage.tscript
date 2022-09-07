@@ -101,7 +101,8 @@ function populateProjectProperties(%isNew)
    
    //MainViewStack.add(createEditCard("Project Preview Image", "FilePath", "$CurrentProject.previewImage", "The preview image displayed in the project manager for this project. (Optional)", ""));
    
-   MainViewStack.add(createEditCard("Project Path", "Folder", "$CurrentProject.localPath", "The folder the project will be put into", ""));
+   %projectPathCard = createEditCard("Project Path", "Folder", "$CurrentProject.localPath", "The folder the project will be put into", "");
+   MainViewStack.add(%projectPathCard);
    
    if($CurrentProject.targetBuildName $= "" && $CurrentProject.engineBuildId)
    {
@@ -149,36 +150,47 @@ function populateProjectProperties(%isNew)
          %cmakeRoll-->stack.add(createEditCard("Enable SQLite Support", "checkbox", "$CurrentProject.enableSQLite", "Adds SQLite database support", "No;Yes"));
       }
       
-      %moduleRoll = new GuiRolloutCtrl() { 
-         caption = "Modules";
-         extent = MainViewStack.extent.x SPC 40;
-         profile = GuiMenuRolloutProfile;
-         margin = "5 5 5 5";
-         
-         new GuiStackControl() {
-            internalName = "stack";
-            padding = "5";
-         };
-      };
-      
-      MainViewStack.add(%moduleRoll);
-      
-      %gamePath = getProjectGamePath($CurrentProject);
-      
-      for( %file = findFirstFile( %gamePath @ "data/*.module" );
-           %file !$= "";
-           %file = findNextFile( %gamePath @ "data/*.module" ))
+      if(!%isNew)
       {
-         %moduleName = fileBase(%file);
+         %moduleRoll = new GuiRolloutCtrl() { 
+            caption = "Modules";
+            extent = MainViewStack.extent.x SPC 40;
+            profile = GuiMenuRolloutProfile;
+            margin = "5 5 5 5";
+            
+            new GuiStackControl() {
+               internalName = "stack";
+               padding = "5";
+            };
+         };
          
-         %moduleCard = createCard(%moduleName, "", "", "", false, "", "button", "", "Remove", "dostuff();");
-         %moduleRoll-->stack.add(%moduleCard);
+         MainViewStack.add(%moduleRoll);
+         
+         %gamePath = getProjectGamePath($CurrentProject);
+         
+         for( %file = findFirstFile( %gamePath @ "data/*.module" );
+              %file !$= "";
+              %file = findNextFile( %gamePath @ "data/*.module" ))
+         {
+            %moduleName = fileBase(%file);
+            
+            %installedModuleTags = "";
+            
+            //TODO: make this work by checking the template dir's module file definitions
+            if(%moduleName $= "UI" || %moduleName $= "ExampleModule" || 
+               %moduleName $= "GameUI" || %moduleName $= "Prototyping")
+               %installedModuleTags = "Default";
+            
+            %moduleCard = createCard(%moduleName, "", %installedModuleTags, "", false, "", "button", "", "Remove", "removeModuleFromProject(" @ $CurrentProject @ ", \"" @ %file @ "\");");
+            %moduleRoll-->stack.add(%moduleCard);
+         }
       }
    }
    
    if(!%isNew)
    {
       %projectNameCard.callonChildren("setActive", false);
+      %projectPathCard.callonChildren("setActive", false);
       %engineBuildCard.callonChildren("setActive", false);
       if(!%targetBuild.isBinary)
       {
@@ -196,6 +208,15 @@ function populateProjectProperties(%isNew)
    
    %valid = true;
    
+   if($CurrentProject.projectName $= "")
+      %valid = false;
+      
+   if($CurrentProject.localPath $= "")
+      %valid = false;
+   
+   if(!isObject(%targetBuild) || (!%targetBuild.isBinary && $CurrentProject.generatorName $= ""))
+      %valid = false;
+   
    if(%valid)
       %buttons-->okButton.setActive(true);
    else
@@ -212,7 +233,7 @@ function populateProjectProperties(%isNew)
       if(isFile(getProjectExecutablePath()))
          AddActionButton("ManagerUI:right_image", "Play", "runProject();", "");
          
-      AddActionButton("ManagerUI:plus_image", "Add Module", "", "");
+      AddActionButton("ManagerUI:plus_image", "Add Module", "openInstallModuleWizard(" @ $CurrentProject @ ");", "");
          
       //AddActionButton("ManagerUI:textField_image", "Open GUI Editor", "", "");
       //AddActionButton("ManagerUI:toolPencil_image", "Open Editor", "", "");
@@ -399,7 +420,7 @@ function makeProjectComplete(%resultCode)
    hideLoadingSplashGui();
    
    //Hop over to the projects page so we can check out our new project
-   MainMenuGui.goToPage("ProjectsPage");
+   navToProjectProps($CurrentProject);
 }
 
 function getUsableEngineBuildsList()
@@ -449,4 +470,24 @@ function getCompilerList()
       %compilerList = %compilerList @ ";Unix Makefile";
    
    return %compilerList;
+}
+
+function removeModuleFromProject(%project, %moduleFile)
+{
+   MessageBoxOKCancel("Confirm", "Are you sure you want to delete the " @ fileBase(%moduleFile) @ " module from project: " @ %project.projectName, 
+                        "doRemoveModuleFromProject("@%project@", \""@%moduleFile@"\");", "");
+}
+
+function doRemoveModuleFromProject(%project, %moduleFile)
+{
+   %modulePath = filePath(%moduleFile);
+   
+   deleteFolder(%modulePath);
+
+   MainMenuGUI.refresh(); 
+}
+
+function installModuleToProject(%project, %module)
+{
+   openInstallModuleWizard(%module);
 }

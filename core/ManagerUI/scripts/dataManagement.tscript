@@ -408,7 +408,7 @@ function getResourcesData()
    if(!isObject(ResourcesData))
       new ArrayObject(ResourcesData);
    else
-      ResourcesData.clear();
+      ResourcesData.empty();
       
    //%http.get("https://torque3dresources.github.io", "/resourcesData.xml");
    PMHttpObj.get("http://resources.torque3d.org", "/resourcesData.xml");
@@ -483,7 +483,6 @@ function PMHttpObj::onDisconncted(%this)
    for(%i=1; %i <= %moduleCount; %i++)
    {
       %moduleName = ResourcesList.value("Modules/" @ %i @ "/moduleName");
-      echo("MODULE NAME: " @ %moduleName);
       if(%moduleName $= "")
          continue;
          
@@ -504,8 +503,6 @@ function PMHttpObj::onDisconncted(%this)
       %module.isDefault = 1; //this comes from our resources list, so it's always a default one
       %module.dependencies = ResourcesList.value("Modules/" @ %i @ "/dependencies", "");
       %module.tags = ResourcesList.value("Modules/" @ %i @ "/tags");
-      
-      echo("TAGS: " @ %module.tags);
       
       saveModule(%module); 
    }

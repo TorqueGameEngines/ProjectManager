@@ -19,6 +19,11 @@ function MainMenuGui::onWake(%this)
    
    if(!isObject(%this.navPages))
       %this.navPages = new ArrayObject();
+      
+   if(!isObject(DownloadQueue))
+      new ArrayObject(DownloadQueue);
+   
+   DownloadQueue.empty();
    
    PMSettings.read();
    
@@ -36,20 +41,18 @@ function MainMenuGui::onWake(%this)
    
    %this.registerPage("SettingsdPage", "Settings", "populateSettings();");
    
-   setupDefaultEngineBuilds();
+   getResourcesData();
    
-   setupDefaultModules();
-   
-   setupWizard();
+   //setupWizard();
    
    //check we have git and cmake commandline access
-   %cmakeTestFilePath = getPrefpath() @ "/cmakeTest.txt";
+   /*%cmakeTestFilePath = getPrefpath() @ "/cmakeTest.txt";
    systemCommand("where cmake > " @ %cmakeTestFilePath);
    cmakeCheck();
 
    %gitTestFilePath = getPrefpath() @ "/gitTest.txt";
    systemCommand("where git > " @ %gitTestFilePath);
-   gitCheck();
+   gitCheck();*/
    
    //If needed, we'll run the setup for these
    //setupCommandLinePrograms();

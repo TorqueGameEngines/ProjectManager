@@ -209,11 +209,10 @@ function populateProjectProperties(%isNew)
    
    if($CurrentProject.localPath !$= "")
    {
-      %playButton = AddActionButton("ManagerUI:right_image", "Play", "runProject();", "");
+      if(isFile(getProjectExecutablePath()))
+         AddActionButton("ManagerUI:right_image", "Play", "runProject();", "");
+         
       AddActionButton("ManagerUI:plus_image", "Add Module", "", "");
-      
-      if(!isFile(getProjectExecutablePath()))
-         %playButton.setActive(false);
          
       //AddActionButton("ManagerUI:textField_image", "Open GUI Editor", "", "");
       //AddActionButton("ManagerUI:toolPencil_image", "Open Editor", "", "");

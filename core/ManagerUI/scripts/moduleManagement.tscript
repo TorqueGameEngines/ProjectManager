@@ -1,10 +1,23 @@
 function downloadModule(%module)
 {
+   $downloadModuleDependencies = false;
+   
    if(hasMissingModuleDependencies())
    {
-      MessageBoxOKCancel("Download?", "This module depends on other modules you have not downloaded. Download them as well?", "", "");
+      MessageBoxYesNo("Download?", %module.moduleName @ " depends on other modules you have not downloaded. Download them as well?", "$downloadModuleDependencies = true; queueModuleDownload("@%module@");", "queueModuleDownload("@%module@");");
    }
-   displayLoadingSplashGui();
+   else
+   {
+      queueModuleDownload(%module);  
+   }
+}
+
+function doModuleDownloads()
+{
+   if(DownloadQueue.count() == 0)
+      return;
+      
+   %module = DownloadQueue.getkey(0);
    
    $downloadingModuleIdx = %module.moduleId;
    
@@ -41,25 +54,76 @@ function downloadModule(%module)
       
    %commandString = %commandString @ %gitPath @ " \"" @ %targetPath @ "\"";
    
+   echo("Beginning download of module " @ %moduleName);
+   
    systemCommand(%commandString, "downloadModuleComplete");
 }
 
 function downloadModuleComplete(%resultCode)
 {
+   %module = DownloadQueue.getkey(0);
+   
    error("Running downloadModule resulted in a return code of " @ %resultCode);
    
    if(%resultCode $= 0)
    {
-      $CurrentModule.localPath = $downloadingModuleTargetPath;
+      %module.localPath = $downloadingModuleTargetPath;
       
-      saveModule($CurrentModule);
-      
-      MainMenuGui.refresh();
+      saveModule(%module);
+   }
+   else
+   {
+      MessageBoxOK("Error", "Something went wrong when cloning " @ %module.moduleName @ " listed repo. Error code: " @ %resultCode);
    }
    
-   hideLoadingSplashGui();
+   DownloadQueue.pop_front();
+   
+   //we're at the end, so push the refresh now
+   if(DownloadQueue.count() == 0)
+   {
+      MainMenuGui.refresh();
+      hideLoadingSplashGui();
+   }
+   else
+   {
+      schedule(32, 0, doModuleDownloads);
+   }
 }
 
+function queueModuleDownload(%module)
+{
+   DownloadQueue.add(%module);
+   
+   if($downloadModuleDependencies)
+   {
+      queueModuleDependenciesDownload(%module);
+   }
+   
+   schedule(32, 0, doModuleDownloads);
+   displayLoadingSplashGui();
+}
+
+function queueModuleDependenciesDownload(%module)
+{
+   if(%module.dependencies !$= "")
+   {
+      %depCount = getTokenCount($CurrentModule.dependencies, ",;");
+      for(%i=0; %i < %depCount; %i++)
+      {
+         %depName = getToken($CurrentModule.dependencies, ",;", %i);
+         %depModuleId = findModuleByName(%depName);
+         if(%depModuleId != 0)
+         {
+            %depModule = getModule(%depModuleId);
+            if(%depModule.localPath $= "")
+            {
+               DownloadQueue.add(%depModule);
+            }
+         }
+      }
+   }  
+}
+//
 function pullUpdateModule(%module)
 {
    $downloadingModuleIdx = %module.moduleId;
@@ -82,6 +146,10 @@ function pullUpdateModuleComplete(%resultCode)
    if(%resultCode $= 0)
    {
       MainMenuGui.refresh();
+   }
+   else
+   {
+      MessageBoxOK("Error", "Something went wrong when pulling updates for " @ $CurrentModule.moduleName @ " listed repo. Error code: " @ %resultCode);
    }
 }
 

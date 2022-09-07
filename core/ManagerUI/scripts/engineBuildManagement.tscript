@@ -53,6 +53,10 @@ function downloadEngineBuildComplete(%resultCode)
       
       MainMenuGui.refresh();
    }
+   else
+   {
+      MessageBoxOK("Error", "Something went wrong when cloning " @ $CurrentEngineBuild.buildName @ " listed repo. Error code: " @ %resultCode);
+   }
    
    hideLoadingSplashGui();
 }
@@ -79,6 +83,10 @@ function pullUpdateEngineBuildComplete(%resultCode)
    if(%resultCode $= 0)
    {
       MainMenuGui.refresh();
+   }
+   else
+   {
+      MessageBoxOK("Error", "Something went wrong when pulling updates for " @ $CurrentEngineBuild.buildName @ " listed repo. Error code: " @ %resultCode);
    }
 }
 

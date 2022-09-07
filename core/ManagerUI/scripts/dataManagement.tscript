@@ -88,41 +88,6 @@ function removeEngineBuild(%build)
    saveEngineBuild(%build);
 }
 
-function setupDefaultEngineBuilds()
-{
-   if(findEngineBuildByName("Torque 3D 4.0 Preview Source") == 0)
-   {
-      %buildId = incrementEngineBuildCount();
-      
-      %bld = new ScriptObject();
-      %bld.buildId = %buildId;
-      %bld.buildName = "Torque 3D 4.0 Preview Source";
-      %bld.gitPath = "https://github.com/TorqueGameEngines/Torque3D";
-      %bld.branchName = "Preview4_0";
-      %bld.localPath = "";
-      %bld.isDefault = 1;
-      %bld.isBinary = 0;
-
-      saveEngineBuild(%bld);
-   }
-
-   if(findEngineBuildByName("Torque 3D 4.0 Preview Binaries") == 0)
-   {
-      %buildId = incrementEngineBuildCount();
-      
-      %bld = new ScriptObject();
-      %bld.buildId = %buildId;
-      %bld.buildName = "Torque 3D 4.0 Preview Binaries";
-      %bld.gitPath = "https://github.com/TorqueGameEngines/Torque3D-Binaries";
-      %bld.branchName = "Torque3D_win_20220409";
-      %bld.localPath = "";
-      %bld.isDefault = 1;
-      %bld.isBinary = 1;
-
-      saveEngineBuild(%bld);
-   }
-}
-
 function getEngineBuildDownloadPath()
 {
    %downloadPath = PMSettings.value("Settings/EngineBuilds/downloadPath", "{ManagerDir}/EngineBuilds/");
@@ -302,104 +267,6 @@ function getModuleDownloadPath()
    
    %downloadPath = strreplace(%downloadPath, "{ManagerDir}", getMainDotCsDir());
    return %downloadPath;
-}
-
-function setupDefaultModules()
-{
-   if(findModuleByName("Action-Adventure Kit") == 0)
-   {
-      %moduleId = incrementModuleCount();
-      
-      %module = new ScriptObject();
-      %module.moduleId = %moduleId;
-      %module.moduleName = "Action-Adventure Kit";
-      %module.gitPath = "https://github.com/Torque3DResources/AAK";
-      %module.description = "Implements gameplay and controls for a standard Action-Adventure style third person game";
-      %module.branchName = "";
-      %module.localPath = "";
-      %module.isDefault = 1;
-      %module.dependencies = "";
-      %module.installInNewProj = false;
-      %module.tags = "Requires Engine Changes;Has Source Files";
-
-      saveModule(%module);
-   }
-   
-   if(findModuleByName("FPSGameplay") == 0)
-   {
-      %moduleId = incrementModuleCount();
-      
-      %module = new ScriptObject();
-      %module.moduleId = %moduleId;
-      %module.moduleName = "FPSGameplay";
-      %module.gitPath = "https://github.com/Torque3DResources/FPSGameplay";
-      %module.description = "Rapid Prototype Kit module that implements standard multiplayer FPS gameplay";
-      %module.branchName = "";
-      %module.localPath = "";
-      %module.isDefault = 1;
-      %module.dependencies = "FPSEquipment;FPSPlayer;inventorySystem;";
-      %module.installInNewProj = false;
-      %module.tags = "";
-
-      saveModule(%module);
-   }
-   
-   if(findModuleByName("FPSEquipment") == 0)
-   {
-      %moduleId = incrementModuleCount();
-      
-      %module = new ScriptObject();
-      %module.moduleId = %moduleId;
-      %module.moduleName = "FPSEquipment";
-      %module.gitPath = "https://github.com/Torque3DResources/FPSEquipment";
-      %module.description = "Implements various default weapons and equipment for an Scifi FPS game";
-      %module.branchName = "";
-      %module.localPath = "";
-      %module.isDefault = 1;
-      %module.dependencies = "";
-      %module.installInNewProj = false;
-      %module.tags = "";
-
-      saveModule(%module);
-   }
-   
-   if(findModuleByName("FPSPlayer") == 0)
-   {
-      %moduleId = incrementModuleCount();
-      
-      %module = new ScriptObject();
-      %module.moduleId = %moduleId;
-      %module.moduleName = "FPSPlayer";
-      %module.gitPath = "https://github.com/Torque3DResources/FPSPlayer";
-      %module.description = "Implements a basic example controllable player for use with a Scifi FPS game";
-      %module.branchName = "";
-      %module.localPath = "";
-      %module.isDefault = 1;
-      %module.dependencies = "";
-      %module.installInNewProj = false;
-      %module.tags = "";
-
-      saveModule(%module);
-   }
-   
-   if(findModuleByName("InventorySystem") == 0)
-   {
-      %moduleId = incrementModuleCount();
-      
-      %module = new ScriptObject();
-      %module.moduleId = %moduleId;
-      %module.moduleName = "InventorySystem";
-      %module.gitPath = "https://github.com/Torque3DResources/inventorySystem";
-      %module.description = "Implements a simple inventory system";
-      %module.branchName = "";
-      %module.localPath = "";
-      %module.isDefault = 1;
-      %module.dependencies = "";
-      %module.installInNewProj = false;
-      %module.tags = "";
-
-      saveModule(%module);
-   }
 }
 
 function getModuleTags(%index)
@@ -583,4 +450,69 @@ function PMHttpObj::onDisconncted(%this)
    };
    
    ResourcesList.read();
+   
+   //update the entries
+   %engineBuildCount = ResourcesList.value("EngineBuilds/NumBuilds", 0);
+   for(%i=1; %i <= %engineBuildCount; %i++)
+   {
+      %buildName = ResourcesList.value("EngineBuilds/" @ %i @ "/buildName");
+      if(%buildName $= "")
+         continue;
+         
+      %build = findEngineBuildByName(%buildName);
+      if(%build == 0) //not found, so lets spool it up
+      {
+         %buildId = incrementEngineBuildCount();
+
+         %build = new ScriptObject();
+         %build.buildId = %buildId;
+         %build.buildName = %buildName;
+         %build.localPath = "";
+      }
+      
+      %build.gitPath = ResourcesList.value("EngineBuilds/" @ %i @ "/gitPath");
+      %build.branchName = ResourcesList.value("EngineBuilds/" @ %i @ "/branchName");
+      %build.isDefault = 1; //this comes from our resources list, so it's always a default one
+      %build.isBinary = ResourcesList.value("EngineBuilds/" @ %i @ "/isBinary");
+      %build.tags = ResourcesList.value("EngineBuilds/" @ %i @ "/tags");
+      
+      saveEngineBuild(%build); 
+   }
+   
+   %moduleCount = ResourcesList.value("Modules/NumModules", 0);
+   for(%i=1; %i <= %moduleCount; %i++)
+   {
+      %moduleName = ResourcesList.value("Modules/" @ %i @ "/moduleName");
+      echo("MODULE NAME: " @ %moduleName);
+      if(%moduleName $= "")
+         continue;
+         
+      %module = findModuleByName(%moduleName);
+      if(%module == 0) //not found, so lets spool it up
+      {
+         %moduleId = incrementModuleCount();
+
+         %module = new ScriptObject();
+         %module.moduleId = %moduleId;
+         %module.moduleName = %moduleName;
+         %module.localPath = "";
+      }
+      
+      %module.description = ResourcesList.value("Modules/" @ %i @ "/description");
+      %module.gitPath = ResourcesList.value("Modules/" @ %i @ "/gitPath");
+      %module.branchName = ResourcesList.value("Modules/" @ %i @ "/branchName");
+      %module.isDefault = 1; //this comes from our resources list, so it's always a default one
+      %module.dependencies = ResourcesList.value("Modules/" @ %i @ "/dependencies", "");
+      %module.tags = ResourcesList.value("Modules/" @ %i @ "/tags");
+      
+      echo("TAGS: " @ %module.tags);
+      
+      saveModule(%module); 
+   }
+   
+   //Update our data file
+   PMSettings.read();
+   
+   //Update the GUI
+   MainMenuGui.refresh();
 }

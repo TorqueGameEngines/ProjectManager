@@ -8,6 +8,12 @@ function CreateNewProject()
       
    $CurrentProject.enableOpenGL = true;
    
+   //clear any flags for modules to be installed
+   for(%i=0; %i < getModuleCount(); %i++)
+   {
+      setVariable("$toInstallModules_" @ %i, false);
+   }
+   
    MainMenuGui.goToPage("NewProjectPage");
 }
 
@@ -153,7 +159,7 @@ function populateProjectProperties(%isNew)
       if(!%isNew)
       {
          %moduleRoll = new GuiRolloutCtrl() { 
-            caption = "Modules";
+            caption = "Installed Modules";
             extent = MainViewStack.extent.x SPC 40;
             profile = GuiMenuRolloutProfile;
             margin = "5 5 5 5";
@@ -182,6 +188,33 @@ function populateProjectProperties(%isNew)
                %installedModuleTags = "Default";
             
             %moduleCard = createCard(%moduleName, "", %installedModuleTags, "", false, "", "button", "", "Remove", "removeModuleFromProject(" @ $CurrentProject @ ", \"" @ %file @ "\");");
+            %moduleRoll-->stack.add(%moduleCard);
+         }
+      }
+      else
+      {
+         %moduleRoll = new GuiRolloutCtrl() { 
+            caption = "Available Modules";
+            extent = MainViewStack.extent.x SPC 40;
+            profile = GuiMenuRolloutProfile;
+            margin = "5 5 5 5";
+            
+            new GuiStackControl() {
+               internalName = "stack";
+               padding = "5";
+            };
+         };
+         
+         MainViewStack.add(%moduleRoll);
+         
+         %moduleCount = getModuleCount();
+         for(%m=0; %m < %moduleCount; %m++)
+         {
+            %module = getModule(%m);
+            if(%module.localPath $= "")
+               continue;
+               
+            %moduleCard = createEditCard(%module.moduleName, "checkbox", "$toInstallModules_" @ %m, "", "No;Yes");
             %moduleRoll-->stack.add(%moduleCard);
          }
       }
@@ -320,26 +353,27 @@ function generateNewProject()
       }
    
       //Install modules
-      /*%moduleCount = getModuleCount();
+      %moduleCount = getModuleCount();
       for(%m=0; %m < %moduleCount; %m++)
       {
-         %doInstall = getVariable("$TorqueManager::installModule[" @ %m @ "]");
+         %doInstall = getVariable("$toInstallModules_" @ %m);
          if(%doInstall)
          {
-            %moduleName = getModuleNameByIndex(%m);
-            %localPath = getModuleLocalPathByIndex(%m);
-            %moduleInstallPath = %fullProjectPath @ "/My Projects/" @ %projName @ "/game/data/" @ %moduleName @ "/";
+            %module = getModule(%m);
+            %moduleName = %module.moduleName;
+            %moduleLocalPath = makeFullPath(%module.localPath);
+            %moduleInstallPath = %fullProjectPath @ "/My Projects/" @ $CurrentProject.projectName @ "/game/data/" @ %moduleName @ "/";
             if(!IsDirectory(%moduleInstallPath))
             {
                createPath(%moduleInstallPath);  
             }
             
-            if(!copyProjectFolder(%localPath, %moduleInstallPath))
+            if(!copyProjectFolder(%moduleLocalPath, %moduleInstallPath))
             {
-               error("Failed to install module " @ %moduleName @ " from path: " @ %localPath @ " to new project: " @ %projName);
+               error("Failed to install module " @ %moduleName @ " from path: " @ %moduleLocalPath @ " to new project: " @ $CurrentProject.projectName);
             }
          }
-      }*/
+      }
       
       //run cmake
       %commandString = "cmake ";
@@ -386,26 +420,27 @@ function generateNewProject()
       }
       
       //Install modules
-      /*%moduleCount = getModuleCount();
+      %moduleCount = getModuleCount();
       for(%m=0; %m < %moduleCount; %m++)
       {
-         %doInstall = getVariable("$TorqueManager::installModule[" @ %m @ "]");
+         %doInstall = getVariable("$toInstallModules_" @ %m);
          if(%doInstall)
          {
-            %moduleName = getModuleNameByIndex(%m);
-            %localPath = getModuleLocalPathByIndex(%m);
+            %module = getModule(%m);
+            %moduleName = %module.moduleName;
+            %moduleLocalPath = makeFullPath(%module.localPath);
             %moduleInstallPath = %fullProjectPath @ "/data/" @ %moduleName @ "/";
             if(!IsDirectory(%moduleInstallPath))
             {
                createPath(%moduleInstallPath);  
             }
             
-            if(!copyProjectFolder(%localPath, %moduleInstallPath))
+            if(!copyProjectFolder(%moduleLocalPath, %moduleInstallPath))
             {
-               error("Failed to install module " @ %moduleName @ " from path: " @ %localPath @ " to new project: " @ %projName);
+               error("Failed to install module " @ %moduleName @ " from path: " @ %moduleLocalPath @ " to new project: " @ $CurrentProject.projectName);
             }
          }
-      }*/
+      }
       
       makeProjectComplete();
    }   

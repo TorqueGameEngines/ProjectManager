@@ -238,9 +238,9 @@ $guiContent = new GuiChunkedBitmapCtrl(MainMenuGui) {
       minExtent = "48 92";
       horizSizing = "center";
       vertSizing = "center";
-      profile = "ToolsGuiWindowProfile";
+      profile = "GuiMenuWindowProfile";
       visible = "0";
-      tooltipProfile = "ToolsGuiToolTipProfile";
+      tooltipProfile = "GuiToolTipProfile";
       hidden = "1";
 
       new GuiContainer(ManagerWizardPageContainer) {
@@ -255,10 +255,10 @@ $guiContent = new GuiChunkedBitmapCtrl(MainMenuGui) {
          extent = "64 22";
          horizSizing = "left";
          vertSizing = "top";
-         profile = "ToolsGuiButtonProfile";
+         profile = "GuiMenuButtonProfile";
          visible = "0";
          command = "ManagerWizardWindow.previousStep();";
-         tooltipProfile = "ToolsGuiToolTipProfile";
+         tooltipProfile = "GuiToolTipProfile";
          internalName = "backButton";
          hidden = "1";
       };
@@ -268,9 +268,9 @@ $guiContent = new GuiChunkedBitmapCtrl(MainMenuGui) {
          extent = "64 22";
          horizSizing = "left";
          vertSizing = "top";
-         profile = "ToolsGuiButtonProfile";
+         profile = "GuiMenuButtonProfile";
          command = "ManagerWizardWindow.nextStep();";
-         tooltipProfile = "ToolsGuiToolTipProfile";
+         tooltipProfile = "GuiToolTipProfile";
          internalName = "nextButton";
       };
    };

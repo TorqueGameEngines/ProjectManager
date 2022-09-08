@@ -191,13 +191,11 @@ function getProjectGamePath(%project)
    
    if(isObject(%targetBuild))
    {
-      if(%targetBuild.isBinary)
-         return %project.localPath;
-      else
+      if(!%targetBuild.isBinary)
          return %project.localPath @ "/My Projects/" @ %project.projectName @ "/game/";
    }
    
-   return %project.localPath;
+   return %project.localPath @ "/";
 }
 /*function populateProjectProperties(%buildIdx)
 {
@@ -728,8 +726,23 @@ function openSolutionFile()
          {
             %openCommand = "cd \"" @ %buildPath @ "\" && start " @ $CurrentProject.projectName @ ".sln";
             systemCommand(%openCommand, "");
+            return;
          }
       }
+      else if($platform $= "macos")
+      {
+         %solutionPath = %buildPath @ $CurrentProject.projectName @ ".xcodeproj";
+         if(isFile(%solutionPath))
+         {
+            %openCommand = "cd \"" @ %buildPath @ "\" && open " @ $CurrentProject.projectName @ ".xcodeproj";
+            systemCommand(%openCommand, "");
+            return;
+         }
+      }
+      
+      //Otherwise, we fall back to just opening the build dir to let the end user deal with it
+      %openCommand = "open \"" @ makeFullPath(%buildPath) @ "\"";
+      systemCommand(%openCommand);
    }
    /*else
    {

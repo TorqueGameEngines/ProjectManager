@@ -828,3 +828,25 @@ new GuiControlProfile( GuiMenuPopUpMenuProfile : GuiMenuPopUpMenuDefault )
    profileForChildren = GuiMenuPopUpMenuDefault;
    category = "Menu";
 };
+
+if(!isObject(GuiMenuWindowProfile))
+new GuiControlProfile (GuiMenuWindowProfile)
+{
+   opaque = false;
+   border = 2;
+   fontType = "Arial Bold";
+   fontColor = getVariable("$Theme::" @ $CurrentTheme @ "::FontColor");
+   fontColorHL = getVariable("$Theme::" @ $CurrentTheme @ "::FontColorEmphasized");
+   fillColor = getVariable("$Theme::" @ $CurrentTheme @ "::BackgroundColor");
+   fillColorHL = getVariable("$Theme::" @ $CurrentTheme @ "::Level1ColorHL");
+   fillColorNA = "30 30 30";
+   borderColor = getVariable("$Theme::" @ $CurrentTheme @ "::Level1Color");
+   borderColorNA = "0 0 0";
+   borderColorHL = getVariable("$Theme::" @ $CurrentTheme @ "::Level1ColorHL");
+   text = "";
+   bitmapAsset = "ManagerUI:window_image";
+   textOffset = "8 4";
+   hasBitmapArray = true;
+   justify = "left";
+   category = "Core";
+};

@@ -1110,7 +1110,7 @@ function pageSlideAnimation()
 //==============================================================================
 //
 //==============================================================================
-function createCard(%mainText, %subText, %tagsList, %tooltip, %hasNavigation, %navCommand, %actionType, %actionData, %actionDefaultValue, %actionCommand, %targetVariable)
+function createCard(%mainText, %subText, %tagsList, %tooltip, %hasNavigation, %navCommand, %actionType, %actionData, %actionDefaultValue, %actionCommand, %targetVariable, %insetCount)
 {
    %pad = 5;
    %cardRowHeight = 20;
@@ -1128,6 +1128,9 @@ function createCard(%mainText, %subText, %tagsList, %tooltip, %hasNavigation, %n
    {
       %cardHeight += %cardRowHeight + 5; //add another 'row' to the card
    }
+   
+   if(%insetCount $= "")
+      %insetCount = 0;
    
    %navArrowMargin = (%cardHeight > (%cardRowHeight * 2)) ? 20 : 8;
       
@@ -1374,6 +1377,25 @@ function createCard(%mainText, %subText, %tagsList, %tooltip, %hasNavigation, %n
       %actionCtrl.variable = %targetVariable;
    }
    
+   //inset as needbe
+   %insetAmount = %insetCount * 20;
+   %ctrl-->btn.position.x += %insetAmount;
+   %ctrl-->btn.extent.x -= %insetAmount;
+   %ctrl-->label.position.x += %insetAmount;
+   %ctrl-->label.extent.x -= %insetAmount;
+   
+   if(isObject(%subTextLine))
+   {
+      %subTextLine.position.x += %insetAmount;
+      %subTextLine.extent.x -= %insetAmount;
+   }
+   
+   if(isObject(%tagStack))
+   {
+      %tagStack.position.x += %insetAmount;
+      %tagStack.extent.x -= %insetAmount;
+   }
+   
    return %ctrl;
 }
 
@@ -1421,10 +1443,13 @@ function createOKCancelCard(%okButtonText, %cancelButtonText, %okButtonCommand, 
    return %ctrl;
 }
 
-function createEditCard(%label, %type, %variable, %tooltip, %data, %enabled)
+function createEditCard(%label, %type, %variable, %tooltip, %data, %enabled, %insetCount)
 {
    if(%enabled $= "")
       %enabled = true;
+      
+   if(%insetCount $= "")
+      %insetCount = 0;
       
    %pad = 5;
    %cardRowHeight = 20;
@@ -1702,6 +1727,13 @@ function createEditCard(%label, %type, %variable, %tooltip, %data, %enabled)
       
       %ctrl.add(%actionCtrl);
    }
+   
+   %insetOffset = %insetCount * 20;
+   %ctrl-->btn.position.x += %insetOffset;
+   %ctrl-->btn.extent.x -= %insetOffset;
+   
+   %ctrl-->label.position.x += %insetOffset;
+   %ctrl-->label.extent.x -= %insetOffset;
    
    %actionCtrl.active = %enabled;
    

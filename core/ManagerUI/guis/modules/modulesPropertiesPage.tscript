@@ -144,20 +144,7 @@ function populateModuleProperties(%isNew)
       
       MainViewStack.add(%depRoll);
       
-      %depCount = getTokenCount($CurrentModule.dependencies, ",;");
-      for(%i=0; %i < %depCount; %i++)
-      {
-         %depName = getToken($CurrentModule.dependencies, ",;", %i);
-         %depModuleId = findModuleByName(%depName);
-         if(%depModuleId != 0)
-         {
-            %depModule = getModule(%depModuleId);
-            %subtext = %depModule.localPath !$= "" ? "(Downloaded)" : "(Not Downloaded)";
-            %depModuleCard = createCard(%depModule.moduleName, %subtext, "", "", false, "", "", "", "", "", "");  
-            
-            %depRoll-->stack.add(%depModuleCard);
-         }
-      }
+      buildModuleDependencyCard(%depRoll, $CurrentModule);
    }
          
    if(%isNew)
@@ -269,4 +256,27 @@ function saveNewModule()
    saveModule($CurrentModule);
    
    MainMenuGUI.goToPage("ModulesPage");
+}
+
+function buildModuleDependencyCard(%rollout, %module, %depth)
+{
+   if(%depth $= "")
+      %depth = 0;
+      
+   %depCount = getTokenCount(%module.dependencies, ",;");
+   for(%i=0; %i < %depCount; %i++)
+   {
+      %depName = getToken(%module.dependencies, ",;", %i);
+      %depModuleId = findModuleByName(%depName);
+      if(%depModuleId != 0)
+      {
+         %depModule = getModule(%depModuleId);
+         %subtext = %depModule.localPath !$= "" ? "(Downloaded)" : "(Not Downloaded)";
+         %depModuleCard = createCard(%depModule.moduleName, %subtext, "", "", false, "", "", "", "", "", "", %depth);  
+         
+         %rollout-->stack.add(%depModuleCard);
+         
+         buildModuleDependencyCard(%rollout, %depModule, %depth+1);
+      }
+   }
 }

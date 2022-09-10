@@ -208,14 +208,18 @@ function populateProjectProperties(%isNew)
          MainViewStack.add(%moduleRoll);
          
          %moduleCount = getModuleCount();
-         for(%m=0; %m < %moduleCount; %m++)
+         for(%m=1; %m <= %moduleCount; %m++)
          {
             %module = getModule(%m);
+            
+            echo(%module.moduleName);
             if(%module.localPath $= "")
                continue;
                
-            %moduleCard = createEditCard(%module.moduleName, "checkbox", "$toInstallModules_" @ %m, "", "No;Yes");
-            %moduleRoll-->stack.add(%moduleCard);
+            if(isModuleInstalledInProject($CurrentProject, %module))
+               continue;
+               
+            buildModuleToggleCard(%moduleRoll, %module);
          }
       }
    }
@@ -525,4 +529,71 @@ function doRemoveModuleFromProject(%project, %moduleFile)
 function installModuleToProject(%project, %module)
 {
    openInstallModuleWizard(%module);
+}
+
+function isModuleInstalledInProject(%project, %module)
+{
+   %gamePath = getProjectGamePath($CurrentProject);
+         
+   for( %file = findFirstFile( %gamePath @ "data/*.module" );
+        %file !$= "";
+        %file = findNextFile( %gamePath @ "data/*.module" ))
+   {
+      %moduleName = fileBase(%file);
+      
+      if(%module.moduleName $= %moduleName)
+         return true;
+   }
+   
+   return false;
+}
+
+function moduleHasTag(%module, %tagToCheck)
+{
+   %tags = getModuleTags(%module.moduleId);
+   
+   %tagCount = getTokenCount(%tags, ",;");
+   if(%tagCount != 0)
+   {
+      for(%t=0; %t < %tagCount; %t++)
+      {
+         %tag = getToken(%tags, ",;", %t);
+         
+         if(%tagToCheck $= %tag)
+            return true;
+      }
+   }
+   
+   return false;
+}
+
+function buildModuleToggleCard(%rollout, %module, %depth)
+{
+   if(%depth $= "")
+      %depth = 0;
+      
+   %tag = "";
+   if(moduleHasTag(%module, "Rapid Prototype Kit"))
+   {
+      %tag = "Rapid Prototype Kit";
+   }
+      
+   %moduleCard = createEditCard(%module.moduleName, "checkbox", "$toInstallModules_" @ %module.moduleId, %tag, "No;Yes", true, %depth);
+   %rollout-->stack.add(%moduleCard);            
+            
+   if(%module.dependencies !$= "")
+   {
+      %depCount = getTokenCount(%module.dependencies, ",;");
+      for(%i=0; %i < %depCount; %i++)
+      {
+         %depName = getToken(%module.dependencies, ",;", %i);
+         %depModuleId = findModuleByName(%depName);
+         if(%depModuleId != 0)
+         {
+            %depModule = getModule(%depModuleId);
+            
+            buildModuleToggleCard(%rollout, %depModule, %depth+1);
+         }
+      }
+   }
 }

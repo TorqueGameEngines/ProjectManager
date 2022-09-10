@@ -109,7 +109,7 @@ $guiContent = new GuiChunkedBitmapCtrl(MainMenuGui) {
                   position = "0 90";
                   extent = "184 25";
                   profile = "GuiMenuButtonProfile";
-                  command = "gotoWebPage(\"https://torque3d.org/docs/t3d/\");";
+                  command = "gotoWebPage(\"https://docs.torque3d.org/\");";
                   tooltipProfile = "GuiToolTipProfile";
                };
                new GuiIconButtonCtrl(MainMenuCommunityBtn) {
@@ -126,18 +126,32 @@ $guiContent = new GuiChunkedBitmapCtrl(MainMenuGui) {
                   command = "gotoWebPage(\"https://torque3d.org/\");";
                   tooltipProfile = "GuiToolTipProfile";
                };
-               new GuiIconButtonCtrl(MainMenuHelpBtn) {
+               new GuiIconButtonCtrl(MainMenuDiscordBtn) {
                   buttonMargin = "-5 0";
                   BitmapAsset = "ManagerUI:share1_image";
                   iconLocation = "Right";
                   sizeIconToButton = "1";
                   makeIconSquare = "1";
                   textLocation = "Center";
-                  text = "Help";
+                  text = "Discord";
                   position = "0 120";
                   extent = "184 25";
                   profile = "GuiMenuButtonProfile";
-                  command = "gotoWebPage(\"https://torque3d.org/docs/kb/\");";
+                  command = "gotoWebPage(\"https://discord.gg/Qnn4vReCe7\");";
+                  tooltipProfile = "GuiToolTipProfile";
+               };
+               new GuiIconButtonCtrl(MainMenuPatreonBtn) {
+                  buttonMargin = "-5 0";
+                  BitmapAsset = "ManagerUI:share1_image";
+                  iconLocation = "Right";
+                  sizeIconToButton = "1";
+                  makeIconSquare = "1";
+                  textLocation = "Center";
+                  text = "Patreon";
+                  position = "0 120";
+                  extent = "184 25";
+                  profile = "GuiMenuButtonProfile";
+                  command = "gotoWebPage(\"https://www.patreon.com/Areloch\");";
                   tooltipProfile = "GuiToolTipProfile";
                };
                new GuiButtonCtrl(MainMenuSettingsBtn) {

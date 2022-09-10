@@ -107,10 +107,10 @@ function queueModuleDependenciesDownload(%module)
 {
    if(%module.dependencies !$= "")
    {
-      %depCount = getTokenCount($CurrentModule.dependencies, ",;");
+      %depCount = getTokenCount(%module.dependencies, ",;");
       for(%i=0; %i < %depCount; %i++)
       {
-         %depName = getToken($CurrentModule.dependencies, ",;", %i);
+         %depName = getToken(%module.dependencies, ",;", %i);
          %depModuleId = findModuleByName(%depName);
          if(%depModuleId != 0)
          {
@@ -118,6 +118,8 @@ function queueModuleDependenciesDownload(%module)
             if(%depModule.localPath $= "")
             {
                DownloadQueue.add(%depModule);
+               
+               queueModuleDependenciesDownload(%depModule);
             }
          }
       }
@@ -481,6 +483,7 @@ function hasMissingModuleDependencies()
    
    return %missing;
 }
+
 //==============================================================================
 // Wizard Stuff
 //==============================================================================

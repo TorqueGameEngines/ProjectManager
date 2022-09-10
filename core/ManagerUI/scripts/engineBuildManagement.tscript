@@ -6,6 +6,8 @@ function downloadEngineBuild(%build)
    
    %gitPath = %build.gitPath;
    %branchName = %build.branchName;
+   %branchName = strReplace(%branchName, "{$platform}", $platform);
+   
    %buildName = %build.buildName;
    
    %downloadPath = getEngineBuildDownloadPath();
@@ -67,6 +69,8 @@ function pullUpdateEngineBuild(%build)
    
    %gitPath = %build.gitPath;
    %branchName = %build.branchName;
+   %branchName = strReplace(%branchName, "{$platform}", $platform);
+   
    %buildName = %build.buildName;
    
    %downloadPath = getEngineBuildDownloadPath();

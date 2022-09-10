@@ -25,31 +25,14 @@ function openProjectActionMenu(%buildIdx, %buttonCtrl)
 
 function runProject(%launchArgs)
 {
-   %buildId = $CurrentProject.projectId;
-   %engineBuildId = $CurrentProject.engineBuildId;
-   %projectName = $CurrentProject.projectName;
-   
-   %projectPath = $CurrentProject.localPath;
-   
-   %engineBuild = getEngineBuild(%engineBuildId);
-   
-   if(!%engineBuild.isBinary)
-   {
-      %projectPath = %projectPath @ "/My Projects/" @ %projectName @ "/game/";
-   }
+   %appPath = getProjectExecutablePath();
    
    if($platform $= "windows")
    {
-      %appPath = %projectPath @ %projectName @ ".exe";
-      if(!isFile(%appPath))
-         %appPath = %projectPath @ %projectName @ "_DEBUG.exe";
-         
       %openCommand = "\"" @ %appPath @ "\"";
    }
    else
    {
-      %appPath = %projectPath @ %projectName;
-         
       %openCommand = "open \"" @ %appPath @ "\"";
    }
   
@@ -63,13 +46,17 @@ function getProjectExecutablePath()
    %engineBuildId = $CurrentProject.engineBuildId;
    %projectName = $CurrentProject.projectName;
    
-   %projectPath = $CurrentProject.localPath;
+   %projectPath = makeFullPath($CurrentProject.localPath);
    
    %engineBuild = getEngineBuild(%engineBuildId);
    
    if(!%engineBuild.isBinary)
    {
       %projectPath = %projectPath @ "/My Projects/" @ %projectName @ "/game/";
+   }
+   else
+   {
+      %projectPath = %projectPath @ "/";
    }
    
    if($platform $= "windows")

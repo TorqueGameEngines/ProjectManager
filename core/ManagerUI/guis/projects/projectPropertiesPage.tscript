@@ -147,7 +147,13 @@ function populateProjectProperties(%isNew)
          MainViewStack.add(%cmakeRoll);
          
          if($platform $= "Windows")
+         {
             %cmakeRoll-->stack.add(createEditCard("Enable D3D Renderer", "checkbox", "$CurrentProject.enableD3D", "Enable the D3D11 Renderer", "No;Yes"));
+         }
+         else
+         {
+            %cmakeRoll-->stack.add(createEditCard("Build in Release Config", "checkbox", "$CurrentProject.releaseMode", "If true, will generate the project in Release mode. If false, it will be in Debug mode", "No;Yes"));  
+         }
             
          %cmakeRoll-->stack.add(createEditCard("Enable OpenGL Renderer", "checkbox", "$CurrentProject.enableOpenGL", "Enable the OpenGL Renderer", "No;Yes"));
          
@@ -453,7 +459,15 @@ function generateNewProject()
       %commandString = %commandString @ "-B \"" @ %buildPath @ "\" ";
       %commandString = %commandString @ "-G \"" @ $CurrentProject.generatorName @ "\" ";
       %commandString = %commandString @ "-DTORQUE_APP_NAME:STRING=" @ $CurrentProject.projectName @ " -DCMAKE_GENERATOR_PLATFORM=x64";
-      %commandString = %commandString @ " -DTORQUE_D3D11:BOOL=" @ $CurrentProject.enableD3D;
+      if($platform $= "windows")
+      {
+         %commandString = %commandString @ " -DTORQUE_D3D11:BOOL=" @ $CurrentProject.enableD3D;
+      }
+      else
+      {
+         %commandString = %commandString @ " -DTORQUE_RELEASE:BOOL=" @ $CurrentProject.releaseMode;
+         %commandString = %commandString @ " -DTORQUE_DEBUG:BOOL=" @ !$CurrentProject.releaseMode;
+      }
       %commandString = %commandString @ " -DTORQUE_OPENGL:BOOL=" @ $CurrentProject.enableOpenGL;
       %commandString = %commandString @ " -DTORQUE_PHYSICS_PHYSX3:BOOL=" @ $CurrentProject.enablePhysX;
       %commandString = %commandString @ " -DTORQUE_PHYSICS_BULLET:BOOL=" @ $CurrentProject.enableBullet;
@@ -474,6 +488,11 @@ function makeProjectComplete(%resultCode)
    if(PMSettings.value("Settings/Building/doAutoBuild", "1"))
    {
       %commandString = "cmake --build \"" @ makeFullPath($CurrentProject.buildPath) @ "\"";
+      
+      //if windows, we'll wanna force auto-build to always gen release projects
+      if($platform $= "windows")
+         %commandString = %commandString @ " --config Release";
+ 
       systemCommand(%commandString, ""); 
    }
    else

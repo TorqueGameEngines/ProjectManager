@@ -773,6 +773,11 @@ function regenerateProjectComplete(%resultCode)
       if(PMSettings.value("Settings/Building/doAutoBuild", "1"))
       {
          %commandString = "cmake --build \"" @ makeFullPath($CurrentProject.buildPath) @ "\"";
+      
+         //if windows, we'll wanna force auto-build to always gen release projects
+         if($platform $= "windows")
+            %commandString = %commandString @ " --config Release";
+    
          systemCommand(%commandString, ""); 
       }
    }

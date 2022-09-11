@@ -68,18 +68,27 @@ function populateEngineBuildProperties(%isNew)
          
    if(%isNew)
    {
-      %buttons = createOKCancelCard("Create", "Cancel", "saveNewEngineBuild();", "MainMenuGUI.goToPage(\"EngineBuildPage\");");
+      MainPanelFooter.setupButtons("Create", "Cancel", "saveNewEngineBuild();", "MainMenuGUI.goToPage(\"EngineBuildPage\");");
    
       %valid = true;
       
       if($CurrentEngineBuild.buildName $= "")
+      {
          %valid = false;
+         MainPanelFooter.setText("Engine Build Name Required");
+      }
          
       if($CurrentEngineBuild.isLocalOrGit $= "")
+      {
          %valid = false;
+         MainPanelFooter.setText("Must define if sourced from Git or Local directory");
+      }
       
       if($CurrentEngineBuild.isLocalOrGit $= "Git Repository" && $CurrentEngineBuild.gitPath $= "")
+      {
          %valid = false;
+         MainPanelFooter.setText("If Git Repository build, Git Path required");
+      }
          
       /*if($CurrentEngineBuild.isLocalOrGit $= "Git Repository" && $CurrentEngineBuild.gitPath !$= "")
       {
@@ -87,19 +96,16 @@ function populateEngineBuildProperties(%isNew)
       }*/
       
       if($CurrentEngineBuild.isLocalOrGit $= "Local Path" && !isEngineBuildDownloaded($CurrentEngineBuild))
+      {
          %valid = false;
+         MainPanelFooter.setText("Local path provided does not contain valid Engine Build");
+      }
       
-      if(%valid)
-         %buttons-->okButton.setActive(true);
-      else
-         %buttons-->okButton.setActive(false);
-      
-      MainViewStack.add(%buttons);  
+      MainPanelFooter.setOKButtonActive(%valid);
    }
    else
    {
-      %buttons = createOKCancelCard("Save", "Cancel", "saveEngineBuild($CurrentEngineBuild);", "");
-      MainViewStack.add(%buttons); 
+      MainPanelFooter.setupButtons("Save", "Cancel", "saveEngineBuild($CurrentEngineBuild);", "");
    }
          
    //Now add our action panel buttons

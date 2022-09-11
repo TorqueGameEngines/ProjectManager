@@ -101,6 +101,8 @@ function populateEngineBuildsList()
    };
    
    ActionButtonPanelList.add(%actionBtn);
+   
+   MainPanelFooter.clear(); //clear the buttons if they're active
 }
 
 function navToEngineBuildProps(%bld)

@@ -149,33 +149,39 @@ function populateModuleProperties(%isNew)
          
    if(%isNew)
    {
-      %buttons = createOKCancelCard("Create", "Cancel", "saveNewModule();", "MainMenuGUI.goToPage(\"ModulesPage\");");
+      MainPanelFooter.setupButtons("Create", "Cancel", "saveNewModule();", "MainMenuGUI.goToPage(\"ModulesPage\");");
    
       %valid = true;
       
       if($CurrentModule.moduleName $= "")
+      {
          %valid = false;
+         MainPanelFooter.setText("Must define Module name");
+      }
          
       if($CurrentModule.isLocalOrGit $= "")
+      {
          %valid = false;
+         MainPanelFooter.setText("Must define if sourced from Git or Local directory");
+      }
       
       if($CurrentModule.isLocalOrGit $= "Git Repository" && $CurrentModule.gitPath $= "")
+      {
          %valid = false;
+         MainPanelFooter.setText("If Git Repository build, Git Path required");
+      }      
       
       if($CurrentModule.isLocalOrGit $= "Local Path" && !isModuleDownloaded($CurrentModule))
+      {
          %valid = false;
+         MainPanelFooter.setText("Local path provided does not contain valid Module definition");
+      }
       
-      if(%valid)
-         %buttons-->okButton.setActive(true);
-      else
-         %buttons-->okButton.setActive(false);
-      
-      MainViewStack.add(%buttons);  
+      MainPanelFooter.setOKButtonActive(%valid);
    }
    else
    {
-      %buttons = createOKCancelCard("Save", "Cancel", "saveModule($CurrentModule);", "");
-      MainViewStack.add(%buttons); 
+      MainPanelFooter.setupButtons("Save", "Cancel", "saveModule($CurrentModule);", "");
    }
    
    //

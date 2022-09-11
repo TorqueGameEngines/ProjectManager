@@ -9,11 +9,9 @@ $guiContent = new GuiChunkedBitmapCtrl(MainMenuGui) {
    tooltipProfile = "GuiToolTipProfile";
    isContainer = "1";
    canSaveDynamicFields = "1";
-      currentPage = "EngineBuildPage";
       Enabled = "1";
       isDecoy = "0";
       isRefreshing = "0";
-      mode = "Engine Builds";
       navigationIndex = "-1";
 
    new GuiPanel() {
@@ -24,16 +22,24 @@ $guiContent = new GuiChunkedBitmapCtrl(MainMenuGui) {
 
       new GuiStackControl(BreadcrumbStack) {
          stackingType = "Horizontal";
-         extent = "105 30";
+         position = "8 6";
+         extent = "64 30";
          profile = "GuiDefaultProfile";
          tooltipProfile = "GuiToolTipProfile";
+
+         new GuiTextCtrl() {
+            extent = "64 30";
+            vertSizing = "center";
+            profile = "GuiMenuButtonProfile";
+            tooltipProfile = "GuiToolTipProfile";
+         };
       };
    };
    new GuiSplitContainer() {
       splitPoint = "188 100";
       fixedSize = "2372";
       position = "0 45";
-      extent = "1024 723";
+      extent = "1024 725";
       horizSizing = "width";
       vertSizing = "height";
       profile = "GuiMenuBackgroundProfile";
@@ -41,7 +47,7 @@ $guiContent = new GuiChunkedBitmapCtrl(MainMenuGui) {
 
       new GuiPanel() {
          docking = "Client";
-         extent = "186 723";
+         extent = "186 725";
          profile = "GuiMenuButtonProfile";
          tooltipProfile = "GuiToolTipProfile";
          internalName = "Panel1";
@@ -49,7 +55,7 @@ $guiContent = new GuiChunkedBitmapCtrl(MainMenuGui) {
          new GuiScrollCtrl() {
             hScrollBar = "alwaysOff";
             vScrollBar = "alwaysOff";
-            extent = "186 725";
+            extent = "186 727";
             horizSizing = "width";
             vertSizing = "height";
             profile = "GuiMenuScrollProfile";
@@ -59,7 +65,7 @@ $guiContent = new GuiChunkedBitmapCtrl(MainMenuGui) {
                padding = "5";
                dynamicSize = "0";
                position = "1 -1";
-               extent = "184 725";
+               extent = "184 727";
                horizSizing = "width";
                vertSizing = "height";
                profile = "GuiMenuBackgroundProfile";
@@ -134,7 +140,7 @@ $guiContent = new GuiChunkedBitmapCtrl(MainMenuGui) {
                   makeIconSquare = "1";
                   textLocation = "Center";
                   text = "Discord";
-                  position = "0 120";
+                  position = "0 150";
                   extent = "184 25";
                   profile = "GuiMenuButtonProfile";
                   command = "gotoWebPage(\"https://discord.gg/Qnn4vReCe7\");";
@@ -148,7 +154,7 @@ $guiContent = new GuiChunkedBitmapCtrl(MainMenuGui) {
                   makeIconSquare = "1";
                   textLocation = "Center";
                   text = "Patreon";
-                  position = "0 120";
+                  position = "0 180";
                   extent = "184 25";
                   profile = "GuiMenuButtonProfile";
                   command = "gotoWebPage(\"https://www.patreon.com/Areloch\");";
@@ -156,7 +162,7 @@ $guiContent = new GuiChunkedBitmapCtrl(MainMenuGui) {
                };
                new GuiButtonCtrl(MainMenuSettingsBtn) {
                   text = "Settings";
-                  position = "0 150";
+                  position = "0 210";
                   extent = "184 25";
                   profile = "GuiMenuButtonProfile";
                   command = "setupDefaultSettings();MainMenuGui.goToPage(\"SettingsPage\");";
@@ -168,62 +174,112 @@ $guiContent = new GuiChunkedBitmapCtrl(MainMenuGui) {
       new GuiPanel(MainPanel) {
          docking = "Client";
          position = "190 0";
-         extent = "834 723";
+         extent = "834 725";
          profile = "GuiMenuBackgroundProfile";
          tooltipProfile = "GuiToolTipProfile";
          internalName = "panel2";
 
-         new GuiStackControl(ActionButtonPanelList) {
-            stackingType = "Horizontal";
-            padding = "5";
-            extent = "100 45";
-            profile = "GuiDefaultProfile";
-            tooltipProfile = "GuiToolTipProfile";
-         };
-         new GuiContainer() {
-            position = "542 9";
-            extent = "280 30";
-            horizSizing = "left";
-            profile = "GuiDefaultProfile";
-            tooltipProfile = "GuiToolTipProfile";
-
-            new GuiTextEditCtrl(MainMenuSearchBar) {
-               placeholderText = "Search (Ctrl + F)";
-               position = "3 2";
-               extent = "432 25";
-               profile = "GuiMenuTextEditProfile";
-               command = "MainMenuSearchBar.updateSearchText();";
-               tooltipProfile = "GuiToolTipProfile";
-            };
-            new GuiBitmapButtonCtrl(MainMenuSearchClearBtn) {
-               BitmapAsset = "ManagerUI:cross_image";
-               position = "260 5";
-               extent = "18 18";
-               profile = "GuiDefaultProfile";
-               command = "MainMenuSearchBar.clearSearchText();";
-               tooltipProfile = "GuiToolTipProfile";
-            };
-         };
-         new GuiScrollCtrl(MainViewScroll) {
-            hScrollBar = "alwaysOff";
-            vScrollBar = "dynamic";
-            position = "0 47";
-            extent = "834 680";
+         new GuiStackControl() {
+            dynamicSize = "0";
+            extent = "834 725";
             horizSizing = "width";
             vertSizing = "height";
-            profile = "GuiMenuScrollProfile";
+            profile = "GuiDefaultProfile";
             tooltipProfile = "GuiToolTipProfile";
 
-            new GuiStackControl(MainViewStack) {
-               padding = "5";
-               dynamicSize = "1";
-               position = "1 1";
-               extent = "817 671";
+            new GuiContainer(ActionButtonPanelContainer) {
+               extent = "834 45";
+               profile = "GuiDefaultProfile";
+               tooltipProfile = "GuiToolTipProfile";
+
+               new GuiStackControl(ActionButtonPanelList) {
+                  stackingType = "Horizontal";
+                  padding = "5";
+                  extent = "100 45";
+                  profile = "GuiDefaultProfile";
+                  tooltipProfile = "GuiToolTipProfile";
+               };
+               new GuiContainer() {
+                  position = "544 9";
+                  extent = "283 30";
+                  horizSizing = "left";
+                  profile = "GuiDefaultProfile";
+                  tooltipProfile = "GuiToolTipProfile";
+
+                  new GuiTextEditCtrl(MainMenuSearchBar) {
+                     placeholderText = "Search (Ctrl + F)";
+                     position = "3 2";
+                     extent = "432 25";
+                     profile = "GuiMenuTextEditProfile";
+                     command = "MainMenuSearchBar.updateSearchText();";
+                     tooltipProfile = "GuiToolTipProfile";
+                  };
+                  new GuiBitmapButtonCtrl(MainMenuSearchClearBtn) {
+                     BitmapAsset = "ManagerUI:cross_image";
+                     position = "260 5";
+                     extent = "18 18";
+                     profile = "GuiDefaultProfile";
+                     command = "MainMenuSearchBar.clearSearchText();";
+                     tooltipProfile = "GuiToolTipProfile";
+                  };
+               };
+            };
+            new GuiScrollCtrl(MainViewScroll) {
+               hScrollBar = "alwaysOff";
+               vScrollBar = "dynamic";
+               position = "0 45";
+               extent = "834 650";
                horizSizing = "width";
                vertSizing = "height";
-               profile = "GuiMenuBackgroundProfile";
+               profile = "GuiMenuScrollProfile";
                tooltipProfile = "GuiToolTipProfile";
-               class = "MenuList";
+
+               new GuiStackControl(MainViewStack) {
+                  padding = "5";
+                  position = "1 1";
+                  extent = "834 65";
+                  horizSizing = "width";
+                  vertSizing = "height";
+                  profile = "GuiMenuBackgroundProfile";
+                  tooltipProfile = "GuiToolTipProfile";
+                  class = "MenuList";
+               };
+            };
+            new GuiContainer(MainPanelFooter) {
+               position = "0 695";
+               extent = "834 30";
+               vertSizing = "top";
+               profile = "GuiDefaultProfile";
+               tooltipProfile = "GuiToolTipProfile";
+
+               new GuiTextCtrl() {
+                  position = "11 5";
+                  extent = "500 20";
+                  profile = "MenuBodyText";
+                  tooltipProfile = "GuiToolTipProfile";
+                  internalName = "footerText";
+               };
+               new GuiButtonCtrl() {
+                  position = "527 2";
+                  extent = "150 20";
+                  horizSizing = "left";
+                  profile = "GuiMenuActionButtonProfile";
+                  visible = "0";
+                  command = "";
+                  tooltipProfile = "GuiToolTipProfile";
+                  internalName = "okButton";
+                  hidden = "1";
+               };
+               new GuiButtonCtrl() {
+                  position = "682 2";
+                  extent = "150 20";
+                  horizSizing = "left";
+                  profile = "GuiMenuActionButtonProfile";
+                  visible = "0";
+                  tooltipProfile = "GuiToolTipProfile";
+                  internalName = "cancelButton";
+                  hidden = "1";
+               };
             };
          };
       };

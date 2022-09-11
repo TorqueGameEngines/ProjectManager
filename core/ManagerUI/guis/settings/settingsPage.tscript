@@ -3,6 +3,8 @@ function setupDefaultSettings()
    $EngineBuildDownloadPath = PMSettings.value("Settings/EngineBuilds/downloadPath", "{ManagerDir}/EngineBuilds/");
    $ModuleDownloadPath = PMSettings.value("Settings/Modules/downloadPath", "{ManagerDir}/Modules/");
    $AutoBuildSetting = PMSettings.value("Settings/Building/doAutoBuild", "1");
+   
+   MainPanelFooter.clearText();
 }
 
 function populateSettingsPage()
@@ -21,8 +23,7 @@ function populateSettingsPage()
 
    //
    //      
-   %buttons = createOKCancelCard("Save", "", "saveSettings();", "");
-   MainViewStack.add(%buttons);
+   MainPanelFooter.setupButtons("Save", "", "saveSettings();", "");
 }
 
 function saveSettings()
@@ -47,4 +48,6 @@ function saveSettings()
    PMSettings.setValue("Settings/Building/doAutoBuild", $AutoBuildSetting);
    
    saveData();
+   
+   MainPanelFooter.setText("Settings Saved!", 3000);
 }

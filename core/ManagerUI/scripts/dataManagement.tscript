@@ -72,6 +72,7 @@ function saveEngineBuild(%build)
    PMSettings.setValue("EngineBuilds/" @ %index @ "/isBinary", %build.isBinary);
    PMSettings.setValue("EngineBuilds/" @ %index @ "/tags", %build.tags);
    
+   MainPanelFooter.setText("Engine Build Saved!", 3000);
    saveData();
 }
 
@@ -243,6 +244,7 @@ function saveModule(%module)
    PMSettings.setValue("Modules/" @ %index @ "/installInNewProj", %module.installInNewProj);
    PMSettings.setValue("Modules/" @ %index @ "/tags", %module.tags);
    
+   MainPanelFooter.setText("Module Saved!", 3000);
    saveData();
 }
 
@@ -379,6 +381,7 @@ function saveProject(%project)
    PMSettings.setValue("Projects/" @ %index @ "/enableBullet", %project.enableBullet);
    PMSettings.setValue("Projects/" @ %index @ "/enableSQLite", %project.enableSQLite);
    
+   MainPanelFooter.setText("Project Saved!", 3000);
    saveData();
 }
 

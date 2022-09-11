@@ -17,12 +17,15 @@ function MainMenuGui::onWake(%this)
       file = %prefPath @ "/data.xml"; 
    };
    
-   if(!isObject(%this.navPages))
-      %this.navPages = new ArrayObject();
+   if(isObject(%this.navPages))
+      %this.navPages.delete();
       
-   if(!isObject(DownloadQueue))
-      new ArrayObject(DownloadQueue);
-   
+   %this.navPages = new ArrayObject();
+      
+   if(isObject(DownloadQueue))
+      DownloadQueue.delete();
+      
+   new ArrayObject(DownloadQueue);
    DownloadQueue.empty();
    
    PMSettings.read();
@@ -113,6 +116,10 @@ function MainMenuGui::doRefresh(%this)
          break;
       }
    }
+   
+   //reboundary the stack, as sometimes resizes can cause stacks in stacks to be
+   //weird
+   MainViewStack.extent.x = MainViewScroll.extent.x;
    
    return;
    
@@ -856,25 +863,12 @@ function isSearchTextInTags(%tags, %text)
 //==============================================================================
 function MainMenuGui::setActionBarVisible(%this, %set)
 {
-   %barHeight = 45;
-   
    if(%set!$= "")
       $showMenubar = %set;
    else
       $showMenubar = !$showMenubar;
       
-   if($showMenubar)
-   {
-      ActionButtonPanelList.setHidden(false);
-      MainViewScroll.position.y = %barHeight + 2;
-      MainViewScroll.extent.y = MainPanel.extent.y - %barHeight + 2; 
-   }
-   else
-   {
-      ActionButtonPanelList.setHidden(true);
-      MainViewScroll.position.y = 0;
-      MainViewScroll.extent.y = MainPanel.extent.y; 
-   }
+   ActionButtonPanelContainer.setHidden(!$showMenubar);
 }
 
 function MainMenuGui::setSearchbarVisible(%this, %set)
@@ -1089,33 +1083,33 @@ function navToAnimation()
 {
    return;
    
-   MainViewScroll.previousPosition = MainViewScroll.position;
+   /*MainViewScroll.previousPosition = MainViewScroll.position;
    MainViewScroll.position.x = MainViewScroll.extent.x / 3;
    
    MainMenuGui.pageTween = Tweener.toOnce(150, MainViewScroll, "position:" @ MainViewScroll.previousPosition, "");
-   MainMenuGui.pageTween.play();
+   MainMenuGui.pageTween.play();*/
 }
 
 function navBackAnimation()
 {
    return;
    
-   MainViewScroll.previousPosition = MainViewScroll.position;
+   /*MainViewScroll.previousPosition = MainViewScroll.position;
    MainViewScroll.position.x = - MainViewScroll.extent.x / 3;
    
    MainMenuGui.pageTween = Tweener.toOnce(150, MainViewScroll, "position:" @ MainViewScroll.previousPosition, "");
-   MainMenuGui.pageTween.play();
+   MainMenuGui.pageTween.play();*/
 }
 
 function pageSlideAnimation()
 {
    return;
    
-   MainViewScroll.previousPosition = MainViewScroll.position;
+   /*MainViewScroll.previousPosition = MainViewScroll.position;
    MainViewScroll.position.y = MainViewScroll.extent.y / 3;
    
    MainMenuGui.pageTween = Tweener.toOnce(150, MainViewScroll, "position:" @ MainViewScroll.previousPosition, "");
-   MainMenuGui.pageTween.play();
+   MainMenuGui.pageTween.play();*/
 }
 //==============================================================================
 //
@@ -1909,4 +1903,63 @@ function AddActionButton(%image, %text, %command, %tooltip)
    ActionButtonPanelList.add(%actionBtn);
    
    return %actionBtn;
+}
+
+//==============================================================================
+//
+//==============================================================================
+function MainPanelFooter::setupButtons(%this, %okButtonLabel, %cancelButtonLabel, %okButtonCommand, %cancelButtonCommand)
+{
+   if(%okButtonLabel $= "" && %okButtonCommand $= "")
+   {
+      %this-->okButton.setHidden(true);  
+   }
+   else
+   {
+      %this-->okButton.setHidden(false);
+      %this-->okButton.setText(%okButtonLabel);
+      %this-->okButton.command = %okButtonCommand;  
+   }
+   
+   if(%cancelButtonLabel $= "" && %cancelButtonCommand $= "")
+   {
+      %this-->cancelButton.setHidden(true);  
+   }
+   else
+   {
+      %this-->cancelButton.setHidden(false);
+      %this-->cancelButton.setText(%cancelButtonLabel);
+      %this-->cancelButton.command = %cancelButtonCommand;  
+   }
+}
+
+function MainPanelFooter::setText(%this, %footerText, %clearTimeMS)
+{
+   %this-->FooterText.setText(%footerText);
+   
+   if(%clearTimeMS !$= "")
+   {
+      %this.schedule(%clearTimeMS, "clearText");  
+   }
+}
+
+function MainPanelFooter::clearText(%this)
+{
+   %this-->FooterText.setText("");
+}
+
+function MainPanelFooter::clear(%this)
+{
+   %this.setupButtons();
+   %this-->FooterText.setText("");
+}
+
+function MainPanelFooter::setOKButtonActive(%this, %active)
+{
+   %this-->okButton.setActive(%active);
+}
+
+function MainPanelFooter::setCancelButtonActive(%this, %active)
+{
+   %this-->cancelButton.setActive(%active);
 }

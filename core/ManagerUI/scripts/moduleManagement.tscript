@@ -810,7 +810,9 @@ function InstallModulePage2::openPage(%this)
       
       if(getVariable("$TorqueManager::toInstallModules_" @ %module.moduleId) == 1)
       {
-         %modulePath = makeFullPath(filePath(%module.localPath));
+         %modulePath = makeFullPath(filePath(%module.localPath @ "/"));
+         %modulePath = strreplace(%modulePath, "//", "/");
+         
          %installPath = %gamePath @ "/data/" @ %module.moduleName @ "/";
          
          if(!IsDirectory(%installPath))
@@ -843,39 +845,4 @@ function InstallModulePage2::openPage(%this)
    %this-->installModuleComplete.setHidden(false);
    ManagerWizardWindow-->nextButton.setActive(true);  
    Canvas.repaint();
-   /*%this-->installModuleCompleteTxt.setHidden(true);
-   ManagerWizardWindow-->nextButton.setActive(false);  
-   Canvas.repaint();
-   
-   %projectId = InstallModulePage0-->projectList.getSelected();
-   
-   %moduleName = getModuleNameByIndex($TorqueManager::toInstallModuleId);
-   %localModulePath = makeFullPath(getModuleLocalPathByIndex($TorqueManager::toInstallModuleId));
-   
-   %projectName = getProjectNameByIndex(%projectId);
-   %projectLocalPath = makeFullPath(getProjectLocalPathByIndex(%projectId));
-   %projectBuildId = getProjectBuildIdByIndex(%projectId);
-   
-   %moduleInstallPath = "";
-   if(!isEngineBuildBinary(%projectBuildId))
-   {
-      %moduleInstallPath = %projectLocalPath @ "/My Projects/" @ %projectName @ "/game/data/" @ %moduleName @ "/";
-   }
-   else
-   {
-      %moduleInstallPath = %projectLocalPath @ "/data/" @ %moduleName @ "/";
-   }
-   
-   if(!IsDirectory(%moduleInstallPath))
-   {
-      createPath(%moduleInstallPath);  
-   }
-   
-   if(!copyProjectFolder(%localModulePath, %moduleInstallPath))
-   {
-      error("Failed to install module " @ %moduleName @ " from path: " @ %localModulePath @ " to new project: " @ %projectName);
-   }
-
-   %this-->installModuleCompleteTxt.setHidden(false);
-   ManagerWizardWindow-->nextButton.setActive(true); */
 }

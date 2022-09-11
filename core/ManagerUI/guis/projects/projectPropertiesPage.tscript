@@ -237,29 +237,37 @@ function populateProjectProperties(%isNew)
    }
          
    if(%isNew)
-   {
-      %buttons = createOKCancelCard("Create", "Cancel", "saveNewProject();", "MainMenuGUI.goToPage(\"ProjectsPage\");");
-   }
+      MainPanelFooter.setupButtons("Create", "Cancel", "saveNewProject();", "MainMenuGUI.goToPage(\"ProjectsPage\");");
    else
-      %buttons = createOKCancelCard("Save", "Cancel", "saveCurrentProject();", "MainMenuGUI.goToPage(\"ProjectsPage\");");
+      MainPanelFooter.setupButtons("Save", "Cancel", "saveCurrentProject();", "MainMenuGUI.goToPage(\"ProjectsPage\");");
    
    %valid = true;
    
-   if($CurrentProject.projectName $= "")
-      %valid = false;
-      
-   if($CurrentProject.localPath $= "")
-      %valid = false;
+   if(%isNew)
+   {
+      if($CurrentProject.projectName $= "")
+      {
+         %valid = false;
+         MainPanelFooter.setText("Must define Project name");
+      }
+      else if($CurrentProject.localPath $= "" || !isDirectory($CurrentProject.localPath))
+      {
+         %valid = false;
+         MainPanelFooter.setText("Must define a valid local folder for Project");
+      }
+      else if(!isObject(%targetBuild))
+      {
+         %valid = false;
+         MainPanelFooter.setText("Must set a valid Engine Build for project");
+      }
+      else if(!%targetBuild.isBinary && $CurrentProject.generatorName $= "")
+      {
+         %valid = false;
+         MainPanelFooter.setText("Source Engine Builds must set a valid CMake generator");
+      }
+   }
    
-   if(!isObject(%targetBuild) || (!%targetBuild.isBinary && $CurrentProject.generatorName $= ""))
-      %valid = false;
-   
-   if(%valid)
-      %buttons-->okButton.setActive(true);
-   else
-      %buttons-->okButton.setActive(false);
-      
-   MainViewStack.add(%buttons);
+   MainPanelFooter.setOKButtonActive(%valid);
    
    //
    //Now add our action panel buttons

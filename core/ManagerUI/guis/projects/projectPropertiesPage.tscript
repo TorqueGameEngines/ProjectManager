@@ -454,7 +454,15 @@ function makeProjectComplete(%resultCode)
 {
    saveProject($CurrentProject);
    
-   openSolutionFile();
+   if(PMSettings.value("Settings/Building/doAutoBuild", "1"))
+   {
+      %commandString = "cmake --build \"" @ makeFullPath($CurrentProject.buildPath) @ "\"";
+      systemCommand(%commandString, ""); 
+   }
+   else
+   {
+      openSolutionFile();
+   }
    
    hideLoadingSplashGui();
    

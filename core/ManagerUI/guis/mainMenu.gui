@@ -159,7 +159,7 @@ $guiContent = new GuiChunkedBitmapCtrl(MainMenuGui) {
                   position = "0 150";
                   extent = "184 25";
                   profile = "GuiMenuButtonProfile";
-                  command = "MainMenuGui.goToPage(\"SettingsPage\");";
+                  command = "setupDefaultSettings();MainMenuGui.goToPage(\"SettingsPage\");";
                   tooltipProfile = "GuiToolTipProfile";
                };
             };

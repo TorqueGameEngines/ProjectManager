@@ -81,10 +81,10 @@ function populateEngineBuildProperties(%isNew)
       if($CurrentEngineBuild.isLocalOrGit $= "Git Repository" && $CurrentEngineBuild.gitPath $= "")
          %valid = false;
          
-      if($CurrentEngineBuild.isLocalOrGit $= "Git Repository" && $CurrentEngineBuild.gitPath !$= "")
+      /*if($CurrentEngineBuild.isLocalOrGit $= "Git Repository" && $CurrentEngineBuild.gitPath !$= "")
       {
          %valid = false;
-      }
+      }*/
       
       if($CurrentEngineBuild.isLocalOrGit $= "Local Path" && !isEngineBuildDownloaded($CurrentEngineBuild))
          %valid = false;

@@ -1,0 +1,50 @@
+function setupDefaultSettings()
+{
+   $EngineBuildDownloadPath = PMSettings.value("Settings/EngineBuilds/downloadPath", "{ManagerDir}/EngineBuilds/");
+   $ModuleDownloadPath = PMSettings.value("Settings/Modules/downloadPath", "{ManagerDir}/Modules/");
+   $AutoBuildSetting = PMSettings.value("Settings/Building/doAutoBuild", "1");
+}
+
+function populateSettingsPage()
+{
+   updateBreadcrumbList("SettingsPage;");
+   
+   MainViewStack.clear();
+   
+   MainMenuGui.setActionBarVisible(false);
+
+   MainViewStack.add(createEditCard("Engine Builds Download Path", "Folder", "$EngineBuildDownloadPath", "Default path for Engine Builds to download into", ""));
+   
+   MainViewStack.add(createEditCard("Modules Download Path", "Folder", "$ModuleDownloadPath", "Default path for Modules to download into", ""));
+   
+   MainViewStack.add(createEditCard("Automatically Build New Project", "checkbox", "$AutoBuildSetting", "If on, cmake will be made to automatically build the project when the project is created or regenerated. Doesn't apply to binary builds."));
+
+   //
+   //      
+   %buttons = createOKCancelCard("Save", "", "saveSettings();", "");
+   MainViewStack.add(%buttons);
+}
+
+function saveSettings()
+{
+   //Engine Builds Download Path
+   %managerPath = getMainDotCsDir();
+   if($EngineBuildDownloadPath $= "")
+      $EngineBuildDownloadPath = "{ManagerDir}/EngineBuilds/";
+      
+   $EngineBuildDownloadPath = strreplace($EngineBuildDownloadPath, %managerPath, "{ManagerDir}");
+   
+   PMSettings.setValue("Settings/EngineBuilds/downloadPath", $EngineBuildDownloadPath);
+   
+   //Modules Download Path
+   if($ModuleDownloadPath $= "")
+      $ModuleDownloadPath = "{ManagerDir}/Modules/";
+      
+   $ModuleDownloadPath = strreplace($ModuleDownloadPath, %managerPath, "{ManagerDir}");
+   
+   PMSettings.setValue("Settings/Modules/downloadPath", $ModuleDownloadPath);
+   
+   PMSettings.setValue("Settings/Building/doAutoBuild", $AutoBuildSetting);
+   
+   saveData();
+}

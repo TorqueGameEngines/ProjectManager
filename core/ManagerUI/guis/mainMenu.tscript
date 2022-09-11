@@ -1447,8 +1447,13 @@ function createOKCancelCard(%okButtonText, %cancelButtonText, %okButtonCommand, 
          profile = GuiMenuActionButtonProfile;
          internalName = "cancelButton";
       };
-
    };
+   
+   if(%okButtonText $= "" && %okButtonCommand $= "")
+      %ctrl-->okButton.setHidden(true);
+   
+   if(%cancelButtonText $= "" && %cancelButtonCommand $= "")
+      %ctrl-->cancelButton.setHidden(true);
    
    return %ctrl;
 }

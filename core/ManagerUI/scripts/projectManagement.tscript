@@ -779,7 +779,19 @@ function regenerateProject()
       %regenCommand = %regenCommand @ " -DTORQUE_PHYSICS_PHYSX3:BOOL=" @ $CurrentProject.enablePhysX;
       %regenCommand = %regenCommand @ " -DTORQUE_PHYSICS_BULLET:BOOL=" @ $CurrentProject.enableBullet;
       %regenCommand = %regenCommand @ " -DTORQUE_SQLITE:BOOL=" @ $CurrentProject.enableSqlite;
-      systemCommand(%regenCommand, "");
+      systemCommand(%regenCommand, "regenerateProjectComplete");
+   }
+}
+
+function regenerateProjectComplete(%resultCode)
+{
+   if(%resultCode <= 0)
+   {
+      if(PMSettings.value("Settings/Building/doAutoBuild", "1"))
+      {
+         %commandString = "cmake --build \"" @ makeFullPath($CurrentProject.buildPath) @ "\"";
+         systemCommand(%commandString, ""); 
+      }
    }
 }
 

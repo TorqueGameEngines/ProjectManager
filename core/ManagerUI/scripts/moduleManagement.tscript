@@ -810,7 +810,13 @@ function InstallModulePage2::openPage(%this)
       
       if(getVariable("$TorqueManager::toInstallModules_" @ %module.moduleId) == 1)
       {
-         %modulePath = makeFullPath(filePath(%module.localPath @ "/"));
+         //check if the localPath has the *.module file def, and if so, clip it
+         if(isFile(%module.localPath))
+            %modulePath = filePath(%module.localPath);
+         else
+            %module.localPath = %module.localPath;
+            
+         %modulePath = makeFullPath(%module.localPath) @ "/";
          %modulePath = strreplace(%modulePath, "//", "/");
          
          %installPath = %gamePath @ "/data/" @ %module.moduleName @ "/";

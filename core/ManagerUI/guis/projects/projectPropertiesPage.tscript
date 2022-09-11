@@ -172,7 +172,8 @@ function populateProjectProperties(%isNew)
          
          MainViewStack.add(%moduleRoll);
          
-         %gamePath = getProjectGamePath($CurrentProject);
+         %gamePath = getProjectGamePath($CurrentProject) @ "/";
+         %gamePath = strreplace(%gamePath, "//", "/");
          
          for( %file = findFirstFile( %gamePath @ "data/*.module" );
               %file !$= "";
@@ -212,7 +213,6 @@ function populateProjectProperties(%isNew)
          {
             %module = getModule(%m);
             
-            echo(%module.moduleName);
             if(!isModuleDownloaded(%module))
                continue;
                
@@ -363,44 +363,6 @@ function generateNewProject()
       {
          MessageBoxOK("Error.", "Failed to copy the Template game files. Please run the INSTALL project in your IDE.");  
       }
-   
-      //Install modules
-      %moduleCount = getModuleCount();
-      for(%m=0; %m < %moduleCount; %m++)
-      {
-         %doInstall = getVariable("$toInstallModules_" @ %m);
-         if(%doInstall)
-         {
-            %module = getModule(%m);
-            %moduleName = %module.moduleName;
-            %moduleLocalPath = makeFullPath(%module.localPath);
-            %moduleInstallPath = %fullProjectPath @ "/My Projects/" @ $CurrentProject.projectName @ "/game/data/" @ %moduleName @ "/";
-            if(!IsDirectory(%moduleInstallPath))
-            {
-               createPath(%moduleInstallPath);  
-            }
-            
-            if(!copyProjectFolder(%moduleLocalPath, %moduleInstallPath))
-            {
-               error("Failed to install module " @ %moduleName @ " from path: " @ %moduleLocalPath @ " to new project: " @ $CurrentProject.projectName);
-            }
-         }
-      }
-      
-      //run cmake
-      %commandString = "cmake ";
-
-      %commandString = %commandString @ "-S \"" @ %fullProjectPath @ "\" ";
-      %commandString = %commandString @ "-B \"" @ %buildPath @ "\" ";
-      %commandString = %commandString @ "-G \"" @ $CurrentProject.generatorName @ "\" ";
-      %commandString = %commandString @ "-DTORQUE_APP_NAME:STRING=" @ $CurrentProject.projectName @ " -DCMAKE_GENERATOR_PLATFORM=x64";
-      %commandString = %commandString @ " -DTORQUE_D3D11:BOOL=" @ $CurrentProject.enableD3D;
-      %commandString = %commandString @ " -DTORQUE_OPENGL:BOOL=" @ $CurrentProject.enableOpenGL;
-      %commandString = %commandString @ " -DTORQUE_PHYSICS_PHYSX3:BOOL=" @ $CurrentProject.enablePhysX;
-      %commandString = %commandString @ " -DTORQUE_PHYSICS_BULLET:BOOL=" @ $CurrentProject.enableBullet;
-      %commandString = %commandString @ " -DTORQUE_SQLITE:BOOL=" @ $CurrentProject.enableSqlite;
-
-      systemCommand(%commandString, "makeProjectComplete");  
    }
    else
    {
@@ -431,31 +393,78 @@ function generateNewProject()
          fileDelete(%appPath);
       }
       
-      //Install modules
-      %moduleCount = getModuleCount();
-      for(%m=0; %m < %moduleCount; %m++)
+      %mainScriptPath = findFirstFile( %fullProjectPath @ "/main.tscript", false);
+      if(%mainScriptPath !$= "")
       {
-         %doInstall = getVariable("$toInstallModules_" @ %m);
-         if(%doInstall)
-         {
-            %module = getModule(%m);
-            %moduleName = %module.moduleName;
-            %moduleLocalPath = makeFullPath(%module.localPath);
+         replaceInFile(%mainScriptPath, "$appName = \"Torque3D\";", "$appName = \"" @ $CurrentProject.projectName @ "\";");
+      }
+   }   
+   
+   //Install modules
+   %moduleCount = getModuleCount();
+   for(%m=1; %m <= %moduleCount; %m++)
+   {
+      %doInstall = getVariable("$toInstallModules_" @ %m);
+      if(%doInstall)
+      {
+         %module = getModule(%m);
+         %moduleName = %module.moduleName;
+         
+         %moduleLocalPath = makeFullPath(%module.localPath) @ "/";
+         %moduleLocalPath = strReplace(%moduleLocalPath, "//", "/");
+         
+         if(!%engineBuild.isBinary)
+            %moduleInstallPath = %fullProjectPath @ "/My Projects/" @ $CurrentProject.projectName @ "/game/data/" @ %moduleName @ "/";
+         else
             %moduleInstallPath = %fullProjectPath @ "/data/" @ %moduleName @ "/";
-            if(!IsDirectory(%moduleInstallPath))
-            {
-               createPath(%moduleInstallPath);  
-            }
             
-            if(!copyProjectFolder(%moduleLocalPath, %moduleInstallPath))
+         if(!IsDirectory(%moduleInstallPath))
+         {
+            createPath(%moduleInstallPath);  
+         }
+         
+         if(!copyProjectFolder(%moduleLocalPath, %moduleInstallPath))
+         {
+            error("Failed to install module " @ %moduleName @ " from path: " @ %moduleLocalPath @ " to new project: " @ $CurrentProject.projectName);
+         }
+         
+         %tags = %module.tags;
+         %tagCount = getTokenCount(%tags, ",;");  
+         
+         for(%t=0; %t < %tagCount; %t++)
+         {
+            %tag = getToken(%tags, ",;", %t);
+            if(%tag $= "Special Installation Instruction")
             {
-               error("Failed to install module " @ %moduleName @ " from path: " @ %moduleLocalPath @ " to new project: " @ $CurrentProject.projectName);
+               MessageBoxOK("", "The module " @ %module.moduleName @ " has special installation instructions. You should check any manual steps needed and then regenerate the project.", "");
+               break;  
             }
          }
       }
-      
+   }
+   
+   //Finalize
+   if(!%engineBuild.isBinary)
+   {
+      //run cmake
+      %commandString = "cmake ";
+
+      %commandString = %commandString @ "-S \"" @ %fullProjectPath @ "\" ";
+      %commandString = %commandString @ "-B \"" @ %buildPath @ "\" ";
+      %commandString = %commandString @ "-G \"" @ $CurrentProject.generatorName @ "\" ";
+      %commandString = %commandString @ "-DTORQUE_APP_NAME:STRING=" @ $CurrentProject.projectName @ " -DCMAKE_GENERATOR_PLATFORM=x64";
+      %commandString = %commandString @ " -DTORQUE_D3D11:BOOL=" @ $CurrentProject.enableD3D;
+      %commandString = %commandString @ " -DTORQUE_OPENGL:BOOL=" @ $CurrentProject.enableOpenGL;
+      %commandString = %commandString @ " -DTORQUE_PHYSICS_PHYSX3:BOOL=" @ $CurrentProject.enablePhysX;
+      %commandString = %commandString @ " -DTORQUE_PHYSICS_BULLET:BOOL=" @ $CurrentProject.enableBullet;
+      %commandString = %commandString @ " -DTORQUE_SQLITE:BOOL=" @ $CurrentProject.enableSqlite;
+
+      systemCommand(%commandString, "makeProjectComplete");  
+   }
+   else
+   {
       makeProjectComplete();
-   }   
+   }
 }
 
 function makeProjectComplete(%resultCode)
@@ -546,8 +555,13 @@ function installModuleToProject(%project, %module)
 
 function isModuleInstalledInProject(%project, %module)
 {
-   %gamePath = getProjectGamePath($CurrentProject);
-         
+   %gamePath = getProjectGamePath($CurrentProject) @ "/";
+   %gamePath = strreplace(%gamePath, "//", "/");
+   
+   //only really comes up in the case of not-yet generated projects(or lost refs)
+   if(!isDirectory( %gamePath @ "data/"))
+      return false;
+
    for( %file = findFirstFile( %gamePath @ "data/*.module" );
         %file !$= "";
         %file = findNextFile( %gamePath @ "data/*.module" ))

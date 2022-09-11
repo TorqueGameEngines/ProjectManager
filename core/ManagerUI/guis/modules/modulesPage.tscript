@@ -87,8 +87,6 @@ function populateModulesList()
    };
    
    ActionButtonPanelList.add(%actionBtn);
-   
-   MainPanelFooter.clear(); //clear the buttons if they're active
 }
 
 function navToModuleProps(%module)

@@ -187,35 +187,18 @@ function findProjectPath(%buildIdx)
 //==============================================================================
 function getProjectGamePath(%project)
 {
+   %projectPath = %project.localPath @ "/";
+   
    %targetBuild = getEngineBuild(%project.engineBuildId);
    
    if(isObject(%targetBuild))
    {
       if(!%targetBuild.isBinary)
-         return %project.localPath @ "/My Projects/" @ %project.projectName @ "/game/";
+         %projectPath = %project.localPath @ "/My Projects/" @ %project.projectName @ "/game/";
    }
    
-   return %project.localPath @ "/";
+   return %projectPath;
 }
-/*function populateProjectProperties(%buildIdx)
-{
-   Canvas.pushDialog(ManagerPropertiesGUI);
-   ManagerPropertiesList.clear();
-
-   ManagerPropertiesGUI.targetId = %buildIdx;
-   ManagerPropertiesGUI.mode = "Project";
-   
-   %buildName = getProjectNameByIndex(%buildIdx);
-   
-   %field = makeSettingsCard("Project Name", "$tmpProjectName", "button", %buildName, %buildName, "Change Project Name", 
-      "changeProjectName("@%buildIdx@");");
-   ManagerPropertiesList.add(%field);
-   
-   /*%previewImage = getProjectPreviewImageByIndex(%buildIdx);
-   %field = makeSettingsCard("Change Preview Image", "$tmpProjectImagePath", "button", %previewImage, %previewImage, "Change Project Preview Image", 
-      "changePreviewImage("@%buildIdx@");");
-   ManagerPropertiesList.add(%field);
-}*/
 
 function changeProjectName(%buildIdx)
 {

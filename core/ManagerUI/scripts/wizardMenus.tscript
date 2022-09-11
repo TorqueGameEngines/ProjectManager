@@ -30,6 +30,9 @@ function ManagerWizardWindow::nextStep(%this)
    if(%this.stepNumber == $TorqueManager::wizardPageList.count()-1)
    {
       ManagerWizardWindow.setHidden(true);
+      
+      $TorqueManager::wizardPageList.empty();
+      
       MainMenuGui.refresh();
       return;  
    }

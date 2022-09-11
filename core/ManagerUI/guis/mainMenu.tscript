@@ -46,7 +46,7 @@ function MainMenuGui::onWake(%this)
    
    getResourcesData();
    
-   //setupWizard();
+   setupWizard();
    
    //check we have git and cmake commandline access
    /*%cmakeTestFilePath = getPrefpath() @ "/cmakeTest.txt";

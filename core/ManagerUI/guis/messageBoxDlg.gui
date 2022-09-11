@@ -42,8 +42,8 @@ $guiContent = new GuiControl(MessageBoxDlg) {
          tooltipProfile = "GuiToolTipProfile";
       };
       new GuiMLTextCtrl(MessageBoxText) {
-         position = "80 130";
-         extent = "481 16";
+         position = "21 130";
+         extent = "607 14";
          minExtent = "8 8";
          horizSizing = "center";
          vertSizing = "center";

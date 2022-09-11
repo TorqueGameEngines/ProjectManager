@@ -74,11 +74,11 @@ function getProjectExecutablePath()
 }
 
 //
-function deleteProject(%projectId)
+function deleteProject(%project)
 {
-   $TorqueManager::selectedProject = %projectId;
-   %projectName = getProjectNameByIndex($TorqueManager::selectedProject);
-   %localPath = getProjectLocalPathByIndex($TorqueManager::selectedProject);
+   $CurrentProject = %project;
+   %projectName = %project.projectName;
+   %localPath = %project.localPath;
    
    MessageBoxOKCancel("Delete Project?", 
       "Are you sure you wish to delete the '" @ %projectName @"' Project?\nFile path: " @ %localPath,
@@ -90,7 +90,7 @@ function doDeleteProject()
    displayLoadingSplashGui();
    
    //do da delete.
-   %localPath = getProjectLocalPathByIndex($TorqueManager::selectedProject);
+   %localPath = makeFullPath($CurrentProject.localPath);
    
    if(isDirectory(%localPath))
    {
@@ -102,11 +102,13 @@ function doDeleteProject()
       }
    }
    
-   setProjectLocalPath($TorqueManager::selectedProject, "");
+   $CurrentProject.localPath = "";
+   
+   saveProject($CurrentProject);
    
    doRemoveProjectFromListing();
    
-   MainMenuGui.refresh();
+   MainMenuGui.goToPage("ProjectsPage");
    
    hideLoadingSplashGui();
 }
@@ -120,11 +122,11 @@ function doProjectRename(%newName)
    MainMenuGui.refresh();
 }
 
-function removeProjectFromListing(%buildIdx)
+function removeProjectFromListing(%project)
 {
-   $TorqueManager::selectedProject = %buildIdx;
+   $CurrentProject = %project;
    
-   %projectName = getProjectNameByIndex($TorqueManager::selectedProject);
+   %projectName = $CurrentProject.projectName;
    MessageBoxOKCancel("Remove Project?", 
       "Are you sure you wish to remove the '" @ %projectName @"' Project from the Manager?\nIf there is a local copy on this machine it will not be deleted.",
       "doRemoveProjectFromListing();", "");
@@ -134,13 +136,24 @@ function doRemoveProjectFromListing()
 {
    displayLoadingSplashGui();
    
-   PMSettings.remove("Projects/" @ $TorqueManager::selectedProject @ "/buildId");
-   PMSettings.remove("Projects/" @ $TorqueManager::selectedProject @ "/projectName");
-   PMSettings.remove("Projects/" @ $TorqueManager::selectedProject @ "/localPath");
+   %index = $CurrentProject.projectId;
+   
+   PMSettings.remove("Projects/" @ %index @ "/projectName");
+   PMSettings.remove("Projects/" @ %index @ "/projectId");
+   PMSettings.remove("Projects/" @ %index @ "/buildPath");
+   PMSettings.remove("Projects/" @ %index @ "/localPath");
+   PMSettings.remove("Projects/" @ %index @ "/previewImage");
+   PMSettings.remove("Projects/" @ %index @ "/engineBuildId");
+   PMSettings.remove("Projects/" @ %index @ "/generatorName");
+   PMSettings.remove("Projects/" @ %index @ "/enableD3D");
+   PMSettings.remove("Projects/" @ %index @ "/enableOpenGL");
+   PMSettings.remove("Projects/" @ %index @ "/enablePhysX");
+   PMSettings.remove("Projects/" @ %index @ "/enableBullet");
+   PMSettings.remove("Projects/" @ %index @ "/enableSQLite");
    
    saveData();
    
-   MainMenuGui.refresh();
+   MainMenuGui.goToPage("ProjectsPage");
    
    hideLoadingSplashGui();
 }

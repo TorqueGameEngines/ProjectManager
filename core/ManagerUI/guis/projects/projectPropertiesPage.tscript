@@ -213,7 +213,7 @@ function populateProjectProperties(%isNew)
             %module = getModule(%m);
             
             echo(%module.moduleName);
-            if(%module.localPath $= "")
+            if(!isModuleDownloaded(%module))
                continue;
                
             if(isModuleInstalledInProject($CurrentProject, %module))
@@ -286,8 +286,8 @@ function populateProjectProperties(%isNew)
       }
    }
    
-   AddActionButton("ManagerUI:trashcan_image", "Delete Project", "", "");
-   AddActionButton("ManagerUI:trashcan_image", "Remove From List", "", "");
+   AddActionButton("ManagerUI:trashcan_image", "Delete Project", "deleteProject(" @ $CurrentProject @ ");", "");
+   AddActionButton("ManagerUI:trashcan_image", "Remove From List", "removeProjectFromListing(" @ $CurrentProject @ ");", "");
 }
 
 function saveCurrentProject()
@@ -473,10 +473,7 @@ function getUsableEngineBuildsList()
       
       %buildName = %bld.buildName;
       
-      if(%bld.localPath $= "")
-         continue;
-         
-      if(!%bld.isBinary && $TorqueManager::cmakeNotFound)
+      if(!isEngineBuildDownloaded(%bld))
          continue;
 
       if(%buildList $= "")

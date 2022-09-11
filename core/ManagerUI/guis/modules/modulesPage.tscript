@@ -58,9 +58,9 @@ function populateModulesList()
          //%localPath = IsDirectory(%module.localPath) ? %module.localPath : %module.localPath SPC "(Not Found)";
          %card = createCard(%module.moduleName, %module.description, %tags, "", true, "navToModuleProps("@%module@");", "", "", "", "");
          
-         if(%module.localPath !$= "")
+         if(isModuleDownloaded(%module))
             %dlRoll-->stack.add(%card);
-         else if(!$TorqueManager::gitNotFound)
+         else
          { 
             if(%module.gitPath !$= "")
                %availRoll-->stack.add(%card);
@@ -97,4 +97,17 @@ function navToModuleProps(%module)
    populateModuleProperties(); 
    
    navToAnimation();
+}
+
+function isModuleDownloaded(%module)
+{
+   if(%module.LocalPath $= "")
+      return false;
+   
+   %fullLocalPath = makeFullPath(%module.LocalPath);
+   %moduleFile = findFirstFile(%fullLocalPath @ "/*.module");
+   if(isFile(%moduleFile))
+      return true;
+      
+   return false;
 }

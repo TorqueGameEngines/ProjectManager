@@ -216,7 +216,7 @@ $guiContent = new GuiChunkedBitmapCtrl(MainMenuGui) {
 
             new GuiStackControl(MainViewStack) {
                padding = "5";
-               dynamicSize = "0";
+               dynamicSize = "1";
                position = "1 1";
                extent = "817 671";
                horizSizing = "width";

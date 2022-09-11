@@ -86,7 +86,7 @@ function populateEngineBuildProperties(%isNew)
          %valid = false;
       }
       
-      if($CurrentEngineBuild.isLocalOrGit $= "Local Path" && $CurrentEngineBuild.localPath $= "")
+      if($CurrentEngineBuild.isLocalOrGit $= "Local Path" && !isEngineBuildDownloaded($CurrentEngineBuild))
          %valid = false;
       
       if(%valid)
@@ -107,20 +107,20 @@ function populateEngineBuildProperties(%isNew)
    
    if(!%isNew)
    {
-      if($CurrentEngineBuild.localPath !$= "" && ($CurrentEngineBuild.isBinary || !$TorqueManager::cmakeNotFound))
+      if(isEngineBuildDownloaded($CurrentEngineBuild) && ($CurrentEngineBuild.isBinary || !$TorqueManager::cmakeNotFound))
       {
          AddActionButton("ManagerUI:plus_image", "New Project", "CreateNewProject();", "");
          
          if($CurrentEngineBuild.gitPath !$= "" && !$TorqueManager::gitNotFound)
-            AddActionButton("ManagerUI:download_image", "Pull Updates", "pullUpdateEngineBuild($CurrentEngineBuild);", "");
+            AddActionButton("ManagerUI:download_image", "Pull Updates", "pullUpdateEngineBuild("@$CurrentEngineBuild@");", "");
             
-         AddActionButton("ManagerUI:trashcan_image", "Delete Local Copy", "", "");
+         AddActionButton("ManagerUI:trashcan_image", "Delete Local Copy", "deleteEngineBuild("@$CurrentEngineBuild@");", "");
       }
       else if(!$TorqueManager::gitNotFound)
-         AddActionButton("ManagerUI:download_image", "Download", "downloadEngineBuild($CurrentEngineBuild);", "");
+         AddActionButton("ManagerUI:download_image", "Download", "downloadEngineBuild("@$CurrentEngineBuild@");", "");
       
       if(!$CurrentEngineBuild.isDefault)
-         AddActionButton("ManagerUI:trashcan_image", "Remove From List", "", "");
+         AddActionButton("ManagerUI:trashcan_image", "Remove From List", "removeEngineBuildFromListing("@$CurrentEngineBuild@");", "");
       
       if($CurrentEngineBuild.gitPath !$= "")
       {

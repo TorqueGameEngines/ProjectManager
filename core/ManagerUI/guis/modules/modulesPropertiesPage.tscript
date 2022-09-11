@@ -106,7 +106,7 @@ function populateModuleProperties(%isNew)
       
       MainViewStack.add(createEditCard("Local Directory Path", "Folder", "$CurrentModule.localPath", "What local directory path this module is drom on the current machine", ""));
       
-      if($CurrentModule.localPath !$= "")
+      if(isModuleDownloaded($CurrentModule))
       {
          %moduleNameField.callonChildren("setActive", false);  
          %moduleDescriptionField.callonChildren("setActive", false);
@@ -162,7 +162,7 @@ function populateModuleProperties(%isNew)
       if($CurrentModule.isLocalOrGit $= "Git Repository" && $CurrentModule.gitPath $= "")
          %valid = false;
       
-      if($CurrentModule.isLocalOrGit $= "Local Path" && $CurrentModule.localPath $= "")
+      if($CurrentModule.isLocalOrGit $= "Local Path" && !isModuleDownloaded($CurrentModule))
          %valid = false;
       
       if(%valid)
@@ -184,7 +184,7 @@ function populateModuleProperties(%isNew)
    
    if(!%isNew)
    {
-      if($CurrentModule.localPath !$= "")
+      if(isModuleDownloaded($CurrentModule))
       {
          AddActionButton("ManagerUI:plus_image", "Install in Project", "openInstallModuleWizard(\"\", " @ $CurrentModule @ ");", "");
          

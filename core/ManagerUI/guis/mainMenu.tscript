@@ -39,7 +39,7 @@ function MainMenuGui::onWake(%this)
    %this.registerPage("ModulePropertiesPage", "Properties", "populateModuleProperties();");
    %this.registerPage("NewModulePage", "New Module Properties", "populateModuleProperties(true);");
    
-   %this.registerPage("SettingsdPage", "Settings", "populateSettings();");
+   %this.registerPage("SettingsPage", "Settings", "populateSettingsPage();");
    
    getResourcesData();
    
@@ -87,6 +87,16 @@ function MainMenuGui::refresh(%this)
 function MainMenuGui::doRefresh(%this)
 {
    %this.isRefreshing = false;
+   if (getUsableEngineBuildsList() $= "No Valid Engine Builds")
+   {
+      MainMenuModulesBtn.setVisible(false);
+      MainMenuProjectsBtn.setVisible(false);
+   }
+   else
+   {
+      MainMenuModulesBtn.setVisible(true);
+      MainMenuProjectsBtn.setVisible(true);   
+   }
    
    for(%i=0; %i < %this.navPages.count(); %i++)
    {

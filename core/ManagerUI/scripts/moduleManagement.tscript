@@ -36,13 +36,22 @@ function doModuleDownloads()
    
    %moduleName = %module.moduleId @ "_" @ %moduleName;
    
-   %targetPath = %downloadPath @ "/" @ %moduleName @ "/";
-   
-   %targetPath = strReplace(%targetPath, "//", "/");
-   
-   if(!IsDirectory(%targetPath))
+   if(%module.localPath !$= "" && isDirectory(%module.localPath) && !isModuleDownloaded(%module))
    {
-      createPath(%targetPath);  
+      //if we've been given a good target folder, use that
+      %targetPath = makeFullPath(%module.localPath);
+   }
+   else
+   {
+      //otherwise use default path
+      %targetPath = %downloadPath @ "/" @ %moduleName @ "/";
+      
+      %targetPath = strReplace(%targetPath, "//", "/");
+      
+      if(!IsDirectory(%targetPath))
+      {
+         createPath(%targetPath);  
+      }
    }
    
    $downloadingModuleTargetPath = %targetPath;
@@ -92,7 +101,9 @@ function downloadModuleComplete(%resultCode)
 
 function queueModuleDownload(%module)
 {
-   DownloadQueue.add(%module);
+   //don't queue for DL if it's already installed
+   if(!isModuleDownloaded(%module))
+      DownloadQueue.add(%module);
    
    if($downloadModuleDependencies)
    {
@@ -115,7 +126,7 @@ function queueModuleDependenciesDownload(%module)
          if(%depModuleId != 0)
          {
             %depModule = getModule(%depModuleId);
-            if(%depModule.localPath $= "")
+            if(!isModuleDownloaded(%depModule))
             {
                DownloadQueue.add(%depModule);
                
@@ -133,10 +144,15 @@ function pullUpdateModule(%module)
    %gitPath = %module.gitPath;
    %branchName = %module.branchName;
    %moduleName = %module.moduleName;
+
+   %localPath = makeFullPath(%module.localPath);
    
-   %downloadPath = getModuleDownloadPath();
-   
-   %commandString = "cd \"" @ filePath(makeFullPath(%module.localPath)) @ "\" && git pull"; 
+   //Just in case we're pointing to the *.module file directly, we'll wanna get
+   //just the file path
+   if(isFile(%localPath))
+      %localPath = filePath(%localPath);
+      
+   %commandString = "cd \"" @ %localPath @ "\" && git pull"; 
    
    systemCommand(%commandString, "pullUpdateModuleComplete");
 }
@@ -253,17 +269,17 @@ function doDeleteModule()
       }
    }
    
-   setModuleLocalPath($CurrentModule, "");
+   $CurrentModule.localPath = "";
+   saveModule($CurrentModule);
    
    //check if it was a build that had a gitpath
    //if not, then we'll just fully remove the registration as well, as it's completely gone
-   %gitPath = $CurrentModule.gitPath;
-   if(%gitPath $= "")
+   if($CurrentModule.gitPath $= "")
    {
       doRemoveModuleFromListing();
    }
    
-   MainMenuGui.refresh();
+   MainMenuGUI.goToPage("ModulesPage");
    
    hideLoadingSplashGui();
 }
@@ -282,10 +298,24 @@ function doRemoveModuleFromListing()
 {
    displayLoadingSplashGui();
    
-   if(!$CurrentModule.isDefault)
-      removeModule($CurrentModule);
+   if($CurrentModule.isDefault)
+      return;
+      
+   %index = $CurrentModule.moduleId;
+      
+   PMSettings.remove("Modules/" @ %index @ "/moduleName");
+   PMSettings.remove("Modules/" @ %index @ "/gitPath");
+   PMSettings.remove("Modules/" @ %index @ "/branchName");
+   PMSettings.remove("Modules/" @ %index @ "/description");
+   PMSettings.remove("Modules/" @ %index @ "/localPath");
+   PMSettings.remove("Modules/" @ %index @ "/isDefault");
+   PMSettings.remove("Modules/" @ %index @ "/dependencies");
+   PMSettings.remove("Modules/" @ %index @ "/installInNewProj");
+   PMSettings.remove("Modules/" @ %index @ "/tags");
+
+   saveData();
    
-   MainMenuGui.refresh();
+   MainMenuGUI.goToPage("ModulesPage");
    
    hideLoadingSplashGui();
 }
@@ -472,7 +502,7 @@ function hasMissingModuleDependencies()
          if(%depModuleId != 0)
          {
             %depModule = getModule(%depModuleId);
-            if(%depModule.localPath $= "")
+            if(!isModuleDownloaded(%depModule))
             {
                %missing = true;
                break;  
@@ -749,11 +779,14 @@ function InstallModulePage1::openPage(%this)
    InstallModule_SelectModulesStack.clear();
    
    %moduleCount = getModuleCount();
-   for(%i=0; %i < %moduleCount; %i++)
+   for(%i=1; %i <= %moduleCount; %i++)
    {
       %module = getModule(%i);
       
-      if(%module.localPath $= "")
+      if(!isModuleDownloaded(%module))
+         continue;
+         
+      if(isModuleInstalledInProject($TorqueManager::targetProject, %module))
          continue;
       
       %moduleCard = createEditCard(%module.moduleName, "checkbox", "$TorqueManager::toInstallModules_" @ %module.moduleId, "", "No;Yes");

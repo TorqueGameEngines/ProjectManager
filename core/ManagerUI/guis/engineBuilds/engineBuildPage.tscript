@@ -72,7 +72,7 @@ function populateEngineBuildsList()
             //(Not Found) to let the user resolve the discrepency
             %dlRoll-->stack.add(%ctrl);
          }
-         else if(!$TorqueManager::gitNotFound)
+         else
          {
             if(%bld.gitPath !$= "")
             {
@@ -111,4 +111,26 @@ function navToEngineBuildProps(%bld)
    populateEngineBuildProperties(); 
    
    navToAnimation();
+}
+
+function isEngineBuildDownloaded(%build)
+{
+   if(%build.LocalPath $= "")
+      return false;
+   
+   if(%build.isBinary)
+   {
+      %fullLocalPath = makeFullPath(%build.LocalPath);
+      %mainScript = %fullLocalPath @ "/main." @ $TorqueScriptFileExtension; 
+      if(isFile(%mainScript))
+         return true;
+   }
+   else
+   {
+      %fullLocalPath = makeFullPath(%build.LocalPath);
+      if(isDirectory(%fullLocalPath @ "/engine/source/"))
+         return true;
+   }
+   
+   return false;
 }

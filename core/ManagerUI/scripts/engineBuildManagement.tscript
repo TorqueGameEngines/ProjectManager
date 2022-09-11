@@ -21,13 +21,20 @@ function downloadEngineBuild(%build)
    
    %buildName = %build.buildId @ "_" @ %buildName;
    
-   %targetPath = %downloadPath @ "/" @ %buildName @ "/";
-   
-   %targetPath = strReplace(%targetPath, "//", "/");
-   
-   if(!IsDirectory(%targetPath))
+   if(%build.localPath !$= "" && isDirectory(%build.localPath) && !isEngineBuildDownloaded(%build))
    {
-      createPath(%targetPath);  
+      %targetPath = makeFullPath(%build.localPath);
+   }
+   else
+   {
+      %targetPath = %downloadPath @ "/" @ %buildName @ "/";
+      
+      %targetPath = strReplace(%targetPath, "//", "/");
+      
+      if(!IsDirectory(%targetPath))
+      {
+         createPath(%targetPath);  
+      }
    }
    
    $downloadingBuildTargetPath = %targetPath;
@@ -72,8 +79,6 @@ function pullUpdateEngineBuild(%build)
    %branchName = strReplace(%branchName, "{$platform}", $platform);
    
    %buildName = %build.buildName;
-   
-   %downloadPath = getEngineBuildDownloadPath();
    
    %commandString = "cd \"" @ makeFullPath(%build.localPath) @ "\" && git pull";  
    
@@ -160,11 +165,11 @@ function openEngineBuildActionMenu(%buildIdx, %buttonCtrl)
 }
 
 //
-function deleteEngineBuild(%buildIdx)
+function deleteEngineBuild(%build)
 {
-   $TorqueManager::selectedEngineBuild = %buildIdx;
-   %buildName = getEngineBuildNameByIndex($TorqueManager::selectedEngineBuild);
-   %localPath = getEngineBuildLocalPathByIndex($TorqueManager::selectedEngineBuild);
+   $CurrentEngineBuild = %build;
+   %buildName = $CurrentEngineBuild.buildName;
+   %localPath = $CurrentEngineBuild.localPath;
    
    MessageBoxOKCancel("Delete Engine Build?", 
       "Are you sure you wish to delete the '" @ %buildName @"' Engine Build?\nFile path: " @ %localPath,
@@ -176,7 +181,7 @@ function doDeleteEngineBuild()
    displayLoadingSplashGui();
    
    //do da delete.
-   %localPath = getEngineBuildLocalPathByIndex($TorqueManager::selectedEngineBuild);
+   %localPath = makeFullPath($CurrentEngineBuild.localPath);
    
    if(isDirectory(%localPath))
    {
@@ -188,19 +193,18 @@ function doDeleteEngineBuild()
       }
    }
    
-   setEngineBuildLocalPathByIndex($TorqueManager::selectedEngineBuild, "");
+   $CurrentEngineBuild.localPath = "";
+   
+   saveCurrentEngineBuild();
    
    //check if it was a build that had a gitpath
    //if not, then we'll just fully remove the registration as well, as it's completely gone
-   %gitPath = getEngineBuildGitPathByIndex($TorqueManager::selectedEngineBuild);
-   if(%gitPath $= "")
+   if($CurrentEngineBuild.gitPath $= "")
    {
       doRemoveEngineBuildFromListing();
    }
    
-   saveData();
-   
-   MainMenuGui.refresh();
+   MainMenuGui.goToPage("EngineBuildPage");
    
    hideLoadingSplashGui();
 }
@@ -214,11 +218,11 @@ function doEngineBuildRename(%newName)
    MainMenuGui.refresh();
 }
 
-function removeEngineBuildFromListing(%buildIdx)
+function removeEngineBuildFromListing(%build)
 {
-   $TorqueManager::selectedEngineBuild = %buildIdx;
+   $CurrentEngineBuild = %build;
    
-   %buildName = getEngineBuildNameByIndex($TorqueManager::selectedEngineBuild);
+   %buildName = $CurrentEngineBuild.buildName;
    MessageBoxOKCancel("Remove Engine Build?", 
       "Are you sure you wish to remove the '" @ %buildName @"' Engine Build from the Manager?\nIf there is a local copy on this machine it will not be deleted.",
       "doRemoveEngineBuildFromListing();", "");
@@ -228,16 +232,22 @@ function doRemoveEngineBuildFromListing()
 {
    displayLoadingSplashGui();
    
-   PMSettings.remove("EngineBuilds/" @ $TorqueManager::selectedEngineBuild @ "/gitPath");
-   PMSettings.remove("EngineBuilds/" @ $TorqueManager::selectedEngineBuild @ "/buildName");
-   PMSettings.remove("EngineBuilds/" @ $TorqueManager::selectedEngineBuild @ "/branchName");
-   PMSettings.remove("EngineBuilds/" @ $TorqueManager::selectedEngineBuild @ "/localPath");
-   PMSettings.remove("EngineBuilds/" @ $TorqueManager::selectedEngineBuild @ "/isDefault");
-   PMSettings.remove("EngineBuilds/" @ $TorqueManager::selectedEngineBuild @ "/isBinary");
+   if($CurrentEngineBuild.isDefault)
+      return;
+   
+   %index = $CurrentEngineBuild.buildId;
+   
+   PMSettings.remove("EngineBuilds/" @ %index @ "/buildName");
+   PMSettings.remove("EngineBuilds/" @ %index @ "/gitPath");
+   PMSettings.remove("EngineBuilds/" @ %index @ "/branchName");
+   PMSettings.remove("EngineBuilds/" @ %index @ "/localPath");
+   PMSettings.remove("EngineBuilds/" @ %index @ "/isDefault");
+   PMSettings.remove("EngineBuilds/" @ %index @ "/isBinary");
+   PMSettings.remove("EngineBuilds/" @ %index @ "/tags");
    
    saveData();
    
-   MainMenuGui.refresh();
+   MainMenuGui.goToPage("EngineBuildPage");
    
    hideLoadingSplashGui();
 }

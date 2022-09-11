@@ -65,7 +65,7 @@ function populateNewEngineBuildPropertiesList()
       }
    }
    
-   if($NewEngineBuild.isLocalOrGit $= "Local Path" && $NewEngineBuild.localPath $= "")
+   if($NewEngineBuild.isLocalOrGit $= "Local Path" && !isEngineBuildDownloaded($NewEngineBuild))
       %valid = false;
    
    if(%valid)

@@ -459,8 +459,8 @@ function PMHttpObj::onDisconncted(%this)
       if(%buildName $= "")
          continue;
          
-      %build = findEngineBuildByName(%buildName);
-      if(%build == 0) //not found, so lets spool it up
+      %buildId = findEngineBuildByName(%buildName);
+      if(%buildId == 0) //not found, so lets spool it up
       {
          %buildId = incrementEngineBuildCount();
 
@@ -468,6 +468,10 @@ function PMHttpObj::onDisconncted(%this)
          %build.buildId = %buildId;
          %build.buildName = %buildName;
          %build.localPath = "";
+      }
+      else
+      {
+         %build = getEngineBuild(%buildId);  
       }
       
       %build.gitPath = ResourcesList.value("EngineBuilds/" @ %i @ "/gitPath");
@@ -486,8 +490,8 @@ function PMHttpObj::onDisconncted(%this)
       if(%moduleName $= "")
          continue;
          
-      %module = findModuleByName(%moduleName);
-      if(%module == 0) //not found, so lets spool it up
+      %moduleId = findModuleByName(%moduleName);
+      if(%moduleId == 0) //not found, so lets spool it up
       {
          %moduleId = incrementModuleCount();
 
@@ -495,6 +499,10 @@ function PMHttpObj::onDisconncted(%this)
          %module.moduleId = %moduleId;
          %module.moduleName = %moduleName;
          %module.localPath = "";
+      }
+      else
+      {
+         %module = getModule(%moduleId);
       }
       
       %module.description = ResourcesList.value("Modules/" @ %i @ "/description");

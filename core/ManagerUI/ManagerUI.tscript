@@ -49,6 +49,8 @@ function ManagerUI::initClient(%this)
    %this.queueExec("./guis/modules/modulesPage");
    %this.queueExec("./guis/modules/modulesPropertiesPage");
    
+   %this.queueExec("./guis/settings/settingsPage");
+   
    //   
    %this.queueExec("./scripts/actionMenu");
    %this.queueExec("./scripts/dataManagement");

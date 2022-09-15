@@ -261,3 +261,8 @@ function GuiCanvas::getBestCanvasRes(%this, %deviceId, %deviceMode)
 
    return %bestRes;
 }
+
+function GuiCanvas::onResize(%this, %width, %height)
+{
+   $pref::Video::Resolution = %width SPC %height;
+}

@@ -10,6 +10,7 @@ trace(false);
 // Set the name of our application
 $appName = "TorqueManager";
 $pref::Video::deviceMode = 0;
+$pref::Video::Resolution = "1024 768";
 
 //-----------------------------------------------------------------------------
 // Load up scripts to initialise subsystems.

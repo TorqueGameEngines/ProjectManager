@@ -72,7 +72,9 @@ function CoreModule::onCreate(%this)
 
 function CoreModule::onDestroy(%this)
 {
-
+   echo("Exporting client prefs");
+   %prefPath = getPrefpath();
+   export("$pref::*", %prefPath @ "/clientPrefs." @ $TorqueScriptFileExtension, false);
 }
 
 //-----------------------------------------------------------------------------

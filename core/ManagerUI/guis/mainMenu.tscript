@@ -11,7 +11,7 @@ function MainMenuGui::onWake(%this)
    $TorqueManager::cmakeNotFound = false;
    
    //Set up our settings object
-   %prefPath = getPrefpath();
+   %prefPath = getUserPath();
    
    new Settings(PMSettings) { 
       file = %prefPath @ "/data.xml"; 
@@ -70,6 +70,11 @@ function MainMenuGui::onWake(%this)
       %this.goToPage("ProjectsPage");
    else
       %this.goToPage("EngineBuildPage");
+      
+   if($pref::FirstTimeStartup)
+   {
+      MessageBoxOKCancel("", "This looks to be the first time you've run the Torque Project Manager.\nWould you like to see the documentation for help in getting everything set up?", "getPMHelp();$pref::FirstTimeStartup = false;", "$pref::FirstTimeStartup = false;", "", "No Thanks");
+   }
 }
 
 function MainMenuGui::onSleep(%this)
@@ -89,6 +94,8 @@ function MainMenuGui::refresh(%this)
 
 function MainMenuGui::doRefresh(%this)
 {
+   PMVersionLabel.setText($PMVersion);
+   
    %this.isRefreshing = false;
    if (getUsableEngineBuildsList() $= "No Valid Engine Builds")
    {
@@ -936,6 +943,11 @@ function navigateBack()
       %pageName = getToken(MainMenuGui.navStack, ",;", %breadcrumbCount-2);
       MainMenuGui.goToPage(%pageName);
    }
+}
+
+function getPMHelp()
+{
+   gotoWebPage("https://docs.torque3d.org/getting-started/getting-familiar/getting-a-copy/torque-project-manager");  
 }
 
 //==============================================================================

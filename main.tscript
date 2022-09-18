@@ -1,6 +1,9 @@
 $Core::windowIcon = "core/icon.png";
 $Core::splashWindowImage = "core/splash.png";
 
+$PMVersion = "v0.85";
+$pref::FirstTimeStartup = true;
+
 // Console does something.
 setLogMode(6);
 

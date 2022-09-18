@@ -93,7 +93,7 @@ function getEngineBuildDownloadPath()
 {
    %downloadPath = PMSettings.value("Settings/EngineBuilds/downloadPath", "{ManagerDir}/EngineBuilds/");
    
-   %downloadPath = strreplace(%downloadPath, "{ManagerDir}", getMainDotCsDir());
+   %downloadPath = strreplace(%downloadPath, "{ManagerDir}", getUserPath());
    return %downloadPath;
 }
 
@@ -267,7 +267,7 @@ function getModuleDownloadPath()
 {
    %downloadPath = PMSettings.value("Settings/Modules/downloadPath", "{ManagerDir}/Modules/");
    
-   %downloadPath = strreplace(%downloadPath, "{ManagerDir}", getMainDotCsDir());
+   %downloadPath = strreplace(%downloadPath, "{ManagerDir}", getUserPath());
    return %downloadPath;
 }
 
@@ -432,7 +432,7 @@ function PMHttpObj::onDisconncted(%this)
 {
    PMHttpObj.delete();
    
-   %resourcesDataFile = "core/cache/resourcesData.xml";
+   %resourcesDataFile = getUserPath() @ "/resourcesData.xml";
    
    %file = new FileObject();
    if(%file.openForWrite(%resourcesDataFile))

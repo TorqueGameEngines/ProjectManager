@@ -21,6 +21,9 @@ function populateSettingsPage()
    
    MainViewStack.add(createEditCard("Automatically Build New Project", "checkbox", "$AutoBuildSetting", "If on, cmake will be made to automatically build the project when the project is created or regenerated. Doesn't apply to binary builds."));
 
+   MainViewStack.add(createCard("Check for Updates", "", "", "", false, "", "button", "", "Check", "checkForPMUpdates();"));
+   
+   MainViewStack.add(createCard("Clear Project Manager Data", "", "", "", false, "", "button", "", "Clear", "clearPMData();"));
    //
    //      
    MainPanelFooter.setupButtons("Save", "", "saveSettings();", "");
@@ -29,7 +32,7 @@ function populateSettingsPage()
 function saveSettings()
 {
    //Engine Builds Download Path
-   %managerPath = getMainDotCsDir();
+   %managerPath = getUserPath();
    if($EngineBuildDownloadPath $= "")
       $EngineBuildDownloadPath = "{ManagerDir}/EngineBuilds/";
       
@@ -50,4 +53,9 @@ function saveSettings()
    saveData();
    
    MainPanelFooter.setText("Settings Saved!", 3000);
+}
+
+function clearPMData()
+{
+   MessageBoxOKCancel("Clear Data", "This will clear all cached data for the Project Manager. Do you wish to continue?", "doClearPMData();", "");
 }

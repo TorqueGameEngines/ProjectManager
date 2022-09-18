@@ -341,7 +341,7 @@ function changeModuleDownloadPath()
       
       if(startsWith(%path, getMainDotCsDir()))
       {
-         %path = strreplace(%path, getMainDotCsDir(), "{ManagerDir}");  
+         %path = strreplace(%path, getUserPath(), "{ManagerDir}");  
       }
       
       EditorSettings.setValue("Settings/Modules/downloadPath", %path);

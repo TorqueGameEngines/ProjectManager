@@ -87,6 +87,8 @@ function ManagerUI::initClient(%this)
    
    GlobalActionMap.bind("keyboard", "ctrl f", "selectSearchbar");
    
+   GlobalActionMap.bind("keyboard", "F1", "getPMHelp");
+   
    GlobalActionMap.bind("keyboard", "escape", "navigateBack");
    
    %this.queueExec("./scripts/webFeed");

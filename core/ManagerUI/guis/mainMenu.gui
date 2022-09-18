@@ -34,6 +34,15 @@ $guiContent = new GuiChunkedBitmapCtrl(MainMenuGui) {
             tooltipProfile = "GuiToolTipProfile";
          };
       };
+      new GuiTextCtrl(PMVersionLabel) {
+         text = "v0.8";
+         position = "959 8";
+         extent = "64 30";
+         horizSizing = "left";
+         vertSizing = "center";
+         profile = "MenuBodyText";
+         tooltipProfile = "GuiToolTipProfile";
+      };
    };
    new GuiSplitContainer() {
       splitPoint = "188 100";
@@ -160,6 +169,21 @@ $guiContent = new GuiChunkedBitmapCtrl(MainMenuGui) {
                   command = "gotoWebPage(\"https://www.patreon.com/Areloch\");";
                   tooltipProfile = "GuiToolTipProfile";
                };
+               new GuiIconButtonCtrl(MainMenuHelpBtn) {
+                  buttonMargin = "-5 0";
+                  BitmapAsset = "ManagerUI:share1_image";
+                  iconLocation = "Right";
+                  sizeIconToButton = "1";
+                  makeIconSquare = "1";
+                  textLocation = "Center";
+                  text = "Help";
+                  position = "0 180";
+                  extent = "184 25";
+                  profile = "GuiMenuButtonProfile";
+                  command = "getPMHelp();";
+                  tooltipProfile = "GuiToolTipProfile";
+               };
+               
                new GuiButtonCtrl(MainMenuSettingsBtn) {
                   text = "Settings";
                   position = "0 210";

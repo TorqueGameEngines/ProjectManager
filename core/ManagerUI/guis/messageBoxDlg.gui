@@ -19,31 +19,29 @@ $guiContent = new GuiControl(MessageBoxDlg) {
       tooltipProfile = "GuiToolTipProfile";
       isContainer = "1";
 
-      new GuiBitmapBarCtrl() {
-         BitmapAsset = "ManagerUI:panel_image";
-         extent = "641 30";
-         horizSizing = "width";
-         profile = "GuiDefaultProfile";
+      new GuiBitmapBorderCtrl() {
+         extent = "641 276";
+         profile = "MenuBorderProfile";
          tooltipProfile = "GuiToolTipProfile";
       };
       new GuiTextCtrl(MessageBoxTitleText) {
          text = "OPTIONS";
-         position = "32 3";
+         position = "32 8";
          extent = "577 28";
-         profile = "MenuHeaderText";
+         profile = "GuiTextProfile";
          tooltipProfile = "GuiToolTipProfile";
       };
       new GuiBitmapBarCtrl() {
          BitmapAsset = "ManagerUI:panel_low_image";
-         position = "0 30";
-         extent = "641 245";
+         position = "8 8";
+         extent = "624 259";
          horizSizing = "width";
          profile = "GuiDefaultProfile";
          tooltipProfile = "GuiToolTipProfile";
       };
       new GuiMLTextCtrl(MessageBoxText) {
-         position = "21 130";
-         extent = "607 14";
+         position = "14 127";
+         extent = "614 14";
          minExtent = "8 8";
          horizSizing = "center";
          vertSizing = "center";
@@ -60,17 +58,15 @@ $guiContent = new GuiControl(MessageBoxDlg) {
          isContainer = "1";
          class = "MenuInputButtonContainer";
 
-         new GuiIconButtonCtrl() {
-            sizeIconToButton = "1";
-            makeIconSquare = "1";
-            textLocation = "Right";
-            text = "Go";
-            position = "251 0";
+         new GuiButtonCtrl() {
+            text = "OK";
+            position = "269 5";
+            extent = "111 20";
             profile = "GuiMenuButtonProfile";
             command = "MainMenuButtonList.activateRow();";
             tooltipProfile = "GuiToolTipProfile";
-            internalName = "OKButton";
             class = "MenuInputButton";
+            internalName = "okButton";
          };
       };
       new GuiControl(MessageBoxOCButtonHolder) {
@@ -83,29 +79,25 @@ $guiContent = new GuiControl(MessageBoxDlg) {
          isContainer = "1";
          class = "MenuInputButtonContainer";
 
-         new GuiIconButtonCtrl() {
-            sizeIconToButton = "1";
-            makeIconSquare = "1";
-            textLocation = "Right";
-            text = "Go";
-            position = "171 0";
+         new GuiButtonCtrl() {
+            text = "OK";
+            position = "190 5";
+            extent = "111 20";
             profile = "GuiMenuButtonProfile";
             command = "MainMenuButtonList.activateRow();";
             tooltipProfile = "GuiToolTipProfile";
-            internalName = "OKButton";
             class = "MenuInputButton";
+            internalName = "okButton";
          };
-         new GuiIconButtonCtrl() {
-            sizeIconToButton = "1";
-            makeIconSquare = "1";
-            textLocation = "Right";
-            text = "Go";
-            position = "323 0";
+         new GuiButtonCtrl() {
+            text = "Cancel";
+            position = "342 5";
+            extent = "111 20";
             profile = "GuiMenuButtonProfile";
             command = "MainMenuButtonList.activateRow();";
             tooltipProfile = "GuiToolTipProfile";
-            internalName = "CancelButton";
             class = "MenuInputButton";
+            internalName = "cancelButton";
          };
       };
       new GuiControl(MessageBoxYNCButtonHolder) {
@@ -118,41 +110,35 @@ $guiContent = new GuiControl(MessageBoxDlg) {
          isContainer = "1";
          class = "MenuInputButtonContainer";
 
-         new GuiIconButtonCtrl() {
-            sizeIconToButton = "1";
-            makeIconSquare = "1";
-            textLocation = "Right";
-            text = "Go";
-            position = "99 0";
+         new GuiButtonCtrl() {
+            text = "Yes";
+            position = "103 5";
+            extent = "111 20";
             profile = "GuiMenuButtonProfile";
             command = "MainMenuButtonList.activateRow();";
             tooltipProfile = "GuiToolTipProfile";
+            class = "MenuInputButton";
             internalName = "yesButton";
-            class = "MenuInputButton";
          };
-         new GuiIconButtonCtrl() {
-            sizeIconToButton = "1";
-            makeIconSquare = "1";
-            textLocation = "Right";
-            text = "Go";
-            position = "251 0";
+         new GuiButtonCtrl() {
+            text = "No";
+            position = "269 5";
+            extent = "111 20";
             profile = "GuiMenuButtonProfile";
             command = "MainMenuButtonList.activateRow();";
             tooltipProfile = "GuiToolTipProfile";
+            class = "MenuInputButton";
             internalName = "noButton";
-            class = "MenuInputButton";
          };
-         new GuiIconButtonCtrl() {
-            sizeIconToButton = "1";
-            makeIconSquare = "1";
-            textLocation = "Right";
-            text = "Go";
-            position = "403 0";
+         new GuiButtonCtrl() {
+            text = "Cancel";
+            position = "436 5";
+            extent = "111 20";
             profile = "GuiMenuButtonProfile";
             command = "MainMenuButtonList.activateRow();";
             tooltipProfile = "GuiToolTipProfile";
-            internalName = "CancelButton";
             class = "MenuInputButton";
+            internalName = "cancelButton";
          };
       };
    };

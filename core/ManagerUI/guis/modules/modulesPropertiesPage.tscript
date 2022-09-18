@@ -192,7 +192,7 @@ function populateModuleProperties(%isNew)
    {
       if(isModuleDownloaded($CurrentModule))
       {
-         AddActionButton("ManagerUI:plus_image", "Install in Project", "openInstallModuleWizard(\"\", " @ $CurrentModule @ ");", "");
+         AddActionButton("ManagerUI:card_add_image", "Install in Project", "openInstallModuleWizard(\"\", " @ $CurrentModule @ ");", "");
          
          if($CurrentModule.gitPath !$= "" && !$TorqueManager::gitNotFound)
             AddActionButton("ManagerUI:download_image", "Pull Updates", "pullUpdateModule($CurrentModule);", "");

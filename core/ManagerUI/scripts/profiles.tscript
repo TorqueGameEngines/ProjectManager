@@ -850,3 +850,10 @@ new GuiControlProfile (GuiMenuWindowProfile)
    justify = "left";
    category = "Core";
 };
+
+singleton GuiControlProfile (MenuBorderProfile)
+{
+   bitmapAsset = "ManagerUI:chatHudBorderArray_image";
+   hasBitmapArray = true;
+   opaque = false;
+};

@@ -273,7 +273,7 @@ function changeEngineBuildDownloadPath()
       
       if(startsWith(%path, getMainDotCsDir()))
       {
-         %path = strreplace(%path, getMainDotCsDir(), "{ManagerDir}");  
+         %path = strreplace(%path, getUserPath(), "{ManagerDir}");  
       }
       
       EditorSettings.setValue("EngineBuilds/downloadPath",%path);

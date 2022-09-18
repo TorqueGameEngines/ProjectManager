@@ -284,14 +284,16 @@ function populateProjectProperties(%isNew)
       if(isFile(getProjectExecutablePath()))
          AddActionButton("ManagerUI:right_image", "Play", "runProject();", "");
          
-      AddActionButton("ManagerUI:plus_image", "Add Module", "openInstallModuleWizard(" @ $CurrentProject @ ");", "");
+      AddActionButton("ManagerUI:card_add_image", "Add Module", "openInstallModuleWizard(" @ $CurrentProject @ ");", "");
          
       //AddActionButton("ManagerUI:textField_image", "Open GUI Editor", "", "");
       //AddActionButton("ManagerUI:toolPencil_image", "Open Editor", "", "");
       
+      AddActionButton("ManagerUI:cards_seek_top_image", "View Files", "", "");
+      
       if(isObject(%targetBuild) && !%targetBuild.isBinary)
       {
-         AddActionButton("ManagerUI:return_image", "Regen Project", "regenerateProject();", "");
+         AddActionButton("ManagerUI:arrow_rotate_image", "Regen Project", "regenerateProject();", "");
          
          if($platform $= "windows")
             AddActionButton("ManagerUI:open_image", "Open Solution", "openSolutionFile();", "");

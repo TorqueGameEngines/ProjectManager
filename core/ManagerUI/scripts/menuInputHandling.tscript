@@ -178,7 +178,8 @@ function MenuInputButton::refresh(%this)
       }
    }
    
-   %this.setBitmap(%assetId @ "_image");
+   if(%this.isMethod("setBitmap"))
+      %this.setBitmap(%assetId @ "_image");
 
    return true;
 }

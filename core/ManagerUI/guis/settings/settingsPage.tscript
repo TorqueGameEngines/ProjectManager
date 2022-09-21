@@ -21,7 +21,11 @@ function populateSettingsPage()
    
    MainViewStack.add(createEditCard("Automatically Build New Project", "checkbox", "$AutoBuildSetting", "If on, cmake will be made to automatically build the project when the project is created or regenerated. Doesn't apply to binary builds."));
 
-   MainViewStack.add(createCard("Check for Updates", "", "", "", false, "", "button", "", "Check", "checkForPMUpdates();"));
+   %latestPMVersion = ResourcesList.value("ProjectManager/versionNum", "0");
+   if(%latestPMVersion !$= "0" && $PMVersion < %latestPMVersion)
+      MainViewStack.add(createCard("Project Manager Updates", "", "", "", false, "", "button", "", "Get Latest", "gotoWebPage(\"https://github.com/TorqueGameEngines/ProjectManager/releases\");"));
+   else
+      MainViewStack.add(createCard("Project Manager Updates", "Up to date!", "", "", false, "", "", "", "", ""));
    
    MainViewStack.add(createCard("Clear Project Manager Data", "", "", "", false, "", "button", "", "Clear", "clearPMData();"));
    //
@@ -58,4 +62,17 @@ function saveSettings()
 function clearPMData()
 {
    MessageBoxOKCancel("Clear Data", "This will clear all cached data for the Project Manager. Do you wish to continue?", "doClearPMData();", "");
+}
+
+function doClearPMData()
+{
+   %resourcesDataFile = getUserPath() @ "/resourcesData.xml";
+   fileDelete(%resourcesDataFile);
+   
+   %dataFile = getUserPath() @ "/data.xml";
+   fileDelete(%dataFile);
+
+   $pref::FirstTimeStartup = false;
+   
+   MainMenuGui.onWake();
 }

@@ -1,7 +1,7 @@
 $Core::windowIcon = "core/icon.png";
 $Core::splashWindowImage = "core/splash.png";
 
-$PMVersion = "v0.85";
+$PMVersion = "0.9";
 $pref::FirstTimeStartup = true;
 
 // Console does something.

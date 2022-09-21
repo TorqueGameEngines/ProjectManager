@@ -197,6 +197,8 @@ function populateModuleProperties(%isNew)
          if($CurrentModule.gitPath !$= "" && !$TorqueManager::gitNotFound)
             AddActionButton("ManagerUI:download_image", "Pull Updates", "pullUpdateModule($CurrentModule);", "");
             
+         AddActionButton("ManagerUI:cards_seek_top_image", "View Files", "openFileLocation("@$CurrentModule.localPath@");", "");
+            
          AddActionButton("ManagerUI:trashcan_image", "Delete Local Copy", "deleteModule($CurrentModule);", "");
       }
       else if(!$TorqueManager::gitNotFound)

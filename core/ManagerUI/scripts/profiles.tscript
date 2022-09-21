@@ -2,7 +2,7 @@ $TextMediumEmphasisColor = "200 200 200";
 $TextHighEmphasisColor = "224 224 224";
 $TextDisabledColor = "108 108 108";
 
-$Theme::AccentColor = "230 0 0";
+$Theme::AccentColor = "10 204 204";
 
 $Theme::Dark::BackgroundColor = "32 32 32";
 $Theme::Dark::FontColor = "204 204 204";
@@ -856,4 +856,16 @@ singleton GuiControlProfile (MenuBorderProfile)
    bitmapAsset = "ManagerUI:chatHudBorderArray_image";
    hasBitmapArray = true;
    opaque = false;
+};
+
+if( !isObject( MenuProgressProfile ) )
+new GuiControlProfile( MenuProgressProfile )
+{
+   opaque = false;
+   fillColor = $Theme::AccentColor;
+   fontColor = getVariable("$Theme::" @ $CurrentTheme @ "::FontColor");
+   border = true;
+   borderColor = getVariable("$Theme::" @ $CurrentTheme @ "::Level1Color");
+   category = "Menu";
+   justify="center";
 };

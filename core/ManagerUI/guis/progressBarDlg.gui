@@ -1,0 +1,59 @@
+//--- OBJECT WRITE BEGIN ---
+$guiContent = new GuiControl(ProgressBarDlg) {
+   extent = "1024 768";
+   minExtent = "8 8";
+   horizSizing = "width";
+   vertSizing = "height";
+   profile = "GuiOverlayProfile";
+   tooltipProfile = "GuiToolTipProfile";
+   isContainer = "1";
+   canSaveDynamicFields = "1";
+      helpTag = "0";
+
+   new GuiBitmapCtrl() {
+      BitmapAsset = "ManagerUI:hudfill_image";
+      extent = "1024 768";
+      horizSizing = "width";
+      vertSizing = "height";
+      profile = "GuiDefaultProfile";
+      tooltipProfile = "GuiToolTipProfile";
+   };
+   new GuiControl(ProgressBarCtrl) {
+      position = "192 213";
+      extent = "641 276";
+      horizSizing = "center";
+      vertSizing = "center";
+      profile = "GuiDefaultProfile";
+      tooltipProfile = "GuiToolTipProfile";
+      isContainer = "1";
+
+      new GuiBitmapBorderCtrl() {
+         extent = "641 276";
+         profile = "MenuBorderProfile";
+         tooltipProfile = "GuiToolTipProfile";
+      };
+      new GuiTextCtrl(ProgressBarTitleText) {
+         text = "";
+         position = "32 8";
+         extent = "577 28";
+         profile = "GuiTextProfile";
+         tooltipProfile = "GuiToolTipProfile";
+      };
+      new GuiBitmapBarCtrl() {
+         BitmapAsset = "ManagerUI:panel_low_image";
+         position = "8 8";
+         extent = "624 259";
+         horizSizing = "width";
+         profile = "GuiDefaultProfile";
+         tooltipProfile = "GuiToolTipProfile";
+      };
+      new GuiProgressCtrl() {
+         position = "90 124";
+         extent = "463 25";
+         profile = "MenuProgressProfile";
+         tooltipProfile = "GuiToolTipProfile";
+         internalName = "bar";
+      };
+   };
+};
+//--- OBJECT WRITE END ---

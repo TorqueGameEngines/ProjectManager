@@ -1,0 +1,5 @@
+<GUIAsset
+    AssetName="ProgressBarDlg"
+    GUIFile="@assetFile=progressBarDlg.gui"
+    scriptFile="@assetFile=progressBarDlg.tscript"
+    VersionId="1"/>

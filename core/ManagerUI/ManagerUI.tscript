@@ -77,6 +77,10 @@ function ManagerUI::initClient(%this)
    
    // Load Editor Dialogs
    %this.queueExec("./guis/messageBoxDlg.gui");
+   %this.queueExec("./guis/messageBoxDlg.tscript");
+   
+   %this.queueExec("./guis/progressBarDlg.gui");
+   %this.queueExec("./guis/progressBarDlg.tscript");
    
    //Load scripts
    %this.queueExec("./scripts/controlsMenu");

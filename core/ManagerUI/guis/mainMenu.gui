@@ -86,6 +86,7 @@ $guiContent = new GuiChunkedBitmapCtrl(MainMenuGui) {
                   profile = "GuiMenuButtonProfile";
                   command = "MainMenuGui.goToPage(\"EngineBuildPage\");";
                   tooltipProfile = "GuiToolTipProfile";
+                  internalName="EngineBuildPage";
                };
                new GuiButtonCtrl(MainMenuRPKsBtn) {
                   text = "Prototype Kits";
@@ -104,6 +105,7 @@ $guiContent = new GuiChunkedBitmapCtrl(MainMenuGui) {
                   profile = "GuiMenuButtonProfile";
                   command = "MainMenuGui.goToPage(\"ModulesPage\");";
                   tooltipProfile = "GuiToolTipProfile";
+                  internalName="ModulesPage";
                };
                new GuiButtonCtrl(MainMenuProjectsBtn) {
                   text = "Projects";
@@ -112,6 +114,7 @@ $guiContent = new GuiChunkedBitmapCtrl(MainMenuGui) {
                   profile = "GuiMenuButtonProfile";
                   command = "MainMenuGui.goToPage(\"ProjectsPage\");";
                   tooltipProfile = "GuiToolTipProfile";
+                  internalName="ProjectsPage";
                };
                new GuiIconButtonCtrl(MainMenuDocsBtn) {
                   buttonMargin = "-5 0";
@@ -183,7 +186,6 @@ $guiContent = new GuiChunkedBitmapCtrl(MainMenuGui) {
                   command = "getPMHelp();";
                   tooltipProfile = "GuiToolTipProfile";
                };
-               
                new GuiButtonCtrl(MainMenuSettingsBtn) {
                   text = "Settings";
                   position = "0 210";
@@ -191,6 +193,7 @@ $guiContent = new GuiChunkedBitmapCtrl(MainMenuGui) {
                   profile = "GuiMenuButtonProfile";
                   command = "setupDefaultSettings();MainMenuGui.goToPage(\"SettingsPage\");";
                   tooltipProfile = "GuiToolTipProfile";
+                  internalName="SettingsPage";
                };
             };
          };

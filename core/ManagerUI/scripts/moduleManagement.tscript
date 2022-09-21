@@ -801,12 +801,18 @@ function InstallModulePage2::openPage(%this)
    ManagerWizardWindow-->nextButton.setActive(false);  
    Canvas.repaint();
    
+   ProgressBarDlg.show();
+   ProgressBarDlg.update("Setting up", 0);
+   
    %gamePath = makeFullPath(getProjectGamePath($TorqueManager::targetProject));
    
+   prepFolderCopy("", "", "finishedInstallingModules();");
+   
+   //Install modules
    %moduleCount = getModuleCount();
-   for(%i=1; %i <= %moduleCount; %i++)
+   for(%m=1; %m <= %moduleCount; %m++)
    {
-      %module = getModule(%i);
+      %module = getModule(%m);
       
       if(getVariable("$TorqueManager::toInstallModules_" @ %module.moduleId) == 1)
       {
@@ -815,40 +821,42 @@ function InstallModulePage2::openPage(%this)
             %modulePath = filePath(%module.localPath);
          else
             %module.localPath = %module.localPath;
+         
+         %moduleLocalPath = makeFullPath(%module.localPath) @ "/";
+         %moduleLocalPath = strReplace(%moduleLocalPath, "//", "/");
+         
+         %moduleInstallPath = %gamePath @ "/data/" @ %module.moduleName @ "/";
             
-         %modulePath = makeFullPath(%module.localPath) @ "/";
-         %modulePath = strreplace(%modulePath, "//", "/");
+         processCopyFiles(%moduleLocalPath, %moduleInstallPath);
          
-         %installPath = %gamePath @ "/data/" @ %module.moduleName @ "/";
+         %tags = %module.tags;
+         %tagCount = getTokenCount(%tags, ",;");  
          
-         if(!IsDirectory(%installPath))
+         for(%t=0; %t < %tagCount; %t++)
          {
-            createPath(%installPath);  
-         }
-         
-         if(!copyProjectFolder(%modulePath, %installPath))
-         {
-            error("Failed to install module " @ %module.moduleName @ " from path: " @ %modulePath @ " to new project: " @ $TorqueManager::targetProject.projectName);
-         }
-         else
-         {
-            %tags = %module.tags;
-            %tagCount = getTokenCount(%tags, ",;");  
-            
-            for(%t=0; %t < %tagCount; %t++)
+            %tag = getToken(%tags, ",;", %t);
+            if(%tag $= "Special Installation Instruction")
             {
-               %tag = getToken(%tags, ",;", %t);
-               if(%tag $= "Source Files" || %tag $= "Has Source Files" || %tag $= "Special Installation Instruction")
-               {
-                  MessageBoxOK("", "The module " @ %module.moduleName @ " has source files or special installation instructions. You should check any manual steps needed and then regenerate the project.", "");
-                  break;  
-               }
+               $newProject::specialInstructionsFound = true;
+               break;  
             }
          }
       }
    }
    
-   %this-->installModuleComplete.setHidden(false);
+   runFileCopy();
+}
+
+function finishedInstallingModules()
+{
+   ProgressBarDlg.hide();
+   
+   if($newProject::specialInstructionsFound)
+   {
+      MessageBoxOK("", "Some of the modules installed have special installation instructions. You should check any manual steps needed and then regenerate the project.", "");
+   }
+   
+   InstallModulePage2-->installModuleComplete.setHidden(false);
    ManagerWizardWindow-->nextButton.setActive(true);  
    Canvas.repaint();
 }

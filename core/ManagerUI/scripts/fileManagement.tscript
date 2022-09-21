@@ -5,11 +5,28 @@ function MainMenuGui::deleteFolder(%this, %folderPath)
    return deleteDirectory(%fullPath);
 }
 
-function copyProjectFolder(%fromFolder, %toFolder)
+function prepFolderCopy(%fromFolder, %toFolder, %finishedCallback)
 {
-   if(!isDirectory(%toFolder))
-      createPath(%toFolder);
+   if(!isObject($FileCopyList))
+      $FileCopyList = new ArrayObject();
       
+   $FileCopyList.empty();
+   $FileCopyList.fromFolder = %fromFolder;
+   $FileCopyList.toFolder = %toFolder;
+   $FileCopyList.finishedCallback = %finishedCallback;
+}
+
+function copyProjectFolder(%fromFolder, %toFolder, %finishedCallback)
+{
+   prepFolderCopy(%fromFolder, %toFolder, %finishedCallback);
+   
+   processCopyFiles(%fromFolder, %toFolder);
+   
+   runFileCopy();
+}
+
+function processCopyFiles(%fromFolder, %toFolder)
+{
    %file = findFirstFileMultiExpr( %fromFolder @ "/*.*", false);
 
    while( %file !$= "" )
@@ -18,23 +35,11 @@ function copyProjectFolder(%fromFolder, %toFolder)
       //%isGitPath = strIsMatchExpr("*.git/*", %file);
       if(!%isGitPath)
       {
-         %copiedFile = strreplace(%file, %fromFolder, %toFolder);
+         %destFile = strreplace(%file, %fromFolder, %toFolder);
          
-         %copiedPath = filePath(%copiedFile);
-         
-         if(!isDirectory(%copiedPath))
-            createPath(%copiedPath);
-      
-         %success = pathCopy(%file, %copiedFile, false);
-         if(!%success)
-            error("copyProjectFolder() - failed to copy file: " @ %file);
-         
+         $FileCopyList.add(%file, %destFile);
       }
-      else
-      {
-         %sadf = true;  
-      }
-      
+
       %file = findNextFileMultiExpr( %fromFolder @ "/*.*" );
    }
    
@@ -47,8 +52,53 @@ function copyProjectFolder(%fromFolder, %toFolder)
       if(%childPath $= ".git")
          continue;
          
-      copyProjectFolder(%fromFolder @ %childPath @ "/", %toFolder @ %childPath @ "/");
+      processCopyFiles(%fromFolder @ %childPath @ "/", %toFolder @ %childPath @ "/");
    }
+   
+   $FileCopyList.totalFileCount = $FileCopyList.count();
+   $FileCopyList.totalProcessedCount = 0;
+}
+
+function runFileCopy()
+{
+   %pageCount = 200;
+   %currentIndex = 0;
+   while($FileCopyList.count() != 0)
+   {
+      %fromFile = $FileCopyList.getKey(0);
+      %destFile = $FileCopyList.getValue(0);
       
-   return true;
+      %destPath = filePath(%destFile) @ "/";
+      if(!isDirectory(%destPath))
+         createPath(%destPath);
+   
+      %success = pathCopy(%fromFile, %destFile, false);
+      if(!%success)
+      {
+         $FileCopyList.hadErrors = true;
+         error("copyProjectFolder() - failed to copy file: " @ %fromFile);
+      }
+      
+      $FileCopyList.erase(0);
+      %currentIndex++;
+      $FileCopyList.totalProcessedCount++;
+      
+      %copyProgressPercent = $FileCopyList.totalProcessedCount/$FileCopyList.totalFileCount;
+      echo("Copy progress: " @ %copyProgressPercent);
+      
+      ProgressBarDlg.update("Copying Files", %copyProgressPercent);
+      
+      if(%currentIndex >= %pageCount)
+      {
+         schedule(100, 0, runFileCopy);
+         Canvas.repaint();
+         %currentIndex = 0;
+         break;  
+      }
+   }
+   
+   if($FileCopyList.count() == 0)
+   {
+      eval($FileCopyList.finishedCallback);
+   }
 }

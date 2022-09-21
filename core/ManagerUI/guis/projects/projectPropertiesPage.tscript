@@ -261,6 +261,15 @@ function populateProjectProperties(%isNew)
          %valid = false;
          MainPanelFooter.setText("Must define a valid local folder for Project");
       }
+      else if($CurrentProject.localPath !$= "")
+      {
+         %file = findFirstFileMultiExpr( $CurrentProject.localPath @ "/*.*", false);
+         if(isFile(%file))
+         {
+            %valid = false;
+            MainPanelFooter.setText("Target folder for new Project must be empty");
+         }
+      }
       else if(!isObject(%targetBuild))
       {
          %valid = false;
@@ -289,7 +298,7 @@ function populateProjectProperties(%isNew)
       //AddActionButton("ManagerUI:textField_image", "Open GUI Editor", "", "");
       //AddActionButton("ManagerUI:toolPencil_image", "Open Editor", "", "");
       
-      AddActionButton("ManagerUI:cards_seek_top_image", "View Files", "", "");
+      AddActionButton("ManagerUI:cards_seek_top_image", "View Files", "openFileLocation("@$CurrentProject.localPath@");", "");
       
       if(isObject(%targetBuild) && !%targetBuild.isBinary)
       {
@@ -330,58 +339,63 @@ function saveNewProject()
 
 function generateNewProject()
 {
+   ProgressBarDlg.show();
+   ProgressBarDlg.update("Setting up", 0);
+   
+   $newProject::specialInstructionsFound = false;
+   
    %engineBuildId = findEngineBuildByName($CurrentProject.targetBuildName);
    $CurrentProject.engineBuildId = %engineBuildId;
-   %engineBuild = getEngineBuild(%engineBuildId);
-   %engineBuildPath = %engineBuild.localPath;
-   %newProjectPath = $CurrentProject.localPath;
+   $newProject::EngineBuild = getEngineBuild(%engineBuildId);
+   $newProject::EngineBuildPath = $newProject::EngineBuild.localPath;
+   $newProject::NewProjectPath = $CurrentProject.localPath;
    
-   %fullProjectPath = %newProjectPath @ "/";
+   $newProject::FullProjectPath = $newProject::NewProjectPath @ "/";
    
    //sanitize the paths to be sure
-   %engineBuildPath = strReplace(%engineBuildPath, "//", "/");
-   %fullProjectPath = strReplace(%fullProjectPath, "//", "/");
+   $newProject::EngineBuildPath = strReplace($newProject::EngineBuildPath, "//", "/");
+   $newProject::FullProjectPath = strReplace($newProject::FullProjectPath, "//", "/");
    
-   if(!IsDirectory(%fullProjectPath))
+   if(!IsDirectory($newProject::FullProjectPath))
    {
-      createPath(%fullProjectPath);
+      createPath($newProject::FullProjectPath);
    }
 
-   displayLoadingSplashGui();
-   if(!%engineBuild.isBinary)
+   //displayLoadingSplashGui();
+   if(!$newProject::EngineBuild.isBinary)
    {
-      %buildPath = %fullProjectPath @ "Build/"; 
-      if(!IsDirectory(%buildPath))
+      $newProject::BuildPath = $newProject::FullProjectPath @ "Build/"; 
+      if(!IsDirectory($newProject::BuildPath))
       {
-         createPath(%buildPath);
+         createPath($newProject::BuildPath);
       } 
       
-      $CurrentProject.buildPath = %buildPath;
-      
-      if(!copyProjectFolder(%engineBuildPath, %fullProjectPath))
-      {
-         MessageBoxOK("Failed.", "Failed to copy the Engine Build to the new project path. Please try again.");  
-         return;
-      }
-      
+      $CurrentProject.buildPath = $newProject::BuildPath;
+   }
+  
+   copyProjectFolder($newProject::EngineBuildPath, $newProject::FullProjectPath, "generateNewProjectPhase2();");
+   /*{
+      MessageBoxOK("Failed.", "Failed to copy the Engine Build to the new project path. Please try again.");  
+      return;
+   }*/
+}
+
+function generateNewProjectPhase2()
+{
+   if(!$newProject::EngineBuild.isBinary)
+   {
       //Install Template files
-      %templatePath = %fullProjectPath @ "Templates/BaseGame/";
-      %projectGamePath = %fullProjectPath @ "My Projects/" @ $CurrentProject.projectName @ "/";
-      if(!copyProjectFolder(%templatePath, %projectGamePath))
-      {
+      %templatePath = $newProject::FullProjectPath @ "Templates/BaseGame/";
+      %projectGamePath = $newProject::FullProjectPath @ "My Projects/" @ $CurrentProject.projectName @ "/";
+      copyProjectFolder(%templatePath, %projectGamePath, "generateNewProjectPhase3();");
+      /*{
          MessageBoxOK("Error.", "Failed to copy the Template game files. Please run the INSTALL project in your IDE.");  
-      }
+      }  */
    }
    else
    {
-      if(!copyProjectFolder(%engineBuildPath, %fullProjectPath))
-      {
-         MessageBoxOK("Failed.", "Failed to copy the Engine Build to the new project path. Please try again.");  
-         return;
-      }
-      
       //Do the rename on the exe, torsion, etc files to comply them to the new project name  
-      %appPath = findFirstFile( %fullProjectPath @ "/*.exe", false);
+      %appPath = findFirstFile( $newProject::FullProjectPath @ "/*.exe", false);
       if(%appPath !$= "")
       {
          %binaryName = fileBase(%appPath);
@@ -391,7 +405,7 @@ function generateNewProject()
          fileDelete(%appPath);
       }
       
-      %appPath = findFirstFile( %fullProjectPath @ "/*.torsion", false);
+      %appPath = findFirstFile( $newProject::FullProjectPath @ "/*.torsion", false);
       if(%appPath !$= "")
       {
          %binaryName = fileBase(%appPath);
@@ -401,12 +415,19 @@ function generateNewProject()
          fileDelete(%appPath);
       }
       
-      %mainScriptPath = findFirstFile( %fullProjectPath @ "/main.tscript", false);
+      %mainScriptPath = findFirstFile( $newProject::FullProjectPath @ "/main.tscript", false);
       if(%mainScriptPath !$= "")
       {
          replaceInFile(%mainScriptPath, "$appName = \"Torque3D\";", "$appName = \"" @ $CurrentProject.projectName @ "\";");
-      }
-   }   
+      } 
+      
+      generateNewProjectPhase3(); 
+   }
+}
+
+function generateNewProjectPhase3()
+{
+   prepFolderCopy("", "", "generateNewProjectPhase4();");
    
    //Install modules
    %moduleCount = getModuleCount();
@@ -421,20 +442,12 @@ function generateNewProject()
          %moduleLocalPath = makeFullPath(%module.localPath) @ "/";
          %moduleLocalPath = strReplace(%moduleLocalPath, "//", "/");
          
-         if(!%engineBuild.isBinary)
-            %moduleInstallPath = %fullProjectPath @ "/My Projects/" @ $CurrentProject.projectName @ "/game/data/" @ %moduleName @ "/";
+         if(!$newProject::EngineBuild.isBinary)
+            %moduleInstallPath = $newProject::FullProjectPath @ "/My Projects/" @ $CurrentProject.projectName @ "/game/data/" @ %moduleName @ "/";
          else
-            %moduleInstallPath = %fullProjectPath @ "/data/" @ %moduleName @ "/";
+            %moduleInstallPath = $newProject::FullProjectPath @ "/data/" @ %moduleName @ "/";
             
-         if(!IsDirectory(%moduleInstallPath))
-         {
-            createPath(%moduleInstallPath);  
-         }
-         
-         if(!copyProjectFolder(%moduleLocalPath, %moduleInstallPath))
-         {
-            error("Failed to install module " @ %moduleName @ " from path: " @ %moduleLocalPath @ " to new project: " @ $CurrentProject.projectName);
-         }
+         processCopyFiles(%moduleLocalPath, %moduleInstallPath);
          
          %tags = %module.tags;
          %tagCount = getTokenCount(%tags, ",;");  
@@ -444,21 +457,26 @@ function generateNewProject()
             %tag = getToken(%tags, ",;", %t);
             if(%tag $= "Special Installation Instruction")
             {
-               MessageBoxOK("", "The module " @ %module.moduleName @ " has special installation instructions. You should check any manual steps needed and then regenerate the project.", "");
+               $newProject::specialInstructionsFound = true;
                break;  
             }
          }
       }
    }
    
+   runFileCopy();
+}
+
+function generateNewProjectPhase4()
+{
    //Finalize
-   if(!%engineBuild.isBinary)
+   if(!$newProject::EngineBuild.isBinary)
    {
       //run cmake
       %commandString = "cmake ";
 
-      %commandString = %commandString @ "-S \"" @ %fullProjectPath @ "\" ";
-      %commandString = %commandString @ "-B \"" @ %buildPath @ "\" ";
+      %commandString = %commandString @ "-S \"" @ $newProject::FullProjectPath @ "\" ";
+      %commandString = %commandString @ "-B \"" @ $newProject::BuildPath @ "\" ";
       %commandString = %commandString @ "-G \"" @ $CurrentProject.generatorName @ "\" ";
       %commandString = %commandString @ "-DTORQUE_APP_NAME:STRING=" @ $CurrentProject.projectName @ " -DCMAKE_GENERATOR_PLATFORM=x64";
       if($platform $= "windows")
@@ -485,6 +503,13 @@ function generateNewProject()
 
 function makeProjectComplete(%resultCode)
 {
+   ProgressBarDlg.hide();
+   
+   if($newProject::specialInstructionsFound)
+   {
+      MessageBoxOK("", "Some of the modules installed have special installation instructions. You should check any manual steps needed and then regenerate the project.", "");
+   }
+   
    saveProject($CurrentProject);
    
    if(PMSettings.value("Settings/Building/doAutoBuild", "1"))
@@ -502,10 +527,12 @@ function makeProjectComplete(%resultCode)
       openSolutionFile();
    }
    
-   hideLoadingSplashGui();
+   //hideLoadingSplashGui();
    
    //Hop over to the projects page so we can check out our new project
    navToProjectProps($CurrentProject);
+   
+   MessageBoxOK("", "Creation of Project " @ $CurrentProject.projectName @ " is complete!");
 }
 
 function getUsableEngineBuildsList()

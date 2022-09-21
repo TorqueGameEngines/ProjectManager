@@ -94,7 +94,7 @@ function MainMenuGui::refresh(%this)
 
 function MainMenuGui::doRefresh(%this)
 {
-   PMVersionLabel.setText($PMVersion);
+   PMVersionLabel.setText("v" @ $PMVersion);
    
    %this.isRefreshing = false;
    if (getUsableEngineBuildsList() $= "No Valid Engine Builds")
@@ -127,6 +127,18 @@ function MainMenuGui::doRefresh(%this)
    //reboundary the stack, as sometimes resizes can cause stacks in stacks to be
    //weird
    MainViewStack.extent.x = MainViewScroll.extent.x;
+   
+   //update highlighting to reflect the selected page, if applicable
+   for(%b = 0; %b < MainMenuButtonList.getCount(); %b++)
+   {
+      MainMenuButtonList.getObject(%b).setHighlighted(false);
+   }
+   
+   %pageBtn = MainMenuButtonList.findObjectByInternalName(%this.currentPage);
+   if(isObject(%pageBtn))
+   {
+      %pageBtn.setHighlighted(true);  
+   }
    
    return;
    

@@ -48,7 +48,7 @@ function populateModuleProperties(%isNew)
       }
       else if($CurrentModule.isLocalOrGit $= "Local Path")
       {
-         MainViewStack.add(createEditCard("Local Directory Path", "ModuleFile", "$CurrentModule.localPath", "What local directory path this module is drom on the current machine", ""));
+         MainViewStack.add(createEditCard("Local Directory Path", "ModuleFile", "$CurrentModule.localPath", "What local directory path this module is from on the current machine", ""));
          
          $CurrentModule.localPath = makeFullPath($CurrentModule.localPath);
          if(fileExt($CurrentModule.localPath) $= ".module")
@@ -104,7 +104,7 @@ function populateModuleProperties(%isNew)
       %gitBranchField.callonChildren("setActive", false); 
       MainViewStack.add(%gitBranchField);
       
-      MainViewStack.add(createEditCard("Local Directory Path", "Folder", "$CurrentModule.localPath", "What local directory path this module is drom on the current machine", ""));
+      MainViewStack.add(createEditCard("Local Directory Path", "Folder", "$CurrentModule.localPath", "What local directory path this module is from on the current machine", ""));
       
       if(isModuleDownloaded($CurrentModule))
       {

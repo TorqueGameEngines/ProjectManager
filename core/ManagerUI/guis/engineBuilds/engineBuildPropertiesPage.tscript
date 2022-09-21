@@ -41,14 +41,14 @@ function populateEngineBuildProperties(%isNew)
       }
       else if($CurrentEngineBuild.isLocalOrGit $= "Local Path")
       {
-         MainViewStack.add(createEditCard("Local Directory Path", "Folder", "$CurrentEngineBuild.localPath", "What local directory path this engine build is drom on the current machine", ""));
+         MainViewStack.add(createEditCard("Local Directory Path", "Folder", "$CurrentEngineBuild.localPath", "What local directory path this engine build is from on the current machine", ""));
       }
    }
    else
    {
       MainViewStack.add(createEditCard("Git URL Path", "TextEdit", "$CurrentEngineBuild.gitPath", "What URL for the git repo this engine build is from", ""));
       MainViewStack.add(createEditCard("Git Branch", "TextEdit", "$CurrentEngineBuild.branchName", "What branch name for the git repo this engine build is from. Leave blank to use the repository default", ""));
-      MainViewStack.add(createEditCard("Local Directory Path", "Folder", "$CurrentEngineBuild.localPath", "What local directory path this engine build is drom on the current machine", ""));
+      MainViewStack.add(createEditCard("Local Directory Path", "Folder", "$CurrentEngineBuild.localPath", "What local directory path this engine build is from on the current machine", ""));
    }
          
    if($CurrentEngineBuild.isDefault)

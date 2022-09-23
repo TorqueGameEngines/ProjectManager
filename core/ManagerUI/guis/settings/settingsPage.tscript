@@ -27,7 +27,10 @@ function populateSettingsPage()
    else
       MainViewStack.add(createCard("Project Manager Updates", "Up to date!", "", "", false, "", "", "", "", ""));
    
-   MainViewStack.add(createCard("Clear Project Manager Data", "", "", "", false, "", "button", "", "Clear", "clearPMData();"));
+   %clearCard = createCard("Clear Project Manager Data", "", "", "", false, "", "button", "", "Clear", "clearPMData();");
+   %clearCard-->actionCtrl.profile = GuiHighlightMenuButtonProfile;
+   
+   MainViewStack.add(%clearCard);
    //
    //      
    MainPanelFooter.setupButtons("Save", "", "saveSettings();", "");

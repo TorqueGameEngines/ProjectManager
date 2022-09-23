@@ -113,7 +113,8 @@ new GuiControlProfile(MenuMLSubHeaderText)
 {
    fontType = "Arial Bold";
    fontSize = 20;
-   fontColor = $TextMediumEmphasisColor;
+   fontColor = getVariable("$Theme::" @ $CurrentTheme @ "::FontColor");
+   fontColorHL = getVariable("$Theme::" @ $CurrentTheme @ "::FontColorEmphasized");
    justify = "left";
    autoSizeWidth = true;
    autoSizeHeight = true;  
@@ -123,7 +124,7 @@ new GuiControlProfile(MenuMLSubHeaderText)
 new GuiControlProfile(MenuBodyText)
 {
    fontType = "Arial";
-   fontSize = 14;
+   fontSize = 16;
    fontColor = getVariable("$Theme::" @ $CurrentTheme @ "::FontColor");
    fontColorHL = getVariable("$Theme::" @ $CurrentTheme @ "::FontColorEmphasized");
    justify = "left";
@@ -211,19 +212,28 @@ if( !isObject( GuiHighlightMenuButtonProfile ) )
 new GuiControlProfile( GuiHighlightMenuButtonProfile )
 {
    opaque = true;
-   border = false;
+   border = "0";
    fontSize = 18;
-   fontType = "Arial Bold";
-   fontColor = "240 240 240";
-   fontColorHL = "0 0 0";
-   fontColorNA = "125 125 125";
-   //fontColorSEL ="0 0 0";
-   fixedExtent = false;
+   fontType = "Arial";
+   fontColor = getVariable("$Theme::" @ $CurrentTheme @ "::FontColor");
+   fontColorHL = getVariable("$Theme::" @ $CurrentTheme @ "::FontColorEmphasized");
+   fillColor = "200 0 0";
+   fillColorHL = "255 0 0";
+   borderColor = getVariable("$Theme::" @ $CurrentTheme @ "::Level1Color");
+   borderColorNA = "0 0 0";
+   borderColorHL = getVariable("$Theme::" @ $CurrentTheme @ "::Level1ColorHL");
+   fixedExtent = 0;
    justify = "center";
    canKeyFocus = false;
-   bitmapAsset = "ManagerUI:selector_button_highlight_only_image";
+   //bitmapAsset = "ManagerUI:menu_button_image";
    hasBitmapArray = false;
    category = "Menu";
+   borderThickness = "1";
+   fillColorNA = "38 37 37 255";
+   fontColors[0] = "204 204 204 255";
+   fontColors[1] = "255 255 255 255";
+   fontColors[2] = "121 120 120 255";
+   fontColorNA = "121 120 120 255";
 };
 
 if( !isObject( GuiBlankMenuButtonProfile ) )

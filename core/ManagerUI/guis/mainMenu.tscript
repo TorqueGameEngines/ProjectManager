@@ -1405,6 +1405,8 @@ function createCard(%mainText, %subText, %tagsList, %tooltip, %hasNavigation, %n
       %actionCtrl.variable = %targetVariable;
    }
    
+   %actionCtrl.internalName = "actionCtrl";
+   
    //inset as needbe
    %insetAmount = %insetCount * 20;
    %ctrl-->btn.position.x += %insetAmount;

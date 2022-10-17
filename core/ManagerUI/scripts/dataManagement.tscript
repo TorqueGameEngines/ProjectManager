@@ -67,6 +67,11 @@ function saveEngineBuild(%build)
    PMSettings.setValue("EngineBuilds/" @ %index @ "/buildName", %build.buildName);
    PMSettings.setValue("EngineBuilds/" @ %index @ "/gitPath", %build.gitPath);
    PMSettings.setValue("EngineBuilds/" @ %index @ "/branchName", %build.branchName);
+   
+   //Bit of sanitization
+   if(%build.localPath !$= "" && !endsWith(%build.localPath, "/"))
+      %build.localPath = %build.localPath @ "/";
+      
    PMSettings.setValue("EngineBuilds/" @ %index @ "/localPath", %build.localPath);
    PMSettings.setValue("EngineBuilds/" @ %index @ "/isDefault", %build.isDefault);
    PMSettings.setValue("EngineBuilds/" @ %index @ "/isBinary", %build.isBinary);
@@ -238,6 +243,11 @@ function saveModule(%module)
    PMSettings.setValue("Modules/" @ %index @ "/gitPath", %module.gitPath);
    PMSettings.setValue("Modules/" @ %index @ "/branchName", %module.branchName);
    PMSettings.setValue("Modules/" @ %index @ "/description", %module.description);
+   
+   //Bit of sanitization
+   if(%module.localPath !$= "" && !endsWith(%module.localPath, "/"))
+      %module.localPath = %module.localPath @ "/";
+      
    PMSettings.setValue("Modules/" @ %index @ "/localPath", %module.localPath);
    PMSettings.setValue("Modules/" @ %index @ "/isDefault", %module.isDefault);
    PMSettings.setValue("Modules/" @ %index @ "/dependencies", %module.dependencies);
@@ -371,6 +381,11 @@ function saveProject(%project)
    PMSettings.setValue("Projects/" @ %index @ "/projectName", %project.projectName);
    PMSettings.setValue("Projects/" @ %index @ "/projectId", %project.projectId);
    PMSettings.setValue("Projects/" @ %index @ "/buildPath", %project.buildPath);
+   
+   //Bit of sanitization
+   if(%project.localPath !$= "" && !endsWith(%project.localPath, "/"))
+      %project.localPath = %project.localPath @ "/";
+      
    PMSettings.setValue("Projects/" @ %index @ "/localPath", %project.localPath);
    PMSettings.setValue("Projects/" @ %index @ "/previewImage", %project.previewImage);
    PMSettings.setValue("Projects/" @ %index @ "/engineBuildId", %project.engineBuildId);

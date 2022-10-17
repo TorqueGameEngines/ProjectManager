@@ -29,7 +29,7 @@ function runProject(%launchArgs)
    
    if($platform $= "windows")
    {
-      %openCommand = "\"" @ %appPath @ "\"";
+      %openCommand = "start \"\" \"" @ %appPath @ "\"";
    }
    else
    {

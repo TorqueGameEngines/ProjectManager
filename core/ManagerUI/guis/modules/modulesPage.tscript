@@ -1,5 +1,7 @@
 function populateModulesList()
 {
+   $creatingNew = false;
+   
    updateBreadcrumbList("ModulesPage");
    
    MainViewStack.hidden = false;
@@ -71,22 +73,8 @@ function populateModulesList()
    //Now add our action panel buttons
    ActionButtonPanelList.clear();
    
-   %actionBtn = new GuiIconButtonCtrl()
-   {
-      position = "0 0";
-      extent = "100 45";
-      profile = GuiMenuButtonProfile;
-      buttonMargin = "0 -10";
-      bitmapAsset = "ManagerUI:plus_image";
-      iconLocation = "Center";
-      sizeIconToButton = true;
-      makeIconSquare = true;
-      textLocation = "Bottom";
-      text = "Add New";
-      command = "$CurrentModule = \"\";CreateNewModule();";
-   };
-   
-   ActionButtonPanelList.add(%actionBtn);
+   AddActionButton("ManagerUI:cloud_add_image", "Add From Web", "CreateNewModule(\"Git Repository\");", "");
+   AddActionButton("ManagerUI:zoom_image", "Locate Existing", "CreateNewModule(\"Local Path\");", "");
 }
 
 function navToModuleProps(%module)

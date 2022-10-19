@@ -1,21 +1,22 @@
-function CreateNewModule()
+function CreateNewModule(%source)
 {
    $CurrentModule = new ScriptObject();
+   
+   $CurrentModule.isLocalOrGit = %source;
+   
+   $creatingNew = true;
    
    MainMenuGui.goToPage("NewModulePage");
 }
 
-function populateModuleProperties(%isNew)
+function populateModuleProperties()
 {
-   if(%isNew $= "")
-      %isNew = false;
-      
-   if(%isNew)
+   if($creatingNew)
       updateBreadcrumbList("ModulesPage;NewModulePage");
    else
       updateBreadcrumbList("ModulesPage;ModulePropertiesPage");
    
-   MainMenuGui.setActionBarVisible(!%isNew);
+   MainMenuGui.setActionBarVisible(!$creatingNew);
    
    MainMenuSearchBar.hidden = true;
    MainMenuSearchClearBtn.hidden = true;
@@ -23,10 +24,8 @@ function populateModuleProperties(%isNew)
    MainViewStack.hidden = false;
    MainViewStack.clear();
    
-   if(%isNew)
+   if($creatingNew)
    {
-      MainViewStack.add(createEditCard("Source Location", "Dropdown", "$CurrentModule.isLocalOrGit", "Indicates if this engine build is from the local machine, or a git repo", "Git Repository;Local Path"));  
-      
       if($CurrentModule.isLocalOrGit $= "Git Repository")
       {
          $CurrentModule.localPath = "";
@@ -147,7 +146,7 @@ function populateModuleProperties(%isNew)
       buildModuleDependencyCard(%depRoll, $CurrentModule);
    }
          
-   if(%isNew)
+   if($creatingNew)
    {
       MainPanelFooter.setupButtons("Create", "Cancel", "saveNewModule();", "MainMenuGUI.goToPage(\"ModulesPage\");");
    
@@ -181,14 +180,14 @@ function populateModuleProperties(%isNew)
    }
    else
    {
-      MainPanelFooter.setupButtons("Save", "Cancel", "saveModule($CurrentModule);", "");
+      MainPanelFooter.setupButtons("", "Save", "", "saveModule($CurrentModule);");
    }
    
    //
    //Now add our action panel buttons
    ActionButtonPanelList.clear();
    
-   if(!%isNew)
+   if(!$creatingNew)
    {
       if(isModuleDownloaded($CurrentModule))
       {

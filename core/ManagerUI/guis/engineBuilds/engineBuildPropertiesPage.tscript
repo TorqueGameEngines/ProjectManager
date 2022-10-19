@@ -1,14 +1,22 @@
-function populateEngineBuildProperties(%isNew)
+function CreateNewEngineBuild(%source)
 {
-   if(%isNew $= "")
-      %isNew = false;
-      
-   if(%isNew)
+   $CurrentEngineBuild = new ScriptObject();
+   
+   $CurrentEngineBuild.isLocalOrGit = %source;
+   
+   $creatingNew = true;
+   
+   MainMenuGui.goToPage("NewEngineBuildPage");
+}
+
+function populateEngineBuildProperties()
+{
+   if($creatingNew)
       updateBreadcrumbList("EngineBuildPage;NewEngineBuildPage");
    else
       updateBreadcrumbList("EngineBuildPage;EngineBuildPropertiesPage");
    
-   MainMenuGui.setActionBarVisible(!%isNew);
+   MainMenuGui.setActionBarVisible(!$creatingNew);
    
    MainMenuSearchBar.hidden = true;
    MainMenuSearchClearBtn.hidden = true;
@@ -18,11 +26,9 @@ function populateEngineBuildProperties(%isNew)
    
    MainViewStack.add(createEditCard("Engine Build Name", "TextEdit", "$CurrentEngineBuild.buildName", "The name of this engine build", ""));
          
-   if(%isNew)
+   if($creatingNew)
    {
-      MainViewStack.add(createEditCard("Source Location", "Dropdown", "$CurrentEngineBuild.isLocalOrGit", "Indicates if this engine build is from the local machine, or a git repo", "Git Repository;Local Path"));  
-      
-      MainViewStack.add(createEditCard("Is Binary Build", "checkbox", "$CurrentEngineBuild.isBinary", "Does this engine build contain precompiled binaries?", "No;Yes"));
+      //MainViewStack.add(createEditCard("Source Location", "Dropdown", "$CurrentEngineBuild.isLocalOrGit", "Indicates if this engine build is from the local machine, or a git repo", "Git Repository;Local Path"));  
       
       if($CurrentEngineBuild.isLocalOrGit $= "Git Repository")
       {
@@ -43,6 +49,8 @@ function populateEngineBuildProperties(%isNew)
       {
          MainViewStack.add(createEditCard("Local Directory Path", "Folder", "$CurrentEngineBuild.localPath", "What local directory path this engine build is from on the current machine", ""));
       }
+      
+      MainViewStack.add(createEditCard("Is Binary Build", "checkbox", "$CurrentEngineBuild.isBinary", "Does this engine build contain precompiled binaries?", "No;Yes"));
    }
    else
    {
@@ -66,7 +74,7 @@ function populateEngineBuildProperties(%isNew)
       }
    }
          
-   if(%isNew)
+   if($creatingNew)
    {
       MainPanelFooter.setupButtons("Create", "Cancel", "saveNewEngineBuild();", "MainMenuGUI.goToPage(\"EngineBuildPage\");");
    
@@ -105,13 +113,13 @@ function populateEngineBuildProperties(%isNew)
    }
    else
    {
-      MainPanelFooter.setupButtons("Save", "Cancel", "saveEngineBuild($CurrentEngineBuild);", "");
+      MainPanelFooter.setupButtons("", "Save", "", "saveEngineBuild($CurrentEngineBuild);");
    }
          
    //Now add our action panel buttons
    ActionButtonPanelList.clear();
    
-   if(!%isNew)
+   if(!$creatingNew)
    {
       if(isEngineBuildDownloaded($CurrentEngineBuild) && ($CurrentEngineBuild.isBinary || !$TorqueManager::cmakeNotFound))
       {

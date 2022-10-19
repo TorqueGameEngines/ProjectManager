@@ -1,5 +1,7 @@
 function populateProjectsList()
 {
+   $creatingNew = false;
+   
    updateBreadcrumbList("ProjectsPage");
    
    MainViewStack.hidden = false;
@@ -35,23 +37,9 @@ function populateProjectsList()
    
    //Now add our action panel buttons
    ActionButtonPanelList.clear();
-   
-   %actionBtn = new GuiIconButtonCtrl()
-   {
-      position = "0 0";
-      extent = "100 45";
-      profile = GuiMenuButtonProfile;
-      buttonMargin = "0 -10";
-      bitmapAsset = "ManagerUI:plus_image";
-      iconLocation = "Center";
-      sizeIconToButton = true;
-      makeIconSquare = true;
-      textLocation = "Bottom";
-      text = "Add New";
-      command = "$CurrentEngineBuild = \"\";CreateNewProject();";
-   };
-   
-   ActionButtonPanelList.add(%actionBtn);
+
+   AddActionButton("ManagerUI:plus_image", "Create New", "CreateNewProject(\"New\");", "");
+   AddActionButton("ManagerUI:zoom_image", "Locate Existing", "CreateNewProject(\"Existing\");", "");
    
    MainPanelFooter.clear(); //clear the buttons if they're active
 }

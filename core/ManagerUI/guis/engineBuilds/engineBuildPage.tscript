@@ -1,5 +1,7 @@
 function populateEngineBuildsList()
 {
+   $creatingNew = false;
+   
    updateBreadcrumbList("EngineBuildPage");
    
    MainMenuGui.setActionBarVisible(true);
@@ -85,22 +87,8 @@ function populateEngineBuildsList()
    //Now add our action panel buttons
    ActionButtonPanelList.clear();
    
-   %actionBtn = new GuiIconButtonCtrl()
-   {
-      position = "0 0";
-      extent = "100 45";
-      profile = GuiMenuButtonProfile;
-      buttonMargin = "0 -10";
-      bitmapAsset = "ManagerUI:plus_image";
-      iconLocation = "Center";
-      sizeIconToButton = true;
-      makeIconSquare = true;
-      textLocation = "Bottom";
-      text = "Add New";
-      command = "$CurrentEngineBuild = new ScriptObject(); $ResetForm = true; MainMenuGui.goToPage(\"NewEngineBuildPage\");";
-   };
-   
-   ActionButtonPanelList.add(%actionBtn);
+   AddActionButton("ManagerUI:cloud_add_image", "Add From Web", "CreateNewEngineBuild(\"Git Repository\");", "");
+   AddActionButton("ManagerUI:zoom_image", "Locate Existing", "CreateNewEngineBuild(\"Local Path\");", "");
    
    MainPanelFooter.clear(); //clear the buttons if they're active
 }

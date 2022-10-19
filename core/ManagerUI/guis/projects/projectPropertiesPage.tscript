@@ -1,4 +1,4 @@
-function CreateNewProject()
+function CreateNewProject(%source)
 {
    $CurrentProject = new ScriptObject();
    $CurrentProject.targetBuildName = $CurrentEngineBuild.buildName;
@@ -7,6 +7,10 @@ function CreateNewProject()
       $CurrentProject.enableD3D = true;
       
    $CurrentProject.enableOpenGL = true;
+   
+   $creatingNew = true;
+   
+   $CurrentProject.newOrExisting = %source;
    
    //clear any flags for modules to be installed
    for(%i=0; %i < getModuleCount(); %i++)
@@ -17,115 +21,75 @@ function CreateNewProject()
    MainMenuGui.goToPage("NewProjectPage");
 }
 
-function populateProjectProperties(%isNew)
+function populateProjectProperties()
 {
-   if(%isNew $= "")
-      %isNew = false;
-      
-   if(%isNew)
+   if($creatingNew)
       updateBreadcrumbList("ProjectsPage;NewProjectPage");
    else
       updateBreadcrumbList("ProjectsPage;ProjectPropertiesPage");
    
-   MainMenuGui.setActionBarVisible(!%isNew);
+   MainMenuGui.setActionBarVisible(!$creatingNew);
    
    MainMenuSearchBar.hidden = true;
    MainMenuSearchClearBtn.hidden = true;
    
    MainViewStack.hidden = false;
    MainViewStack.clear();
-   
-   /*%engineBuild = getEngineBuild($CurrentProject.engineBuildId);
-   %tags = getEngineBuildTags($CurrentProject.engineBuildId);
-   MainViewStack.add(createCard("Project Name", $CurrentProject.projectName, %tags, "The name of this project", false, 
-         "", "Button", "", "Change", "changeProjectName($CurrentProject);"));
          
-   /*if($CurrentEngineBuild.gitPath !$= "")
+   if(!$creatingNew || $CurrentProject.newOrExisting $= "New")
    {
-      %gitPath = $CurrentEngineBuild.gitPath !$= "" ? $CurrentEngineBuild.gitPath : "(None)";
-      MainViewStack.add(createCard("Git Repository URL", %gitPath, "", "The URL for the git repo this build is from", false, 
-            "", %enabled ? "Button" : "", "", "Change", "changeEngineBuildGitPath($CurrentEngineBuild);"));
-            
-      %branchName = $CurrentEngineBuild.branchName;
-      if(%branchName $= "")
-         %branchName = "(Default}";
-         
-      MainViewStack.add(createCard("Git Repository Branch", %branchName, "", "The name of the branch in the git repo this build is from", false, 
-            "", %enabled ? "Button" : "", "", "Change", "changeEngineBuildBranchName($CurrentEngineBuild);"));
-   }*/
-         
-   /*%localPath = $CurrentProject.localPath !$= "" ? $CurrentProject.localPath : "(Unknown)";
-   %buttonText = $CurrentProject.localPath !$= "" ? "Change" : "Find";
-   MainViewStack.add(createCard("Local File Path", %localPath, "", "The local file path for this project on the current machine", false, 
-         "", "Button", "", %buttonText, "changeProjectLocalPath($CurrentProject);"));
-         
-   //MainViewStack.add(createCard("Is Binary Build", "", "", "Does this engine build have precompiled binaries", false, 
-   //      "", "Checkbox", "False;True", $CurrentEngineBuild.isBinary, "changeEngineBuildIsBinary($CurrentEngineBuild);"));
-   
-   //CMake Settings
-   if(!%engineBuild.isBinary)
-   {
-      %cmakeRoll = new GuiRolloutCtrl() { 
-         caption = "CMake Settings";
-         extent = MainViewStack.extent.x SPC 40;
-         profile = GuiMenuRolloutProfile;
-         margin = "5 5 5 5";
-         
-         new GuiStackControl() {
-            internalName = "stack";
-            padding = "5";
-         };
-      };
+      %projectNameCard = createEditCard("Project Name", "TextEdit", "$CurrentProject.projectName", "The name of this project", "");
+      MainViewStack.add(%projectNameCard);
       
-      if($platform $= "Windows")
-         %cmakeRoll-->stack.add(createEditCard("Enable D3D Renderer", "checkbox", "$CurrentProject.enableD3D", "Enable the D3D11 Renderer"));
-         
-      %cmakeRoll-->stack.add(createEditCard("Enable OpenGL Renderer", "checkbox", "$CurrentProject.enableOpenGL", "Enable the OpenGL Renderer"));
+      //MainViewStack.add(createEditCard("Project Preview Image", "FilePath", "$CurrentProject.previewImage", "The preview image displayed in the project manager for this project. (Optional)", ""));
       
-      %cmakeRoll-->stack.add(createEditCard("Enable PhysX Physics Plugin", "checkbox", "$CurrentProject.enablePhysX", "Makes the engine utilize the PhysX Physics Plugin"));
-      %cmakeRoll-->stack.add(createEditCard("Enable Bullet Physics Plugin", "checkbox", "$CurrentProject.enableBullet", "Makes the engine utilize the Bullet Physics Plugin"));
-      %cmakeRoll-->stack.add(createEditCard("Enable SQLite Support", "checkbox", "$CurrentProject.enableSQLite", "Adds SQLite database support"));
+      %projectPathCard = createEditCard("Project Path", "Folder", "$CurrentProject.localPath", "The folder the project will be put into", "");
+      MainViewStack.add(%projectPathCard);
+      
+      if($CurrentProject.targetBuildName $= "" && $CurrentProject.engineBuildId)
+      {
+         %targetBuild = getEngineBuild($CurrentProject.engineBuildId);
+         $CurrentProject.targetBuildName = %targetBuild.buildName;
+      }
+      
+      %buildList = getUsableEngineBuildsList();
+      %engineBuildCard = createEditCard("Engine Build", "Dropdown", "$CurrentProject.targetBuildName", "What Engine build is this project using", %buildList);
+      MainViewStack.add(%engineBuildCard);
+      
+      %targetBuildIdx = findEngineBuildByName($CurrentProject.targetBuildName);
+      
+      if(%targetBuildIdx != 0)
+         %targetBuild = getEngineBuild(%targetBuildIdx);
    }
-   
-   //Modules
-   %moduleRoll = new GuiRolloutCtrl() { 
-      caption = "Modules";
-      extent = MainViewStack.extent.x SPC 40;
-      profile = GuiMenuRolloutProfile;
-      margin = "5 5 5 5";
+   else if($creatingNew && $CurrentProject.newOrExisting $= "Existing")
+   {
+      %projectPathCard = createEditCard("Project Path", "Folder", "$CurrentProject.localPath", "The folder the project is in.", "");
+      MainViewStack.add(%projectPathCard);
       
-      new GuiStackControl() {
-         internalName = "stack";
-         padding = "5";
-      };
-   };
-   
-   MainViewStack.add(%moduleRoll);*/
+      if($CurrentProject.localPath !$= "" && IsDirectory($CurrentProject.localPath))
+      {
+         %projectNameCard = createEditCard("Project Name", "TextEdit", "$CurrentProject.projectName", "The name of this project", "");
+         MainViewStack.add(%projectNameCard);
+      
+         $CurrentProject.targetBuildName = "Unlisted";
+         %engineBuildCard = createEditCard("Engine Build", "Dropdown", "$CurrentProject.targetBuildName", "What Engine build is this project using", "Unlisted");
+         MainViewStack.add(%engineBuildCard);
+         %engineBuildCard.callonChildren("setActive", false);
          
-   %projectNameCard = createEditCard("Project Name", "TextEdit", "$CurrentProject.projectName", "The name of this project", "");
-   MainViewStack.add(%projectNameCard);
-   
-   //MainViewStack.add(createEditCard("Project Preview Image", "FilePath", "$CurrentProject.previewImage", "The preview image displayed in the project manager for this project. (Optional)", ""));
-   
-   %projectPathCard = createEditCard("Project Path", "Folder", "$CurrentProject.localPath", "The folder the project will be put into", "");
-   MainViewStack.add(%projectPathCard);
-   
-   if($CurrentProject.targetBuildName $= "" && $CurrentProject.engineBuildId)
-   {
-      %targetBuild = getEngineBuild($CurrentProject.engineBuildId);
-      $CurrentProject.targetBuildName = %targetBuild.buildName;
+         %projectNameCard = createEditCard("Build Path", "Folder", "$CurrentProject.buildPath", "The folder cmake generates into.", "");
+         MainViewStack.add(%projectNameCard);
+         
+         if($CurrentProject.projectName !$= "" && $CurrentProject.buildPath !$= "" && IsDirectory($CurrentProject.buildPath))
+         {
+            %targetBuildIdx = -1;
+            %targetBuild = new ScriptObject();
+            %targetBuild.isBinary = false;
+         }
+      }
    }
-   
-   %buildList = getUsableEngineBuildsList();
-   %engineBuildCard = createEditCard("Engine Build", "Dropdown", "$CurrentProject.targetBuildName", "What Engine build is this project using", %buildList);
-   MainViewStack.add(%engineBuildCard);
-   
-   %targetBuildIdx = findEngineBuildByName($CurrentProject.targetBuildName);
-   
-   if(%targetBuildIdx != 0)
-   {
-      %targetBuild = getEngineBuild(%targetBuildIdx);
       
+   if(%targetBuildIdx != 0 && isObject(%targetBuild))
+   {
       if(!%targetBuild.isBinary)
       {
          %compilerList = getCompilerList();
@@ -162,7 +126,7 @@ function populateProjectProperties(%isNew)
          %cmakeRoll-->stack.add(createEditCard("Enable SQLite Support", "checkbox", "$CurrentProject.enableSQLite", "Adds SQLite database support", "No;Yes"));
       }
       
-      if(!%isNew)
+      if(!$creatingNew)
       {
          %moduleRoll = new GuiRolloutCtrl() { 
             caption = "Installed Modules";
@@ -230,7 +194,7 @@ function populateProjectProperties(%isNew)
       }
    }
    
-   if(!%isNew)
+   if(!$creatingNew)
    {
       %projectNameCard.callonChildren("setActive", false);
       %projectPathCard.callonChildren("setActive", false);
@@ -242,14 +206,14 @@ function populateProjectProperties(%isNew)
       }
    }
          
-   if(%isNew)
+   if($creatingNew)
       MainPanelFooter.setupButtons("Create", "Cancel", "saveNewProject();", "MainMenuGUI.goToPage(\"ProjectsPage\");");
    else
-      MainPanelFooter.setupButtons("Save", "Cancel", "saveCurrentProject();", "MainMenuGUI.goToPage(\"ProjectsPage\");");
+      MainPanelFooter.setupButtons("", "Save", "", "saveCurrentProject();");
    
    %valid = true;
    
-   if(%isNew)
+   if($creatingNew)
    {
       if($CurrentProject.projectName $= "")
       {
@@ -261,7 +225,7 @@ function populateProjectProperties(%isNew)
          %valid = false;
          MainPanelFooter.setText("Must define a valid local folder for Project");
       }
-      else if($CurrentProject.localPath !$= "")
+      else if($CurrentProject.localPath !$= "" && $CurrentProject.newOrExisting $= "New")
       {
          %file = findFirstFileMultiExpr( $CurrentProject.localPath @ "/*.*", false);
          if(isFile(%file))
@@ -334,7 +298,23 @@ function saveNewProject()
    
    $CurrentProject.projectId = %newProjectId;
    
-   generateNewProject();
+   if($CurrentProject.newOrExisting $= "New")
+   {
+      generateNewProject();
+   }
+   else
+   {
+      saveProject($CurrentProject);
+      
+      $creatingNew = false;
+
+      //Hop over to the projects page so we can check out our new project
+      navToProjectProps($CurrentProject);
+      
+      MainMenuGui.refresh();
+      
+      MessageBoxOK("", "Creation of Project " @ $CurrentProject.projectName @ " is complete!");
+   }
 }
 
 function generateNewProject()
@@ -503,6 +483,8 @@ function generateNewProjectPhase4()
 
 function makeProjectComplete(%resultCode)
 {
+   $creatingNew = false;
+   
    ProgressBarDlg.hide();
    
    if($newProject::specialInstructionsFound)

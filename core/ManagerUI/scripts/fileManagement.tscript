@@ -84,7 +84,6 @@ function runFileCopy()
       $FileCopyList.totalProcessedCount++;
       
       %copyProgressPercent = $FileCopyList.totalProcessedCount/$FileCopyList.totalFileCount;
-      echo("Copy progress: " @ %copyProgressPercent);
       
       ProgressBarDlg.update("Copying Files", %copyProgressPercent);
       

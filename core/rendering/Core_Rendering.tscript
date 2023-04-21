@@ -42,21 +42,21 @@ function Core_Rendering::initClient(%this)
    initRenderManager();
    initLightingSystems("Advanced Lighting"); 
    
-   exec("./scripts/gfxData/clouds." @ $TorqueScriptFileExtension);
+   /*exec("./scripts/gfxData/clouds." @ $TorqueScriptFileExtension);
    exec("./scripts/gfxData/commonMaterialData." @ $TorqueScriptFileExtension);
    exec("./scripts/gfxData/scatterSky." @ $TorqueScriptFileExtension);
    exec("./scripts/gfxData/shaders." @ $TorqueScriptFileExtension);
    exec("./scripts/gfxData/terrainBlock." @ $TorqueScriptFileExtension);
    exec("./scripts/gfxData/water." @ $TorqueScriptFileExtension);
-   exec("./scripts/gfxData/warningTerrainMat." @ $TorqueScriptFileExtension);
+   exec("./scripts/gfxData/warningTerrainMat." @ $TorqueScriptFileExtension);*/
 
    //load prefs
-   exec("data/defaults." @ $TorqueScriptFileExtension);
+   exec("core/defaults." @ $TorqueScriptFileExtension);
    %prefPath = getPrefpath();
    if ( isFile( %prefPath @ "/clientPrefs." @ $TorqueScriptFileExtension ) )
       exec( %prefPath @ "/clientPrefs." @ $TorqueScriptFileExtension );
       
-   postFXInit();
+   //postFXInit();
    
    configureCanvas();
    

@@ -559,18 +559,24 @@ function displayHelp()
    // (flushing the write buffer) after every write.
    // -log 2 overwrites any existing logfile; it also only closes
    // the logfile when the application shuts down.  (default)
-
-   error(
-      "Torque Demo command line options:\n"@
-      "  -log <logmode>         Logging behavior; see main." @ $TorqueScriptFileExtension @ " comments for details\n"@
-      "  -game <game_name>      Reset list of mods to only contain <game_name>\n"@
-      "  <game_name>            Works like the -game argument\n"@
-      "  -dir <dir_name>        Add <dir_name> to list of directories\n"@
-      "  -console               Open a separate console\n"@
-      "  -jSave  <file_name>    Record a journal\n"@
-      "  -jPlay  <file_name>    Play back a journal\n"@
-      "  -help                  Display this help message\n"
-   );
+   
+     %helpstring = "Torque Demo command line options:\n";
+     %helpstring =%helpstring @ "  -log <logmode>         Logging behavior; see main." @ $TorqueScriptFileExtension @ " comments for details\n";
+     %helpstring =%helpstring @ "  -game <game_name>      Reset list of mods to only contain <game_name>\n";
+     %helpstring =%helpstring @ "  <game_name>            Works like the -game argument\n";
+     %helpstring =%helpstring @ "  -dir <dir_name>        Add <dir_name> to list of directories\n";
+     %helpstring =%helpstring @ "  -console               Open a separate console\n";
+     %helpstring =%helpstring @ "  -jSave  <file_name>    Record a journal\n";
+     %helpstring =%helpstring @ "  -jPlay  <file_name>    Play back a journal\n";
+     %helpstring =%helpstring @ "  -help                  Display this help message\n";
+      
+   error(%helpstring);
+   
+   %file = new FileObject();
+   if(%file.openForWrite("help.txt"))
+      %file.writeLine(%helpstring);
+   %file.close();
+   %file.delete();
 }
 
 // Execute startup scripts for each mod, starting at base and working up
@@ -695,13 +701,33 @@ function switchControlObject(%client, %newControlEntity)
    %control.setConnectionControlObject(%client);
 }
 
-function populateAllFonts(%font)
+function populateAllFonts()
 {
-   populateFontCacheRange(%font,14,0,65535);
-   populateFontCacheRange(%font,18,0,65535);
-   populateFontCacheRange(%font,24,0,65535);
-   populateFontCacheRange(%font,32,0,65535);
-   populateFontCacheRange(%font,36,0,65535);
+   %fontarray = new ArrayObject();
+   foreach( %obj in GuiDataGroup )
+   {
+      if( !%obj.isMemberOfClass( "GuiControlProfile" ) )
+         continue;
+      %fontarray.push_back(%obj.fontType,%obj.fontSize);
+   }
+   %fontarray.uniqueKey();
+   
+   %fontarrayCount = %fontarray.count(); 
+   
+   echo("Generating "@ %fontarrayCount @" fonts");
+   for (%i=0;%i<%fontarrayCount;%i++)
+   {
+      %font = %fontarray.getKey(%i);
+      %hieght =  %fontarray.getValue(%i);
+      schedule(1000*%i,0,"delayedFontsPopulation",%font, %hieght, %i+1);
+   }
+   %fontarray.delete();
+}
+function delayedFontsPopulation(%font, %hieght, %fontNum)
+{
+    echo("Font ["@ %fontNum @"] Generating "@ %font SPC %hieght);
+    populateFontCacheRange(%font,%hieght,32, 126);
+    populateFontCacheRange(%font,%hieght,160, 65535);
 }
 
 //------------------------------------------------------------------------------

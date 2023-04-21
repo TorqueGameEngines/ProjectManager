@@ -54,7 +54,10 @@ $WORD::FULLSCREEN = 2;
 $WORD::BITDEPTH = 3;
 $WORD::REFRESH = 4;
 $WORD::AA = 5;
-$Video::ModeTags = "Windowed\tBorderless\tFullscreen";
+if($platform $= "windows")
+   $Video::ModeTags = "Windowed\tBorderless";
+else
+   $Video::ModeTags = "Windowed\tBorderless\tFullscreen";
 $Video::ModeWindowed = 0;
 $Video::ModeBorderless = 1;
 $Video::ModeFullscreen = 2;
@@ -107,6 +110,7 @@ function configureCanvas()
    %resY = $pref::Video::Resolution.y;
    %bpp  = $pref::Video::BitDepth;
    %rate = $pref::Video::RefreshRate;
+   %aaMode = $pref::video::AAMode;
    %aa = $pref::Video::AA;
    %fs = ($pref::Video::deviceMode == 2);
 
@@ -115,7 +119,7 @@ function configureCanvas()
       "--Screen Mode    : " @ %fsLabel NL
       "--Bits Per Pixel : " @ %bpp NL
       "--Refresh Rate   : " @ %rate NL
-      "--FXAA Level     : " @ %aa NL
+      "--Anit-Aliasing Type     : " @ %aaMode NL
       "--------------");
 
    // Actually set the new video mode
@@ -137,10 +141,30 @@ function configureCanvas()
 
    // AA piggybacks on the AA setting in $pref::Video::mode.
    // We need to parse the setting between AA modes, and then it's level
-   // It's formatted as AATypexAALevel
-   // So, FXAAx4 or MLAAx2
-   if ( isObject( FXAAPostFX ) )
-      FXAAPostFX.Enabled = ( %aa > 0 ) ? true : false;
+   
+   if(isObject( FXAAPostFX ))
+   {
+      if ( startsWith(%aaMode, "FXAA") )
+      {
+         FXAAPostFX.Enabled = true; 
+      }
+      else
+      {
+         FXAAPostFX.Enabled = false;  
+      }
+   }
+   
+   if(isObject( SMAAPostFX ))
+   {
+      if ( startsWith(%aaMode, "SMAA") )
+      {
+         SMAAPostFX.Enabled = true; 
+      }
+      else
+      {
+         SMAAPostFX.Enabled = false;  
+      }
+   }
 }
 
 function GuiCanvas::modeStrToPrefs(%this, %modeStr)
@@ -164,7 +188,7 @@ function GuiCanvas::checkCanvasRes(%this, %mode, %deviceId, %deviceMode, %startu
 {
    // Toggle for selecting the borderless window allowed sizes. Set true to allow
    // borderless windows to be less than the device res.
-   %allowSmallBorderless = true;
+   %allowSmallBorderless = false;
 
    %resX = getWord(%mode, $WORD::RES_X);
    %resY = getWord(%mode, $WORD::RES_Y);

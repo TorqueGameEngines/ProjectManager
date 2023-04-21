@@ -1,19 +1,91 @@
+$reportModuleOrder = false;
 $traceModuleCalls=false;
 $reportModuleFileConflicts=true;
 if (!isObject(ExecFilesList))
    new ArrayObject(ExecFilesList);
-  
-function callOnModules(%functionName, %moduleGroup, %var0, %var1, %var2, %var3, %var4, %var5, %var6)
-{   
+   
+function reformatModTime(%modTime)
+{
+    %date = getword(%modTime,0);
+    %date = strreplace(%modTime,"/"," ");
+    %date = getword(%date,2) SPC getword(%date,0) SPC getword(%date,1);
+    %hourMinSec = getword(%modTime,1);
+    %hourMinSec = strreplace(%hourMinSec,":"," ");
+    %retTime = %date SPC %hourMinSec;
+    for (%i=0;%i<6;%i++)
+    {
+        %nTry = getWord(%retTime,%i);
+        if (%nTry<10)
+            setWord(%retTime,%i,"0" SPC %nTry);
+    }
+    return %retTime;
+}
+
+//example usage: reloadModuleFiles("game");
+function reloadModuleFiles(%moduleGroup)
+{
+   //Get our modules so we can exec any specific client-side loading/handling
+   %modulesList = ModuleDatabase.findModules();
+   for(%i=0; %i < getWordCount(%modulesList); %i++)
+   {
+      %module = getWord(%modulesList, %i);
+      if(%moduleGroup !$= "")
+      {
+         if(%module.group !$= %moduleGroup)
+            continue;  
+      }
+      if(isFile(%module.ModuleScriptFilePath))
+      {
+        %modTime = fileModifiedTime(%module.ModuleScriptFilePath);
+        if (getWordCount(%modTime)>0)
+        {
+            %doExec = false;
+            if ($lastReExecution $="")
+            {
+                %doExec = true;
+            }
+            else
+            {
+                %modTime = reformatModTime(%modTime);
+                if (strcmp(%modTime,$lastReExecution)>0)
+                {
+                    //error("moded:"@ %modTime);
+                    //warn("execd:"@ $lastReExecution);
+                    %doExec = true;
+                }
+            }
+            if (%doExec)
+            {
+                exec(%module.ModuleScriptFilePath);
+            }
+        }
+      }
+   }
+   $lastReExecution = getTimeStamp();
+   //erase time seperators
+   $lastReExecution = strreplace($lastReExecution,"_"," ");
+   $lastReExecution = strreplace($lastReExecution,"-"," ");
+   for (%i=0;%i<6;%i++)
+   {
+      %nTry = getWord($lastReExecution,%i);
+      if (%nTry<10)
+         setWord($lastReExecution,%i,"0" SPC %nTry);
+   }
+}
+
+function moduleExec(%functionName, %moduleGroup, %var0, %var1, %var2, %var3, %var4, %var5, %var6)
+{
+   reloadModuleFiles(%moduleGroup);
    //clear per module group file execution chain
    %execArray = new ArrayObject("callOn" @ %functionName @ "_" @ %moduleGroup);
    ExecFilesList.push_back(%execArray);
    //Get our modules so we can exec any specific client-side loading/handling
-   %modulesList = ModuleDatabase.findModules(false);
+   %modulesList = ModuleDatabase.findModules();
+   %modlist = "modlist:";
    for(%i=0; %i < getWordCount(%modulesList); %i++)
    {
       %module = getWord(%modulesList, %i);
-      
+      %modlist = %modlist SPC %module.ModuleId;
       if(%moduleGroup !$= "")
       {
          if(%module.group !$= %moduleGroup)
@@ -23,6 +95,8 @@ function callOnModules(%functionName, %moduleGroup, %var0, %var1, %var2, %var3, 
       if(isObject(%module.scopeSet) && %module.scopeSet.isMethod(%functionName))
         %module.scopeSet.call(%functionName, %var0, %var1, %var2, %var3, %var4, %var5, %var6);
    }
+   if ($reportModuleOrder)
+      warn(%modlist);
    
    %execFilecount = %execArray.count();
    
@@ -40,6 +114,28 @@ function callOnModules(%functionName, %moduleGroup, %var0, %var1, %var2, %var3, 
    
    ExecFilesList.pop_back(); //cleanup
    %execArray.delete();
+}
+
+function callOnModules(%functionName, %moduleGroup, %var0, %var1, %var2, %var3, %var4, %var5, %var6)
+{   
+   //Get our modules so we can exec any specific client-side loading/handling
+   %modulesList = ModuleDatabase.findModules();
+   %modlist = "modlist:";
+   for(%i=0; %i < getWordCount(%modulesList); %i++)
+   {
+      %module = getWord(%modulesList, %i);
+      %modlist = %modlist SPC %module.ModuleId;
+      if(%moduleGroup !$= "")
+      {
+         if(%module.group !$= %moduleGroup)
+            continue;  
+      }
+      // match this to i/o signature
+      if(isObject(%module.scopeSet) && %module.scopeSet.isMethod(%functionName))
+        %module.scopeSet.call(%functionName, %var0, %var1, %var2, %var3, %var4, %var5, %var6);
+   }
+   if ($reportModuleOrder)
+      warn(%modlist);  
 }
 
 function loadModuleMaterials(%moduleGroup)
@@ -100,7 +196,7 @@ function loadAssetsByType(%assetType)
    }
 }
 
-function SimSet::getModulePath(%scopeSet)
+function ModuleRoot::getModulePath(%scopeSet)
 {
    %name = %scopeSet.getName();
    %moduleDef = ModuleDatabase.findModule(%name);
@@ -111,7 +207,7 @@ function SimSet::getModulePath(%scopeSet)
    return "";
 }
 
-function SimSet::registerDatablock(%scopeSet, %datablockFilePath, %isExclusive)
+function ModuleRoot::registerDatablock(%scopeSet, %datablockFilePath, %isExclusive)
 {
    if ($traceModuleCalls)
       warn("SimSet::registerDatablock");
@@ -167,7 +263,7 @@ function SimSet::registerDatablock(%scopeSet, %datablockFilePath, %isExclusive)
       DatablockFilesList.echo();
 }
 
-function SimSet::unRegisterDatablock(%scopeSet, %datablockFilePath)
+function ModuleRoot::unRegisterDatablock(%scopeSet, %datablockFilePath)
 {
    if ($traceModuleCalls)
       warn("SimSet::unRegisterDatablock");
@@ -211,7 +307,7 @@ function SimSet::unRegisterDatablock(%scopeSet, %datablockFilePath)
       DatablockFilesList.echo();
 }
 
-function SimSet::queueExec(%scopeSet, %execFilePath, %isExclusive)
+function ModuleRoot::queueExec(%scopeSet, %execFilePath, %isExclusive)
 {
    if ($traceModuleCalls)
       warn("SimSet::queueExec");
@@ -268,7 +364,7 @@ function SimSet::queueExec(%scopeSet, %execFilePath, %isExclusive)
       %execFileList.echo();
 }
 
-function SimSet::unQueueExec(%scopeSet, %execFilePath)
+function ModuleRoot::unQueueExec(%scopeSet, %execFilePath)
 {
    if ($traceModuleCalls)
       warn("SimSet::unRegisterDatablock");
@@ -313,3 +409,10 @@ function SimSet::unQueueExec(%scopeSet, %execFilePath)
       %execFileList.echo();
 }
 
+function ModuleRoot::GetEventManager(%scopeSet)
+{
+   if( !isObject( %scopeSet.eventManager ) )
+      %scopeSet.eventManager = new EventManager() { queue = "ModuleEventManager"; };
+      
+   return %scopeSet.eventManager;
+}

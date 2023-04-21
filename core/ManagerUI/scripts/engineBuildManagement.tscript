@@ -46,6 +46,8 @@ function downloadEngineBuild(%build)
       
    %commandString = %commandString @ %gitPath @ " \"" @ %targetPath @ "\"";
    
+   echo("Running Command: " @ %commandString);
+   
    systemCommand(%commandString, "downloadEngineBuildComplete");
 }
 
@@ -81,6 +83,8 @@ function pullUpdateEngineBuild(%build)
    %buildName = %build.buildName;
    
    %commandString = "cd \"" @ makeFullPath(%build.localPath) @ "\" && git pull";  
+   
+   echo("Running Command: " @ %commandString);
    
    systemCommand(%commandString, "pullUpdateEngineBuildComplete");
 }

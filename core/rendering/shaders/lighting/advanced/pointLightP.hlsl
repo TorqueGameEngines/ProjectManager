@@ -25,7 +25,6 @@
 #include "farFrustumQuad.hlsl"
 #include "../../lighting.hlsl"
 #include "../shadowMap/shadowMapIO_HLSL.h"
-#include "softShadow.hlsl"
 #include "../../torque.hlsl"
 
 struct ConvexConnectP
@@ -35,14 +34,6 @@ struct ConvexConnectP
    float4 ssPos : TEXCOORD1;
    float4 vsEyeDir : TEXCOORD2;
 };
-
-#ifdef USE_COOKIE_TEX
-
-/// The texture for cookie rendering.
-TORQUE_UNIFORM_SAMPLERCUBE(cookieMap, 3);
-
-#endif
-
 
 #ifdef SHADOW_CUBE
 
@@ -107,16 +98,19 @@ TORQUE_UNIFORM_SAMPLERCUBE(cookieMap, 3);
 #endif
 
 TORQUE_UNIFORM_SAMPLER2D(deferredBuffer, 0);
-
 #ifdef SHADOW_CUBE
 TORQUE_UNIFORM_SAMPLERCUBE(shadowMap, 1);
 #else
 TORQUE_UNIFORM_SAMPLER2D(shadowMap, 1);
 #endif
-
-TORQUE_UNIFORM_SAMPLER2D(lightBuffer, 5);
-TORQUE_UNIFORM_SAMPLER2D(colorBuffer, 6);
-TORQUE_UNIFORM_SAMPLER2D(matInfoBuffer, 7);
+//contains gTapRotationTex sampler 
+#include "softShadow.hlsl"
+TORQUE_UNIFORM_SAMPLER2D(colorBuffer, 3);
+TORQUE_UNIFORM_SAMPLER2D(matInfoBuffer, 4);
+#ifdef USE_COOKIE_TEX
+/// The texture for cookie rendering.
+TORQUE_UNIFORM_SAMPLERCUBE(cookieMap, 5);
+#endif
 
 uniform float4 rtParams0;
 uniform float4 lightColor;
@@ -152,13 +146,10 @@ float4 main(   ConvexConnectP IN ) : SV_TARGET
    //create surface
    Surface surface = createSurface( normDepth, TORQUE_SAMPLER2D_MAKEARG(colorBuffer),TORQUE_SAMPLER2D_MAKEARG(matInfoBuffer),
                                     uvScene, eyePosWorld, wsEyeRay, cameraToWorld);
-
-   //early out if emissive
-   if (getFlag(surface.matFlag, 0))
-   {   
-      return float4(0, 0, 0, 0);
-   }
-
+   if (getFlag(surface.matFlag, 2))
+   {
+      return surface.baseColor;
+   } 
    float3 L = lightPosition - surface.P;
    float dist = length(L);
    float3 lighting = 0.0.xxx;
@@ -168,21 +159,21 @@ float4 main(   ConvexConnectP IN ) : SV_TARGET
       float distToLight = dist / lightRange;
       SurfaceToLight surfaceToLight = createSurfaceToLight(surface, L);
 
-   #ifdef NO_SHADOW
-      float shadowed = 1.0;
-   #else
-
+   float shadow = 1.0;
+   #ifndef NO_SHADOW
+   if (getFlag(surface.matFlag, 0)) //also skip if we don't recieve shadows
+   {
    #ifdef SHADOW_CUBE
 
       // TODO: We need to fix shadow cube to handle soft shadows!
       float occ = TORQUE_TEXCUBE( shadowMap, mul( worldToLightProj, -surfaceToLight.L ) ).r;
-      float shadowed = saturate( exp( lightParams.y * ( occ - distToLight ) ) );
+      shadow = saturate( exp( lightParams.y * ( occ - distToLight ) ) );
 
    #else
       float2 shadowCoord = decodeShadowCoord( mul( worldToLightProj, -surfaceToLight.L ) ).xy;
-      float shadowed = softShadow_filter(TORQUE_SAMPLER2D_MAKEARG(shadowMap), ssPos.xy, shadowCoord, shadowSoftness, distToLight, surfaceToLight.NdotL, lightParams.y);
+      shadow = softShadow_filter(TORQUE_SAMPLER2D_MAKEARG(shadowMap), ssPos.xy, shadowCoord, shadowSoftness, distToLight, surfaceToLight.NdotL, lightParams.y);
    #endif
-   
+   }
    #endif // !NO_SHADOW
    
       float3 lightCol = lightColor.rgb;
@@ -227,7 +218,7 @@ float4 main(   ConvexConnectP IN ) : SV_TARGET
    #endif
 
       //get punctual light contribution   
-      lighting = getPunctualLight(surface, surfaceToLight, lightCol, lightBrightness, lightInvSqrRange, shadowed);
+      lighting = getPunctualLight(surface, surfaceToLight, lightCol, lightBrightness, lightInvSqrRange, shadow);
    }
       
    return float4(lighting, 0);

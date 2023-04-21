@@ -599,6 +599,7 @@ new SimGroup( ShaderQualityGroup )
       
       key["$pref::Video::disablePixSpecular"] = false;
       key["$pref::Video::disableNormalmapping"] = false;
+      key["$pref::PostFX::EnableHDRBloom"] = true;
    };
    new ArrayObject()
    {
@@ -609,6 +610,7 @@ new SimGroup( ShaderQualityGroup )
       
       key["$pref::Video::disablePixSpecular"] = true;
       key["$pref::Video::disableNormalmapping"] = true;
+      key["$pref::PostFX::EnableHDRBloom"] = false;
    };
 };
 
@@ -644,7 +646,6 @@ function getQualityLevels(%qualityGroup)
 
 function AutodetectGraphics()
 {
-   return;
    $pref::Video::autoDetect = false;
    
    %shaderVer = getPixelShaderVersion();
@@ -679,14 +680,15 @@ function AutodetectGraphics_Apply(%shaderVer, %intel, %videoMem )
          
          $pref::Shadows::useShadowCaching = true;
          
-         $pref::Water::disableTrueReflections = true;
-         $pref::Video::disableParallaxMapping = true;
+         $pref::Water::enableTrueReflections = false;
+         $pref::Video::enableParallaxMapping = false;
          $pref::PostFX::EnableSSAO = false;
          $pref::PostFX::EnableHDR = false;
          $pref::PostFX::EnableDOF = false;
          $pref::PostFX::EnableLightRays = false;
          $pref::PostFX::EnableVignette = false;
          
+         $pref::Video::AAMode = "None";
          $pref::Video::AA = 0;
          $pref::Video::defaultAnisotropy = 0;
       }
@@ -705,14 +707,15 @@ function AutodetectGraphics_Apply(%shaderVer, %intel, %videoMem )
          
          $pref::Shadows::useShadowCaching = true;
          
-         $pref::Water::disableTrueReflections = true;
-         $pref::Video::disableParallaxMapping = true;
+         $pref::Water::enableTrueReflections = false;
+         $pref::Video::enableParallaxMapping = false;
          $pref::PostFX::EnableSSAO = false;
          $pref::PostFX::EnableHDR = false;
          $pref::PostFX::EnableDOF = false;
          $pref::PostFX::EnableLightRays = false;
          $pref::PostFX::EnableVignette = false;
          
+         $pref::Video::AAMode = "None";
          $pref::Video::AA = 0;
          $pref::Video::defaultAnisotropy = 0;
       }
@@ -735,14 +738,15 @@ function AutodetectGraphics_Apply(%shaderVer, %intel, %videoMem )
          //Should this default to on in ultra settings?
          $pref::Shadows::useShadowCaching = true;
          
-         $pref::Water::disableTrueReflections = false;
-         $pref::Video::disableParallaxMapping = false;
+         $pref::Water::enableTrueReflections = true;
+         $pref::Video::enableParallaxMapping = true;
          $pref::PostFX::EnableSSAO = true;
          $pref::PostFX::EnableHDR = true;
          $pref::PostFX::EnableDOF = true;
          $pref::PostFX::EnableLightRays = true;
          $pref::PostFX::EnableVignette = true;
          
+         $pref::Video::AAMode = "SMAA High";
          $pref::Video::AA = 4;
          $pref::Video::defaultAnisotropy = 16;
       }
@@ -761,14 +765,15 @@ function AutodetectGraphics_Apply(%shaderVer, %intel, %videoMem )
          
          $pref::Shadows::useShadowCaching = true;
          
-         $pref::Water::disableTrueReflections = false;
-         $pref::Video::disableParallaxMapping = true;
+         $pref::Water::enableTrueReflections = true;
+         $pref::Video::enableParallaxMapping = true;
          $pref::PostFX::EnableSSAO = false;
          $pref::PostFX::EnableHDR = true;
          $pref::PostFX::EnableDOF = true;
          $pref::PostFX::EnableLightRays = true;
          $pref::PostFX::EnableVignette = true;
          
+         $pref::Video::AAMode = "SMAA";
          $pref::Video::AA = 4;
          $pref::Video::defaultAnisotropy = 4;
          
@@ -790,14 +795,15 @@ function AutodetectGraphics_Apply(%shaderVer, %intel, %videoMem )
          
          $pref::Shadows::useShadowCaching = true;
          
-         $pref::Water::disableTrueReflections = false;
-         $pref::Video::disableParallaxMapping = true;
+         $pref::Water::enableTrueReflections = true;
+         $pref::Video::enableParallaxMapping = true;
          $pref::PostFX::EnableSSAO = false;
          $pref::PostFX::EnableHDR = false;
          $pref::PostFX::EnableDOF = false;
          $pref::PostFX::EnableLightRays = false;
          $pref::PostFX::EnableVignette = false;
          
+         $pref::Video::AAMode = "FXAA";
          $pref::Video::AA = 0;
          $pref::Video::defaultAnisotropy = 0;
       }

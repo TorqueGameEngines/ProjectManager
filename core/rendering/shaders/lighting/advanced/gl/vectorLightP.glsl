@@ -26,7 +26,6 @@
 #include "../../../gl/torque.glsl"
 #include "../../../gl/lighting.glsl"
 #include "../../shadowMap/shadowMapIO_GLSL.h"
-#include "softShadow.glsl"
 #line 30
 in vec4 hpos;
 in vec2 uv0;
@@ -35,6 +34,8 @@ in vec3 vsEyeRay;
 
 uniform sampler2D deferredBuffer;
 uniform sampler2D shadowMap;
+//contains gTapRotationTex sampler 
+#include "softShadow.glsl"
 
 uniform sampler2D colorBuffer;
 uniform sampler2D matInfoBuffer;             
@@ -185,24 +186,21 @@ void main()
    //create surface
    Surface surface = createSurface( normDepth, colorBuffer, matInfoBuffer,
                                     uv0, eyePosWorld, wsEyeRay, cameraToWorld);
-   
-   //early out if emissive
-   if (getFlag(surface.matFlag, 0))
-   {
-      OUT_col = vec4(0, 0, 0, 0);
+   if (getFlag(surface.matFlag, 2))
+   { 
+      OUT_col = surface.baseColor;
       return;
-	}
-	
+   } 
    //create surface to light                           
    SurfaceToLight surfaceToLight = createSurfaceToLight(surface, -lightDirection);
 
    //light color might be changed by PSSM_DEBUG_RENDER
    vec3 lightingColor = lightColor.rgb;
    
-   #ifdef NO_SHADOW
-      float shadow = 1.0;
-   #else
-
+   float shadow = 1.0;
+   #ifndef NO_SHADOW
+   if (getFlag(surface.matFlag, 0)) //also skip if we don't recieve shadows
+   {
       // Fade out the shadow at the end of the range.
       vec4 zDist = vec4(zNearFarInvNearFar.x + zNearFarInvNearFar.y * surface.depth);
       float fadeOutAmt = ( zDist.x - fadeStartLength.x ) * fadeStartLength.y;
@@ -210,7 +208,7 @@ void main()
       vec4 shadowed_colors = AL_VectorLightShadowCast( shadowMap, uv0.xy, worldToLightProj, surface.P, scaleX, scaleY, offsetX, offsetY,
                                                              farPlaneScalePSSM, surfaceToLight.NdotL);
 
-      float shadow = shadowed_colors.a;
+      shadow = shadowed_colors.a;
 	  
       #ifdef PSSM_DEBUG_RENDER
 	     lightingColor = shadowed_colors.rgb;
@@ -220,16 +218,16 @@ void main()
       
       #ifdef PSSM_DEBUG_RENDER
          if ( fadeOutAmt > 1.0 )
-            lightingColor = 1.0;
+            lightingColor = vec3(1.0,1.0,1.0);
       #endif
-
+   }
    #endif //NO_SHADOW
 
    #ifdef DIFFUSE_LIGHT_VIZ
       vec3 factor = lightingColor.rgb * max(surfaceToLight.NdotL, 0) * shadow * lightBrightness;
       vec3 diffuse = BRDF_GetDebugDiffuse(surface,surfaceToLight) * factor;
 
-      vec3 final = max(0.0f, diffuse);
+      vec3 final = max(vec3(0.0f,0.0f,0.0f), diffuse);
       
       OUT_col = vec4(final, 0);
       return;
@@ -239,7 +237,7 @@ void main()
       vec3 factor = lightingColor.rgb * max(surfaceToLight.NdotL, 0) * shadow * lightBrightness;
       vec3 spec = BRDF_GetDebugSpecular(surface, surfaceToLight) * factor;
 
-      vec3 final = max(0.0f, factor);
+      vec3 final = max(vec3(0.0f,0.0f,0.0f), factor);
       
       OUT_col = vec4(final, 0);
       return;
@@ -250,7 +248,7 @@ void main()
       vec3 diffuse = BRDF_GetDebugDiffuse(surface,surfaceToLight) * factor;
       vec3 spec = BRDF_GetDebugSpecular(surface,surfaceToLight) * factor;
 
-      vec3 final = max(0.0f, diffuse + spec);
+      vec3 final = max(vec3(0.0f,0.0f,0.0f), diffuse + spec);
       
       OUT_col = vec4(final, 0);
       return;

@@ -35,6 +35,8 @@ function runProject(%launchArgs)
    {
       %openCommand = "open \"" @ %appPath @ "\"";
    }
+   
+   echo("Running Command: " @ %openCommand);
   
    systemCommand(%openCommand, "");
 }
@@ -631,6 +633,9 @@ function CreateNewProjectPage3::openPage(%this)
       {
          %commandString = %commandString @ "-DTORQUE_SQLITE=ON";  
       }*/
+      
+      echo("Running Command: " @ %commandString);
+      
       systemCommand(%commandString, "makeProjectComplete");  
    }
    else
@@ -708,6 +713,9 @@ function openSolutionFile()
          if(isFile(%solutionPath))
          {
             %openCommand = "cd \"" @ %buildPath @ "\" && start " @ $CurrentProject.projectName @ ".sln";
+            
+            echo("Running Command: " @ %openCommand);
+            
             systemCommand(%openCommand, "");
             return;
          }
@@ -718,6 +726,9 @@ function openSolutionFile()
          if(isFile(%solutionPath))
          {
             %openCommand = "cd \"" @ %buildPath @ "\" && open " @ $CurrentProject.projectName @ ".xcodeproj";
+            
+            echo("Running Command: " @ %openCommand);
+            
             systemCommand(%openCommand, "");
             return;
          }
@@ -725,6 +736,9 @@ function openSolutionFile()
       
       //Otherwise, we fall back to just opening the build dir to let the end user deal with it
       %openCommand = "open \"" @ makeFullPath(%buildPath) @ "\"";
+      
+      echo("Running Command: " @ %openCommand);
+      
       systemCommand(%openCommand);
    }
    /*else
@@ -762,6 +776,9 @@ function regenerateProject()
       %regenCommand = %regenCommand @ " -DTORQUE_PHYSICS_PHYSX3:BOOL=" @ $CurrentProject.enablePhysX;
       %regenCommand = %regenCommand @ " -DTORQUE_PHYSICS_BULLET:BOOL=" @ $CurrentProject.enableBullet;
       %regenCommand = %regenCommand @ " -DTORQUE_SQLITE:BOOL=" @ $CurrentProject.enableSqlite;
+      
+      echo("Running Command: " @ %regenCommand);
+      
       systemCommand(%regenCommand, "regenerateProjectComplete");
    }
 }
@@ -777,6 +794,8 @@ function regenerateProjectComplete(%resultCode)
          //if windows, we'll wanna force auto-build to always gen release projects
          if($platform $= "windows")
             %commandString = %commandString @ " --config Release";
+            
+         echo("Running Command: " @ %commandString);
     
          systemCommand(%commandString, ""); 
       }
@@ -789,11 +808,17 @@ function openFileLocation(%path)
    if($platform $= "windows")
    {
       %cmd = "cd \"" @ %fullPath @ "\" && start .";
+      
+      echo("Running Command: " @ %cmd);
+      
       systemCommand(%cmd);
    }
    else
    {
       %cmd = "open \"" @ %fullPath @ "\"";
+      
+      echo("Running Command: " @ %cmd);
+      
       systemCommand(%cmd);
    }  
 }

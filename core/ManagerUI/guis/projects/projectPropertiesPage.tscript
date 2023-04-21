@@ -472,6 +472,8 @@ function generateNewProjectPhase4()
       %commandString = %commandString @ " -DTORQUE_PHYSICS_PHYSX3:BOOL=" @ $CurrentProject.enablePhysX;
       %commandString = %commandString @ " -DTORQUE_PHYSICS_BULLET:BOOL=" @ $CurrentProject.enableBullet;
       %commandString = %commandString @ " -DTORQUE_SQLITE:BOOL=" @ $CurrentProject.enableSqlite;
+      
+      echo("Running Command: " @ %commandString);
 
       systemCommand(%commandString, "makeProjectComplete");  
    }
@@ -501,6 +503,8 @@ function makeProjectComplete(%resultCode)
       //if windows, we'll wanna force auto-build to always gen release projects
       if($platform $= "windows")
          %commandString = %commandString @ " --config Release";
+         
+      echo("Running Command: " @ %commandString);
  
       systemCommand(%commandString, ""); 
    }

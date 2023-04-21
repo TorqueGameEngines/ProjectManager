@@ -20,11 +20,14 @@ uniform int numProbes;
 
 TORQUE_UNIFORM_SAMPLERCUBEARRAY(specularCubemapAR, 4);
 TORQUE_UNIFORM_SAMPLERCUBEARRAY(irradianceCubemapAR, 5);
+TORQUE_UNIFORM_SAMPLER2D(WetnessTexture, 6);
 
 #ifdef USE_SSAO_MASK
-TORQUE_UNIFORM_SAMPLER2D(ssaoMask, 6);
-uniform float4 rtParams6;
+TORQUE_UNIFORM_SAMPLER2D(ssaoMask, 7);
+uniform float4 rtParams7;
 #endif
+uniform float accumTime;
+uniform float dampness;
 
 uniform float4    probePosArray[MAX_PROBES];
 uniform float4    refPosArray[MAX_PROBES];
@@ -37,6 +40,7 @@ uniform float4    probeContribColors[MAX_PROBES];
 #endif
 
 uniform int skylightCubemapIdx;
+uniform int SkylightDamp;
 
 float4 main(PFXVertToPix IN) : SV_TARGET
 {
@@ -46,20 +50,19 @@ float4 main(PFXVertToPix IN) : SV_TARGET
    //create surface
    Surface surface = createSurface(normDepth, TORQUE_SAMPLER2D_MAKEARG(colorBuffer),TORQUE_SAMPLER2D_MAKEARG(matInfoBuffer),
       IN.uv0.xy, eyePosWorld, IN.wsEyeRay, cameraToWorld);
-
-   //early out if emissive
-   if (getFlag(surface.matFlag, 0))
+      
+   if (getFlag(surface.matFlag, 2))
    {
-      return float4(surface.albedo, 0);
-   }
-
+      return surface.baseColor;
+   } 
+   
    #ifdef USE_SSAO_MASK
-      float ssao =  1.0 - TORQUE_TEX2D( ssaoMask, viewportCoordToRenderTarget( IN.uv0.xy, rtParams6 ) ).r;
+      float ssao =  1.0 - TORQUE_TEX2D( ssaoMask, viewportCoordToRenderTarget( IN.uv0.xy, rtParams7 ) ).r;
       surface.ao = min(surface.ao, ssao);  
    #endif
 
    float alpha = 1;
-
+   float wetAmmout = 0;
 #if SKYLIGHT_ONLY == 0
    int i = 0;
    float blendFactor[MAX_PROBES];
@@ -69,11 +72,12 @@ float4 main(PFXVertToPix IN) : SV_TARGET
    float probehits = 0;
    //Set up our struct data
    float contribution[MAX_PROBES];
-
+   
+   float blendCap = 0;
    if (alpha > 0)
    {
       //Process prooooobes
-      for (i = 0; i < numProbes; ++i)
+      for (i = 0; i < numProbes; i++)
       {
          contribution[i] = 0.0;
 
@@ -92,28 +96,36 @@ float4 main(PFXVertToPix IN) : SV_TARGET
          else
             contribution[i] = 0.0;
 
+         if (refScaleArray[i].w>0)
+            wetAmmout += contribution[i];
+         else
+            wetAmmout -= contribution[i];
+
          blendSum += contribution[i];
+         blendCap = max(contribution[i],blendCap);
       }
-      
-       if (probehits > 1.0)//if we overlap
+      if (wetAmmout<0) wetAmmout =0;
+       if (probehits > 0.0)
 	   {
-         invBlendSum = (probehits - blendSum)/(probehits-1); //grab the remainder 
+         invBlendSum = (probehits - blendSum)/probehits; //grab the remainder 
          for (i = 0; i < numProbes; i++)
          {
                blendFactor[i] = contribution[i]/blendSum; //what % total is this instance
-               blendFactor[i] *= blendFactor[i] / invBlendSum;  //what should we add to sum to 1
+               blendFactor[i] *= blendFactor[i]/invBlendSum;  //what should we add to sum to 1
                blendFacSum += blendFactor[i]; //running tally of results
          }
 
-         for (i = 0; i < numProbes; ++i)
+         for (i = 0; i < numProbes; i++)
          {
-               contribution[i] *= blendFactor[i]/blendFacSum; //normalize
+            //normalize, but in the range of the highest value applied
+            //to preserve blend vs skylight
+            contribution[i] = blendFactor[i]/blendFacSum*blendCap;
          }
       }
       
 #if DEBUGVIZ_ATTENUATION == 1
       float contribAlpha = 0;
-      for (i = 0; i < numProbes; ++i)
+      for (i = 0; i < numProbes; i++)
       {
          contribAlpha += contribution[i];
       }
@@ -123,18 +135,30 @@ float4 main(PFXVertToPix IN) : SV_TARGET
 
 #if DEBUGVIZ_CONTRIB == 1
       float3 finalContribColor = float3(0, 0, 0);
-      for (i = 0; i < numProbes; ++i)
+      for (i = 0; i < numProbes; i++)
       {
          finalContribColor += contribution[i] * float3(fmod(i+1,2),fmod(i+1,3),fmod(i+1,4));
       }
       return float4(finalContribColor, 1);
 #endif
    }
+   for (i = 0; i < numProbes; i++)
+   {
+      float contrib = contribution[i];
+      if (contrib > 0.0f)
+      {
+         alpha -= contrib;
+      }
+   }
 #endif
 
    float3 irradiance = float3(0, 0, 0);
    float3 specular = float3(0, 0, 0);
 
+   if (SkylightDamp>0)
+      wetAmmout += alpha;
+   dampen(surface, TORQUE_SAMPLER2D_MAKEARG(WetnessTexture), accumTime, wetAmmout*dampness);
+   
    // Radiance (Specular)
 #if DEBUGVIZ_SPECCUBEMAP == 0
    float lod = roughnessToMipLevel(surface.roughness, cubeMips);
@@ -143,7 +167,7 @@ float4 main(PFXVertToPix IN) : SV_TARGET
 #endif
 
 #if SKYLIGHT_ONLY == 0
-   for (i = 0; i < numProbes; ++i)
+   for (i = 0; i < numProbes; i++)
    {
       float contrib = contribution[i];
       if (contrib > 0.0f)
@@ -153,11 +177,9 @@ float4 main(PFXVertToPix IN) : SV_TARGET
 
          irradiance += TORQUE_TEXCUBEARRAYLOD(irradianceCubemapAR, dir, cubemapIdx, 0).xyz * contrib;
          specular += TORQUE_TEXCUBEARRAYLOD(specularCubemapAR, dir, cubemapIdx, lod).xyz * contrib;
-         alpha -= contrib;
       }
    }
 #endif
-
    if(skylightCubemapIdx != -1 && alpha >= 0.001)
    {
       irradiance = lerp(irradiance,TORQUE_TEXCUBEARRAYLOD(irradianceCubemapAR, surface.R, skylightCubemapIdx, 0).xyz,alpha);
@@ -169,7 +191,6 @@ float4 main(PFXVertToPix IN) : SV_TARGET
 #elif DEBUGVIZ_DIFFCUBEMAP == 1
    return float4(irradiance, 1);
 #endif
-
    //energy conservation
    float3 F = FresnelSchlickRoughness(surface.NdotV, surface.f0, surface.roughness);
    float3 kD = 1.0f - F;
@@ -188,7 +209,7 @@ float4 main(PFXVertToPix IN) : SV_TARGET
    float horizon = saturate( 1 + horizonOcclusion * dot(surface.R, surface.N));
    horizon *= horizon;
 #if CAPTURING == 1
-    return float4(lerp(surface.baseColor.rgb,(irradiance + specular* horizon) ,surface.metalness/2),0);
+    return float4(lerp((irradiance + specular* horizon), surface.baseColor.rgb,surface.metalness),0);
 #else
    return float4((irradiance + specular* horizon)*ambientColor, 0);//alpha writes disabled   
 #endif

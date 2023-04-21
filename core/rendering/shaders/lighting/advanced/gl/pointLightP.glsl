@@ -26,7 +26,6 @@
 #include "farFrustumQuad.glsl"
 #include "../../../gl/lighting.glsl"
 #include "../../shadowMap/shadowMapIO_GLSL.h"
-#include "softShadow.glsl"
 #include "../../../gl/torque.glsl"
 #line 31
 
@@ -35,12 +34,6 @@ in vec4 ssPos;
 in vec4 vsEyeDir;
 in vec4 color;
 
-#ifdef USE_COOKIE_TEX
-
-/// The texture for cookie rendering.
-uniform samplerCube cookieMap;
-
-#endif
 
 
 #ifdef SHADOW_CUBE
@@ -106,16 +99,19 @@ uniform samplerCube cookieMap;
 #endif
 
 uniform sampler2D deferredBuffer;
-
 #ifdef SHADOW_CUBE
 	uniform samplerCube shadowMap;
 #else
 	uniform sampler2D shadowMap;
 #endif
-
-uniform sampler2D lightBuffer;
+//contains gTapRotationTex sampler 
+#include "softShadow.glsl"
 uniform sampler2D colorBuffer;
 uniform sampler2D matInfoBuffer;
+#ifdef USE_COOKIE_TEX
+/// The texture for cookie rendering.
+uniform samplerCube cookieMap;
+#endif
 
 uniform vec4 rtParams0;
 
@@ -150,14 +146,12 @@ void main()
    //create surface
    Surface surface = createSurface( normDepth, colorBuffer, matInfoBuffer,
                                     uvScene, eyePosWorld, wsEyeRay, cameraToWorld);
-   
-   //early out if emissive
-   if (getFlag(surface.matFlag, 0))
-   {
-      OUT_col = vec4(0, 0, 0, 0);
-      return;
-   }
 
+   if (getFlag(surface.matFlag, 2))
+   { 
+      OUT_col = surface.baseColor;
+      return;
+   } 
    vec3 L = lightPosition - surface.P;
    float dist = length(L);
    vec3 lighting = vec3(0.0);
@@ -166,22 +160,22 @@ void main()
       float distToLight = dist / lightRange;
       SurfaceToLight surfaceToLight = createSurfaceToLight(surface, L);
 
-   #ifdef NO_SHADOW
-      float shadowed = 1.0;
-   #else
-
+      float shadow = 1.0;
+      #ifndef NO_SHADOW
+      if (getFlag(surface.matFlag, 0)) //also skip if we don't recieve shadows
+      {
       #ifdef SHADOW_CUBE
               
          // TODO: We need to fix shadow cube to handle soft shadows!
          float occ = texture( shadowMap, tMul( worldToLightProj, -surfaceToLight.L ) ).r;
-         float shadowed = saturate( exp( lightParams.y * ( occ - distToLight ) ) );
+         shadow = saturate( exp( lightParams.y * ( occ - distToLight ) ) );
          
       #else
-      vec2 shadowCoord = decodeShadowCoord( tMul( worldToLightProj, -surfaceToLight.L ) ).xy;
-      float shadowed = softShadow_filter(shadowMap, ssPos.xy/ssPos.w, shadowCoord, shadowSoftness, distToLight, surfaceToLight.NdotL, lightParams.y);
+         vec2 shadowCoord = decodeShadowCoord( tMul( worldToLightProj, -surfaceToLight.L ) ).xy;
+         shadow = softShadow_filter(shadowMap, ssPos.xy/ssPos.w, shadowCoord, shadowSoftness, distToLight, surfaceToLight.NdotL, lightParams.y);
       #endif
-
-   #endif // !NO_SHADOW
+      }
+      #endif // !NO_SHADOW
    
       vec3 lightCol = lightColor.rgb;
    #ifdef USE_COOKIE_TEX
@@ -229,7 +223,7 @@ void main()
    #endif
 
       //get punctual light contribution   
-      lighting = getPunctualLight(surface, surfaceToLight, lightCol, lightBrightness, lightInvSqrRange, shadowed);
+      lighting = getPunctualLight(surface, surfaceToLight, lightCol, lightBrightness, lightInvSqrRange, shadow);
    }
 
    OUT_col = vec4(lighting, 0);

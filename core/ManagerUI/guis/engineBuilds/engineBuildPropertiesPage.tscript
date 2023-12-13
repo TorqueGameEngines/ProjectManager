@@ -128,7 +128,7 @@ function populateEngineBuildProperties()
          if($CurrentEngineBuild.gitPath !$= "" && !$TorqueManager::gitNotFound)
             AddActionButton("ManagerUI:download_image", "Pull Updates", "pullUpdateEngineBuild("@$CurrentEngineBuild@");", "");
             
-         AddActionButton("ManagerUI:cards_seek_top_image", "View Files", "openFileLocation("@$CurrentEngineBuild.localPath@");", "");
+         AddActionButton("ManagerUI:cards_seek_top_image", "View Files", "openFileLocation($CurrentEngineBuild.localPath);", "");
             
          AddActionButton("ManagerUI:trashcan_image", "Delete Local Copy", "deleteEngineBuild("@$CurrentEngineBuild@");", "");
       }

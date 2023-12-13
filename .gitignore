@@ -1,0 +1,23 @@
+#############
+## Torque executable
+#############
+
+*.dll
+*.exe
+
+
+#############
+## Torque
+#############
+
+console.log
+cache/
+
+
+#############
+## Torsion
+#############
+
+*.torsion
+*.torsion.exports
+*.torsion.opt

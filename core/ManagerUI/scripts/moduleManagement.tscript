@@ -177,14 +177,18 @@ function pullUpdateModuleComplete(%resultCode)
 
 function openModuleGitPage(%buildIdx)
 {
-   %gitPath = getModuleGitPathByIndex(%buildIdx);
+   //Disabled until getModuleGitPathByIndex() function exists
+   //%gitPath = getModuleGitPathByIndex(%buildIdx);
+   %gitPath = %buildIdx.gitPath;
    
    gotoWebPage(%gitPath);
 }
 
 function openModuleIssuesPage(%buildIdx)
 {
-   %gitPath = getModuleGitPathByIndex(%buildIdx);
+   //Disabled until getModuleGitPathByIndex() function exists
+   //%gitPath = getModuleGitPathByIndex(%buildIdx);
+   %gitPath = %buildIdx.gitPath;
    
    gotoWebPage(%gitPath @ "/issues");
 }

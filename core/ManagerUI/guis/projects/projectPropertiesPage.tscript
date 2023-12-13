@@ -262,7 +262,7 @@ function populateProjectProperties()
       //AddActionButton("ManagerUI:textField_image", "Open GUI Editor", "", "");
       //AddActionButton("ManagerUI:toolPencil_image", "Open Editor", "", "");
       
-      AddActionButton("ManagerUI:cards_seek_top_image", "View Files", "openFileLocation("@$CurrentProject.localPath@");", "");
+      AddActionButton("ManagerUI:cards_seek_top_image", "View Files", "openFileLocation($CurrentProject.localPath);", "");
       
       if(isObject(%targetBuild) && !%targetBuild.isBinary)
       {
